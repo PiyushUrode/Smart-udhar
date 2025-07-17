@@ -1,0 +1,105 @@
+/* index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Roboto-Medium';
+  src: url('./assets/font/Inter/Roboto/static/Roboto-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Roboto-Regular';
+  src: url('./assets/font/Inter/Roboto/static/Roboto-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Roboto-Bold';
+  src: url('./assets/font/Inter/Roboto/static/Roboto-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Roboto-Thin';
+  src: url('./assets/font/Inter/Roboto/static/Roboto-Thin.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Roboto-SemiBold';
+  src: url('./assets/font/Inter/Roboto/static/Roboto-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Inter-Medium';
+  src: url('./assets/font/Inter/Inter/static/Inter_18pt-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter-Regular';
+  src: url('./assets/font/Inter/Inter/static/Inter_18pt-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter-Bold';
+  src: url('./assets/font/Inter/Inter/static/Inter_18pt-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter-Light';
+  src: url('./assets/font/Inter/Inter/static/Inter_18pt-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter-SemiBold';
+  src: url('./assets/font/Inter/Inter/static/Inter_18pt-SemiBold.ttf') format('truetype');
+}
+
+:root {
+  font-family: 'Roboto-Medium', sans-serif;
+  background-color: #ffffff;
+  color: rgba(255, 255, 255, 0.87);
+  color-scheme: light dark;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --w3m-accent-color: #41d3c5 !important;
+  --w3m-background-color: #f019de !important;
+}
+
+body {
+  font-family: 'Roboto-Medium', sans-serif;
+}
+h1, h2, h3, h4, h5 {
+  font-family: 'Roboto-SemiBold', sans-serif;
+  line-height: 1.6;
+  font-weight: 600;
+  word-spacing: 0.1em;
+}
+p {
+  font-family: 'Inter-Medium', sans-serif;
+  line-height: 1.6;
+  word-spacing: 0.1em;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+}
+
+
+.input {
+  @apply w-full px-3 py-2 rounded border outline-none text-sm shadow-[0px_4px_6px_0px_#0000001A];
+}

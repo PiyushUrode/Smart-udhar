@@ -1,0 +1,337 @@
+.login-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(115.57deg, #5BA0F9 3.68%, #77C2FB 24.82%, #6F88FC 45.17%, #BCD4FA 62.05%, #D2E5F4 90.54%);
+  display: flex;
+  flex-direction: column;
+}
+
+.login-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 50px;
+  align-items: center;
+  background: white;
+}
+
+.logo {
+    width: 149px;
+  height: auto;
+}
+
+.login-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+
+
+.login-header-right span {
+  font-family: Inter;
+font-weight: 400;
+font-size: 16px;
+line-height: 16px;
+letter-spacing: 0%;
+  color: #525252;
+}
+
+.signup-btn {
+    background: linear-gradient(90deg, #2563EB 0%, #10B981 100%);
+    box-shadow: 0px 2px 5px 0px #00000099;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  color: #FFF;
+  cursor: pointer;
+  font-family: Inter;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-align: center;
+
+}
+
+.login-main {
+  display: flex;
+  flex: 1;
+  padding: 40px 60px;
+  align-items: center;
+  justify-content: center;
+  max-width: 1079px;
+  margin: 0 auto;
+  /* gap: 60px; */
+
+}
+
+.login-left {
+  flex: 1;
+  text-align: center;
+}
+
+.lock-img {
+  max-width: 100%;
+  height: auto;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.login-form-container {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.login-card {
+  background: white;
+  border-radius: 12px;
+  padding: 60px;
+  max-width: 554px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.icon-placeholder  {
+  /* font-size: 40px; */
+  margin-bottom: 20px;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  text-align: center;
+  align-self: center;
+  display: flex;
+}
+
+
+.icon-placeholder img  {
+  width: 36px;
+  height: 36px;
+}
+
+.l-head {
+  display: flex;
+  font-family: Inter;
+font-weight: 400;
+font-size: 30px;
+line-height: 30px;
+letter-spacing: 0%;
+text-align: center;
+color: hsl(0, 0%, 9%);
+margin-bottom: 20px;
+justify-content: center;
+}
+
+.l-para {
+  font-family: Inter;
+font-weight: 400;
+font-size: 16px;
+line-height: 16px;
+letter-spacing: 0%;
+text-align: center;
+color: #525252;
+margin-bottom: 30px;
+justify-content: center;
+}
+
+.btn {
+  display: flex;
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: Inter;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 16px;
+  letter-spacing: 0%;
+  text-align: center;
+  justify-content: center;
+}
+
+.btn img {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.whatsapp {
+  background-color: #25D366;
+  color: white;
+}
+
+.truecaller {
+  background-color: #2C78F4;
+  color: white;
+}
+
+.otp {
+  background: linear-gradient(90deg, #2563EB 0%, #10B981 100%);
+  color: white;
+  font-family: Inter;
+  margin-bottom: 40px;
+}
+
+.divider {
+  margin: 20px 0;
+  color: #888;
+  font-family: Inter;
+}
+
+.phone-input {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  color: #000;
+}
+
+.phone-input select,
+.phone-input input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  flex: 1;
+  background-color: #fff;
+}
+
+.phone-input select {
+  flex: 0.3;
+  background-color: #fff;
+}
+
+.terms {
+  font-family: Inter;
+font-weight: 400;
+font-size: 14px;
+line-height: 14px;
+letter-spacing: 0%;
+text-align: center;
+  color: #525252;
+  margin-top: 15px;
+}
+
+.terms a {
+  color: #525252;
+  text-decoration: underline;
+}
+
+/* Tablet Devices (up to 991px) */
+@media (max-width: 991px) {
+  .login-main {
+    flex-direction: column;
+    padding: 30px 40px;
+    text-align: center;
+  }
+
+  .login-left {
+    margin-bottom: 30px;
+  }
+
+  .login-form-container {
+    justify-content: center;
+  }
+
+  .login-header {
+    padding: 15px 30px;
+    /* flex-direction: column; */
+    gap: 10px;
+    text-align: center;
+  }
+
+  .login-header-right {
+    /* flex-direction: column; */
+    gap: 10px;
+  }
+
+  .logo {
+    width: 130px;
+  }
+}
+
+/* Mobile Devices (up to 600px) */
+@media (max-width: 600px) {
+  .login-wrapper {
+    background: white;
+  }
+
+   .logo {
+    width: 100px;
+  }
+
+  .login-main {
+    padding: 20px;
+  }
+
+  .login-card {
+    padding: 30px 20px;
+  }
+
+  .btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .l-head {
+    font-size: 24px;
+    line-height: 28px;
+  }
+
+  .l-para {
+    font-size: 14px;
+    line-height: 16px;
+  }
+
+  .phone-input {
+    flex-direction: column;
+  }
+
+  .phone-input select,
+  .phone-input input {
+    flex: 1;
+    width: 100%;
+  }
+
+  .signup-btn {
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+
+  .login-header {
+    padding: 10px 20px;
+  }
+
+  .terms {
+    font-size: 12px;
+    line-height: 14px;
+  }
+
+  .divider {
+    font-size: 14px;
+  }
+
+
+  .icon-placeholder img {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 454px) {
+
+  .login-header-right span {
+    display: none;
+  }
+}
+
+
+
+@media (max-width: 375px) {
+    .l-head {
+      flex-direction: column;
+      gap: 20px;
+      font-size: 24px;
+    }
+
+}

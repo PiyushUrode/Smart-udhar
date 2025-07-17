@@ -1,0 +1,127 @@
+.gst-container {
+  max-width: 720px;
+  width: 100%;
+  margin: 30px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0px 10px 15px 0px #0000001A;
+  font-family: 'Roboto', sans-serif;
+  color: #374151;
+}
+
+.gst-container h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.gst-container select {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  background-color: #3B82F6;
+  color: white;
+  border: none;
+  margin-bottom: 16px;
+}
+
+.display-box {
+  background: #F6F8FA;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px 0px #0000001A;
+  text-align: right;
+  margin-bottom: 16px;
+}
+
+.input-display {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.output-display {
+  font-size: 18px;
+  font-weight: 400;
+  color: #555;
+}
+
+.gst-rate-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.gst-rate-buttons button {
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+  background: #E6E6E680;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.gst-rate-buttons button:hover {
+  background: #d0e6ff;
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.calc-grid button {
+  padding: 14px;
+  font-size: 16px;
+  background: #f3f3f3;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  color: #374151;
+}
+
+.calc-grid button svg {
+  color: #374151;
+}
+
+.calc-grid button:nth-child(4) svg {
+  color: #33ACAB; /* Mic color */
+}
+
+.calc-grid button:hover {
+  background: #dbeafe;
+}
+
+.footer-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.clear-btn,
+.add-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.clear-btn {
+  background: white;
+  color: #333;
+}
+
+.add-btn {
+  background: #3B82F6;
+  color: white;
+}
