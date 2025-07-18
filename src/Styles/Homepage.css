@@ -1425,6 +1425,7 @@ letter-spacing: 0%;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
+  gap: 20px;
 }
 
 .arrow {
@@ -1586,6 +1587,10 @@ letter-spacing: 0%;
     gap: 30px;
   }
 
+.testimonial-box {
+  gap: 10px;
+}
+
   .testimonial-header h2 {
     font-size: 40px;
   }
@@ -1716,6 +1721,10 @@ letter-spacing: 0%;
   .testimonial-header h2 {
     font-size: 26px;
   }
+
+  .testimonial-box {
+  gap: 7px;
+}
 
   .subtext,
   .impact p,
@@ -1984,14 +1993,15 @@ letter-spacing: 0%;
   .smart-left {
     max-width: 100%;
     margin-bottom: 30px;
+    text-align: left;
   }
 
-  .smart-left h2 {
+  /* .smart-left h2 {
     font-size: 42px;
-  }
+  } */
 
   .smart-left p {
-    font-size: 16px;
+    font-size: 18px;
     max-width: 100%;
   }
 
@@ -2021,7 +2031,7 @@ letter-spacing: 0%;
   }
 
   .smart-left p {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .store-btn img {
