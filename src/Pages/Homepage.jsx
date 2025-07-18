@@ -188,11 +188,13 @@ const Homepage = () => {
       {/* About section Start */}
 
       <section className="secure-section">
+      <div className="secure-h">
         <h2 className="secure-title">
           Secure
           <img src={hicon} alt="" />
           your <span className="highlight">Debts</span> Smartly
         </h2>
+      </div>
         <p className="secure-subtext">
           Manage credit, track payments, send reminders, and grow your business effortlessly with SMARTUDHAR's intelligent accounting
           tools designed for smarter, faster, and more reliable repayment management.
