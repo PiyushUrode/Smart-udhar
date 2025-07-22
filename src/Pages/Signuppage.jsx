@@ -1,8 +1,8 @@
 import logo from '../assets/logo/logo_hr.png'; 
 import lockImage from '../assets/login/login side img.webp'; 
 // import icon from '../assets/login/icon.png';
-import whatsapp from '../assets/login/whatsapp_icon.webp';
-import callicon from '../assets/login/call_icon.webp';
+// import whatsapp from '../assets/login/whatsapp_icon.webp';
+// import callicon from '../assets/login/call_icon.webp';
 
 import { Link } from 'react-router-dom';
 
@@ -28,11 +28,11 @@ const LoginPage = () => {
 
         <div className="login-form-container">
           <div className="login-card">
-            <h2 className='l-head'>              
+            <h2 className='l-head' style={{ display:'ruby' }}>              
               Welcome to 
-                <img style={{ marginLeft: '15px',  }} src={logo} alt="" className='max-w-[10vw]' />
+                <img style={{ marginLeft: '15px', maxWidth:'147px' }} src={logo} alt=""  />
             </h2>
-            <p className='l-para'>Please enter your details to sign up</p>
+            <p className='l-para' style={{ marginTop:'20px' }}>Please enter your details to sign up</p>
 
             {/* <button className="btn whatsapp">
               <img src={whatsapp} alt="" />
