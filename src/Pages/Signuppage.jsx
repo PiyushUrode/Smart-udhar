@@ -1,8 +1,8 @@
 import logo from '../assets/logo/logo_hr.png'; 
-import lockImage from '../assets/login/login side img.png'; 
+import lockImage from '../assets/login/login side img.webp'; 
 // import icon from '../assets/login/icon.png';
-import whatsapp from '../assets/login/whatsapp_icon.png';
-import callicon from '../assets/login/call_icon.png';
+import whatsapp from '../assets/login/whatsapp_icon.webp';
+import callicon from '../assets/login/call_icon.webp';
 
 import { Link } from 'react-router-dom';
 
@@ -34,16 +34,16 @@ const LoginPage = () => {
             </h2>
             <p className='l-para'>Please enter your details to sign up</p>
 
-            <button className="btn whatsapp">
+            {/* <button className="btn whatsapp">
               <img src={whatsapp} alt="" />
               Continue with WhatsApp
             </button>
             <button className="btn truecaller">
               <img src={callicon} alt="" />
               Continue with Truecaller
-            </button>
+            </button> */}
 
-            <div className="divider">OR</div>
+            {/* <div className="divider">OR</div> */}
 
             <div className="phone-input">
               <select>

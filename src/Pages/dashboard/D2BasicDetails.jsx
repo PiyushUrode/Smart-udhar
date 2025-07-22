@@ -159,45 +159,15 @@ const [isOpen, setIsOpen] = useState(false); // Default is closed
 
 {isOpen && (
   <section>
-    <div className="max-w-4xl mx-auto   md:p-4 bg-white rounded-xl px-2  rounded-t-md shadow-lg space-y-6">
+    <div className="max-w-4xl mx-auto    bg-white rounded-xl   rounded-t-md shadow-lg space-y-6">
       
-      {/* Section 1: Basic Details */}
-      <div>
-        <div className='flex flex-row w-full justify-between py-5  '>  
-          <div className="bg-white text-[#374151] text-lg font-semibold">
-          Bussiness Profile
-        </div>
-        <div className='flex flex-row gap-4'> <h1 className='text-[#374151]'>Add Button</h1>
-              <CirclePlus  />
 
-           </div>
-        </div>
-        <div className="bg-bluecol text-white text-lg px-4 py-2 rounded-t-md font-semibold">
-          Detail Information
-        </div>
-        <div className="p-4 border border-t-0 rounded-b-md space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" placeholder="Business Name" className="input bg-[#F6F8FA]" />
-            <input type="text" placeholder="GST Number (Optional)" className="input bg-[#F6F8FA]" />
-          </div>
-          <textarea placeholder="Address" rows={3} className="input bg-[#F6F8FA] w-full" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="text" placeholder="Pincode" className="input bg-[#F6F8FA]" />
-            <input type="text" placeholder="Mobile 1" className="input bg-[#F6F8FA]" />
-            <input type="text" placeholder="Mobile 2" className="input bg-[#F6F8FA]" />
-          </div>
-          <input type="email" placeholder="Email" className="input bg-[#F6F8FA] w-full" />
-          <textarea placeholder="Short Bio (160 words)" rows={3} className="input bg-[#F6F8FA] w-full" />
-        </div>
-      </div>
 
       {/* Section 2: Extended Details */}
       <div>
         
-        <div className="bg-bluecol text-white text-lg px-2 md:px-4 py-2 rounded-t-md font-semibold">
-          Detailed Information
-        </div>
-        <div className=" p-2 md:p-4 border border-t-0 rounded-b-md space-y-4">
+
+        <div className="  border border-t-0 rounded-b-md space-y-4">
           <select className="input bg-[#F6F8FA] w-full">
             <option>Select Industry</option>
           </select>

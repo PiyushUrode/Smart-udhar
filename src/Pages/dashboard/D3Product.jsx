@@ -131,12 +131,12 @@ const D3Product = () => {
                   onChange={handleChange}
                 />
               </div>
-              <button
+              {/* <button
                 type="button"
                 className="bg-bluecol text-white w-[50%]  rounded"
               >
                 + Add
-              </button>
+              </button> */}
             </div>
             <span className="text-xs text-gray-500 mt-1 block">
               Custom Sale Price

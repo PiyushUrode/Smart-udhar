@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import {
   FaTachometerAlt, FaBuilding, FaInfoCircle, FaBoxOpen, FaConciergeBell,
   FaUserFriends, FaPlusCircle, FaFileInvoice, FaMoneyBillWave, FaStar,
@@ -11,14 +12,12 @@ const sections = [
     title: "Main Menu",
     items: [
       { label: "Dashboard", icon: <FaTachometerAlt />, path: "/dashboard" },
-
     ],
   },
   {
     title: "Business Profile",
     items: [
       { label: "Basic Details", icon: <FaBuilding />, path: "/dashboard/basic-details" },
-
     ],
   },
   {
@@ -35,7 +34,7 @@ const sections = [
       { label: "Staff Roles", icon: <FaUserFriends />, path: "/dashboard/staff-role" },
       { label: "Staff Details", icon: <FaUserFriends />, path: "/dashboard/staff-details" },
       { label: "Add Customer", icon: <FaPlusCircle />, path: "/dashboard/add-customer" },
-       { label: "Customer Details", icon: <FaUsers />, path: "/dashboard/customer-details" },
+      { label: "Customer Details", icon: <FaUsers />, path: "/dashboard/customer-details" },
     ],
   },
   {
@@ -69,24 +68,57 @@ const sections = [
   },
 ];
 
-
 const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
+  const [selectedPanel, setSelectedPanel] = useState("Business Panel 1");
+
+  const businessPanels = [
+    "Business Panel 1",
+    "Business Panel 2",
+    "Business Panel 3",
+    "Business Panel 4",
+    "Business Panel 5",
+  ];
+
+  const handlePanelChange = (e) => {
+    setSelectedPanel(e.target.value);
+    // Optionally trigger logic for switching context
+  };
+
   return (
     <div
-      className={`bg-[#3B82F6]  h-full transition-all duration-300 p-3 custom-scrollbar overflow-y-auto hover:overflow-y-scroll ${
+      className={`bg-[#3B82F6] h-full transition-all duration-300 p-3 custom-scrollbar overflow-y-auto hover:overflow-y-scroll ${
         isOpen ? "w-56" : "w-16"
       }`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         {!isMobile && (
-          <h1 className={`text-lg font-bold flex  text-white items-center gap-2 ${isOpen ? "block" : "hidden"}`}>
-            <FaBuilding />
-            Business Panel
-          </h1>
+          <div className="flex flex-col w-full">
+            {isOpen ? (
+              <>
+                <div className="text-white font-bold text-sm mb-1 flex gap-2 items-center">
+                  <FaBuilding />
+                <select
+                  value={selectedPanel}
+                  onChange={handlePanelChange}
+                  className="text-sm bg-[#3B82F6]  rounded px-2 py-1"
+                >
+                  {businessPanels.map((panel, idx) => (
+                    <option key={idx} value={panel}>
+                      {panel}
+                    </option>
+                  ))}
+                </select>
+                </div>
+
+              </>
+            ) : (
+              <FaBuilding className="text-white text-xl mx-auto" />
+            )}
+          </div>
         )}
         <button
-          className="text-white focus:outline-none"
+          className="text-white focus:outline-none ml-2"
           onClick={toggleSidebar}
         >
           ☰
@@ -97,7 +129,11 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       <div className="space-y-5">
         {sections.map((section, index) => (
           <div key={index}>
-            <h2 className={`text-xs text-white uppercase tracking-wide mb-2 ${isOpen ? "block" : "hidden"}`}>
+            <h2
+              className={`text-xs text-white uppercase tracking-wide mb-2 ${
+                isOpen ? "block" : "hidden"
+              }`}
+            >
               {section.title}
             </h2>
             <ul>

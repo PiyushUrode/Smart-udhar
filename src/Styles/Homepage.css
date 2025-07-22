@@ -40,6 +40,7 @@ header {
   align-items: center;
   gap: 30px;
   justify-content: flex-end;
+
 }
 
 .nav-menu ul {
@@ -53,8 +54,7 @@ header {
 .nav-menu ul li a {
   text-decoration: none;
   color: #595959;
-  font-family: Roboto, sans-serif;
-  font-weight: 400;
+
   font-size: 18px;
   line-height: 100%;
   transition: color 0.3s;
@@ -78,8 +78,7 @@ header {
   border-radius: 5px;
   cursor: pointer;
   transition: all 0.3s;
-  font-family: 'Inria Sans', sans-serif;
-  font-weight: 400;
+
   font-size: 18px;
   text-decoration: none;
   display: flex;

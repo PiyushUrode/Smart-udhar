@@ -185,6 +185,15 @@ const D1DashboardHome = () => {
         </div>
       </div>
 
+        <div className="bg-white p-4 shadow rounded-lg">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Cashbook Transactions</h2>
+          <div className="space-y-3 flex flex-row justify-between w-full">
+            {renderTransactionCard("Purchase", "Purchase", "₹8.5L", "+5.2%")}
+            {renderTransactionCard("Expense", "Expense", "₹3.2L", "-2.1%")}
+            {renderTransactionCard("Collection", "Collection Calls", "156", "+18.3%")}
+          </div>
+        </div>
+
       {/* Transactions Table */}
       <div className="bg-white p-4 shadow rounded-lg gap-5 flex flex-col" id='Recenttransaction'>
         <div className="flex justify-between items-center mb-4">

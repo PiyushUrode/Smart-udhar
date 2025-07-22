@@ -29,7 +29,7 @@ import apple from "../assets/homepage/appdowload/apple store.png";
 import playstore from "../assets/homepage/appdowload/google play.png";
 import app from "../assets/homepage/appdowload/SMART UDHAR.png";
 
-import flogo from '../assets/homepage/Footer/logo_hr.png';
+import flogo from '../assets/logo/logo_hr.png';
 import { FaClock } from "react-icons/fa";
 import downloadBtn from "../assets/homepage/app-download.png";
 import facebook from '../assets/homepage/Footer/facebook.png';
@@ -63,7 +63,7 @@ const Homepage = () => {
           </Link>
         </div>
         <nav className={`nav-menu ${isMobileMenuOpen ? "open" : ""}`}>
-          <ul>
+          <ul className="font-robotoR">
             <li>
               <Link to="/?scrollTo=about">About Us</Link>
             </li>
@@ -82,10 +82,10 @@ const Homepage = () => {
           </ul>
 
           <div className="nav-buttons mobile-visible">
-            <button className="login-btn">
+            <button className="login-btn font-InriaR font-normal">
               <a href="/login">Login/Signup</a>
             </button>
-            <button className="app-btn">
+            <button className="app-btn font-InriaR font-normal ">
               <a target='blank' href="/">SmartUdhar App</a>
             </button>
           </div>
@@ -424,7 +424,7 @@ const Homepage = () => {
             <ul>
               <li>
                 {/* <FaPhoneAlt /> */}
-                <img src={call} style={{ width: '20px', height: 'auto' }} alt="" />
+                <img src={call} style={{ width: '16px', height: 'auto' }} alt="" />
                 +91-XXXXXXXXXX
               </li>
               <li>
@@ -437,7 +437,7 @@ const Homepage = () => {
                 {/* <FaWhatsapp />  */}
                 WhatsApp Support
               </li>
-              <li><FaClock /> Mon-Sat, 10am - 7pm</li>
+              <li><FaClock size={16} /> Mon-Sat, 10am - 7pm</li>
             </ul>
           </div>
 
@@ -445,10 +445,10 @@ const Homepage = () => {
           <div className="footer-section brand">
             <img src={flogo} alt="SmartUdhar" className="brand-logo" />
             <div className="social-icons">
-              <img src={facebook} alt="" />
-              <img src={twitter} alt="" />
-              <img src={instagram} alt="" />
-              <img src={telegram} alt="" />
+              <img src={facebook} alt=""  className="w-14" />
+              <img src={twitter} alt=""   className="w-14"/>
+              <img src={instagram} alt="" className="w-14" />
+              <img src={telegram} alt=""  className="w-14" />
             </div>
           </div>
         </div>

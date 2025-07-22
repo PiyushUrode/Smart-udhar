@@ -1,6 +1,6 @@
 import logo from '../assets/logo/logo_hr.png'; 
-import lockImage from '../assets/login/login side img.png'; 
-import icon from '../assets/logo/icon3.png';
+import lockImage from '../assets/login/login side img.webp'; 
+import icon from '../assets/login/icon.webp';
 
 import { Link } from 'react-router-dom';
 

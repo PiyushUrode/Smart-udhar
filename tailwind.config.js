@@ -29,6 +29,8 @@ export default {
         interB: ['Inter-Bold', 'sans-serif'],
         interL: ['Inter-Light', 'sans-serif'],
         interSb: ['Inter-SemiBold', 'sans-serif'],
+
+                InriaR: ['InriaSans-Regular', 'sans-serif'],
       },
       screens: {
         am: '400px',

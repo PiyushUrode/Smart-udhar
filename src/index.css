@@ -45,6 +45,11 @@
   src: url('./assets/font/Inter/Inter/static/Inter_18pt-SemiBold.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'InriaSans-Regular';
+  src: url('./assets/font/Inria_Sans/InriaSans-Regular.ttf') format('truetype');
+}
+
 :root {
   font-family: 'Roboto-Medium', sans-serif;
   background-color: #ffffff;
