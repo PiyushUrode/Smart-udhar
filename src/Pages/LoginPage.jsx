@@ -112,9 +112,9 @@ const LoginPage = () => {
                       onChange={(e) => handleOtpChange(e, index)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       className="w-10 h-10 rounded-xl text-center  text-lg outline-none
-                                 border-2 
+                                 border 
                                  bg-white text-gray-700
-                                 focus:ring-2 focus:ring-blue-500 border-blue-400"
+                                 focus:ring-2 focus:ring-blue-500 border-blue-500"
                     />
                   ))}
                 </div>
