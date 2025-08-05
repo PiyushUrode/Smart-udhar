@@ -1,0 +1,236 @@
+// src/components/Sidebar.jsx
+import { useState } from "react";
+import {
+  FaBuilding, FaUserFriends, FaPlusCircle, FaGift, FaClock, FaSync, FaHeadphones,
+  FaTachometerAlt, FaBoxOpen, FaConciergeBell, FaFileInvoice, FaMoneyBillWave, FaStar,
+  FaFileAlt, FaCog, FaBell, FaCalculator, FaInfoCircle, FaDownload
+} from "react-icons/fa";
+
+const sections = [
+   {
+    title: "Main Menu",
+    items: [{ label: "Dashboard", icon: <FaTachometerAlt />, path: "/dashboard" }]
+  },
+ {
+    title: "Business Profile",
+    items: [
+      { label: "BasicDetails", icon: <FaBuilding />, path: "/dashboard/basic-details" },
+      { label: "Detail Information", icon: <FaInfoCircle />, path: "/dashboard/detail-info" } 
+    ]
+  },
+  {
+    title: "Items",
+    items: [
+      { label: "Products", icon: <FaBoxOpen /> },
+      { label: "Services", icon: <FaConciergeBell /> }
+    ]
+  },
+  {
+    title: "People",
+    items: [
+      { label: "Staff Roles", icon: <FaUserFriends /> },
+      { label: "Add Customer", icon: <FaPlusCircle /> }
+    ]
+  },
+  {
+    title: "Transactions",
+    items: [
+      { label: "Create Invoice", icon: <FaFileInvoice /> },
+      { label: "Payment Collection", icon: <FaMoneyBillWave /> },
+      { label: "Credit Score", icon: <FaStar /> },
+      { label: "Expenses", icon: <FaFileAlt /> }
+    ]
+  },
+  {
+    title: "System",
+    items: [
+      { label: "Statement Download", icon: <FaDownload /> },
+      { label: "Settings", icon: <FaCog /> },
+      { label: "Notifications", icon: <FaBell /> },
+      { label: "GST Calculator", icon: <FaCalculator /> }
+    ]
+  },
+  {
+    title: "More",
+    items: [
+      { label: "Rewards", icon: <FaGift /> },
+      { label: "Coming Soon", icon: <FaClock /> },
+      { label: "Updates", icon: <FaSync /> },
+      { label: "Support", icon: <FaHeadphones /> }
+    ]
+  }
+];
+
+const Sidebar = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  return (
+    <div className={`bg-[#4285F4] text-white min-h-screen transition-all duration-300 ${isCollapsed ? "w-16" : "w-64"} p-3`}>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className={`text-lg font-bold flex items-center gap-2 ${isCollapsed ? "hidden" : "block"}`}>
+          <FaBuilding />
+          Business Panel
+        </h1>
+        <button
+          className="text-white focus:outline-none"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          ☰
+        </button>
+      </div>
+
+      <div className="space-y-5">
+        {sections.map((section, index) => (
+          <div key={index}>
+            <h2 className={`text-xs uppercase tracking-wide mb-2 ${isCollapsed ? "hidden" : "block"}`}>
+              {section.title}
+            </h2>
+            <ul>
+              {section.items.map((item, idx) => (
+                <li key={idx} className="mb-2 hover:bg-white/10 p-2 rounded-md flex items-center gap-3 cursor-pointer">
+                  {item.icon}
+                  {!isCollapsed && <span>{item.label}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+new sidebar page2
+
+
+// src/components/Sidebar.jsx
+import { useState } from "react";
+import { Link } from 'react-router-dom';
+import {
+  FaBuilding, FaUserFriends, FaPlusCircle, FaGift, FaClock, FaSync, FaHeadphones,
+  FaTachometerAlt, FaBoxOpen, FaConciergeBell, FaFileInvoice, FaMoneyBillWave, FaStar,
+  FaFileAlt, FaCog, FaBell, FaCalculator, FaInfoCircle, FaDownload
+} from "react-icons/fa";
+
+const sections = [
+   {
+    title: "Main Menu",
+    items: [{ label: "Dashboard", icon: <FaTachometerAlt />, path: "/dashboard" }]
+  },
+ {
+    title: "Business Profile",
+    items: [
+      { label: "BasicDetails", icon: <FaBuilding />, path: "/dashboard/basic-details" },
+      { label: "Detail Information", icon: <FaInfoCircle />, path: "/dashboard/detail-info" } 
+    ]
+  },
+  {
+    title: "Items",
+   items: [
+  { label: "Products", icon: <FaBoxOpen />, path: "/dashboard/product" },
+  { label: "Services", icon: <FaConciergeBell />, path: "/dashboard/service" }
+]
+
+  },
+  {
+    title: "People",
+    items: [
+      { label: "Staff Roles", icon: <FaUserFriends /> },
+      { label: "Add Customer", icon: <FaPlusCircle /> }
+    ]
+  },
+  {
+    title: "Transactions",
+    items: [
+      { label: "Create Invoice", icon: <FaFileInvoice /> },
+      { label: "Payment Collection", icon: <FaMoneyBillWave /> },
+      { label: "Credit Score", icon: <FaStar /> },
+      { label: "Expenses", icon: <FaFileAlt /> }
+    ]
+  },
+  {
+    title: "System",
+    items: [
+      { label: "Statement Download", icon: <FaDownload /> },
+      { label: "Settings", icon: <FaCog /> },
+      { label: "Notifications", icon: <FaBell /> },
+      { label: "GST Calculator", icon: <FaCalculator /> }
+    ]
+  },
+  {
+    title: "More",
+    items: [
+      { label: "Rewards", icon: <FaGift /> },
+      { label: "Coming Soon", icon: <FaClock /> },
+      { label: "Updates", icon: <FaSync /> },
+      { label: "Support", icon: <FaHeadphones /> }
+    ]
+  }
+];
+
+const Sidebar = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  return (
+    <div className={`bg-[#4285F4] text-white min-h-screen transition-all duration-300 ${isCollapsed ? "w-16" : "w-56"} p-3`}>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className={`text-lg font-bold flex items-center gap-2 ${isCollapsed ? "hidden" : "block"}`}>
+          <FaBuilding />
+          Business Panel
+        </h1>
+        <button
+          className="text-white focus:outline-none"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          ☰
+        </button>
+      </div>
+
+      <div className="space-y-5">
+        {sections.map((section, index) => (
+          <div key={index}>
+            <h2 className={`text-xs uppercase tracking-wide mb-2 ${isCollapsed ? "hidden" : "block"}`}>
+              {section.title}
+            </h2>
+            <ul>
+              {section.items.map((item, idx) => (
+     <li key={idx}>
+  <Link
+    to={item.path}
+    className="mb-2 hover:bg-white/10 p-2 rounded-md flex items-center gap-3 cursor-pointer block"
+  >
+    {item.icon}
+    {!isCollapsed && <span>{item.label}</span>}
+  </Link>
+</li>
+
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;
+
+
