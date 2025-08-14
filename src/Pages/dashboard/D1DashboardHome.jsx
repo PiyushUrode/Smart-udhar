@@ -5,14 +5,37 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { FaArrowUp, FaArrowDown, FaPlus,   FaClock , FaRupeeSign } from 'react-icons/fa';
-import { Phone, ShoppingCart, CreditCard,  TrendingUp, IndianRupee, Wallet } from 'lucide-react';
+import {
+  FaArrowUp,
+  FaArrowDown,
+  FaPlus,
+  FaClock,
+  FaRupeeSign,
+  FaPhoneAlt,
+  FaWhatsapp, 
+  FaEnvelope
+} from 'react-icons/fa';
+import {
+  Phone,
+  ShoppingCart,
+  CreditCard,
+  Wallet
+} from 'lucide-react';
 import { GoGraph } from "react-icons/go";
+import midsection from "../../assets/homepage/midsection.png"
 
+
+const graphData = [
+  { month: 'Jul 2024', sales: 18, collection: 16 },
+  { month: 'Aug 2024', sales: 19, collection: 17 },
+  { month: 'Sep 2024', sales: 18, collection: 18 },
+  { month: 'Oct 2024', sales: 19, collection: 19 },
+  { month: 'Nov 2024', sales: 18, collection: 18 },
+  { month: 'Dec 2024', sales: 18, collection: 17 }
+];
 
 const TRANSACTION_TYPE_MAP = {
   Purchase: {
@@ -38,27 +61,25 @@ const TRANSACTION_TYPE_MAP = {
   }
 };
 
-
 const STAT_CARD_TYPE_MAP = {
   sale: {
-    icon: <GoGraph color = "#16A34A" size={20} />,
+    icon: <GoGraph color="#16A34A" size={20} />,
     bg: "bg-[#DCFCE7]",
   },
   paid: {
-    icon: <Wallet color = "#2563EB" size={20} />,
+    icon: <Wallet color="#2563EB" size={20} />,
     bg: "bg-[#DBEAFE]",
   },
   pending: {
-    icon: <FaClock  color="#EA580C"  size={20} />,
+    icon: <FaClock color="#EA580C" size={20} />,
     bg: "bg-[#FFEDD5]",
   }
 };
 
-// ----------------- REUSABLE STAT CARD -----------------
 const StatCard = ({ title, value, change, isPositive, type }) => {
   const config = STAT_CARD_TYPE_MAP[type] || {};
   return (
-    <div className="bg-white shadow rounded-lg p-4 flex justify-between items-center w-full mt-5">
+    <div className="bg-white shadow-customSoft rounded-lg p-4 flex justify-between items-center w-full mt-5">
       <div className="flex flex-col gap-1">
         <div className="text-sm text-[#4B5563] font-robotoM">{title}</div>
         <div className="text-2xl text-black font-robotoB font-bold">{value}</div>
@@ -72,9 +93,8 @@ const StatCard = ({ title, value, change, isPositive, type }) => {
   );
 };
 
-// ----------------- TRANSACTION ROW -----------------
 const TransactionItem = ({ date, type, description, amount, status }) => (
-  <tr className="border-t text-sm md:my-4 md:shadow-md md:rounded-lg md:border font-robotoM md:border-gray-200 md:overflow-hidden bg-white">
+  <tr className="border-t text-sm bg-white">
     <td className="p-5 text-gray-700">{date}</td>
     <td className="p-5">
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -86,26 +106,13 @@ const TransactionItem = ({ date, type, description, amount, status }) => (
       </span>
     </td>
     <td className="p-5 text-gray-700">{description}</td>
-    <td className="p-5 font-medium text-gray-800">
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-        parseFloat(amount.toString().replace(/,/g, '')) >= 0
-          ? 'text-[#16A34A]'
-          : 'text-[#DC2626]'
-      }`}>
-        ₹{amount}
-      </span>
-    </td>
+    <td className="p-5 font-medium text-gray-800">₹{amount}</td>
     <td className="p-5">
-      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-        status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-      }`}>
-        {status}
-      </span>
+      <span className="text-xs px-2 py-1 rounded-full font-semibold bg-green-100 text-green-700">{status}</span>
     </td>
   </tr>
 );
 
-// ----------------- MAIN COMPONENT -----------------
 const D1DashboardHome = () => {
   const [selectedType, setSelectedType] = useState('All');
 
@@ -117,17 +124,24 @@ const D1DashboardHome = () => {
     { date: "Dec 24, 2024", type: "Expense", description: "Travel Expense", amount: "5,000", status: "Paid" }
   ];
 
-  const filteredTransactions = selectedType === 'All'
-    ? allTransactions
-    : allTransactions.filter(txn => txn.type === selectedType);
+  const collectionData = [
+    { name: "Ramesh Kumar", dueAmount: "₹12,000", dueDate: "Aug 10, 2025", contact: "9876543210", status: "Pending" },
+    { name: "Sita Devi", dueAmount: "₹8,500", dueDate: "Aug 12, 2025", contact: "9876501234", status: "Reminder Sent" },
+    { name: "Ajay Singh", dueAmount: "₹15,000", dueDate: "Aug 1, 2025", contact: "9876123456", status: "Overdue" },
+    { name: "Neha Sharma", dueAmount: "₹5,000", dueDate: "Aug 8, 2025", contact: "9876345678", status: "Paid" }
+  ];
+
+  const filteredTransactions =
+    selectedType === "Collection"
+      ? collectionData
+      : selectedType === "All"
+      ? allTransactions
+      : allTransactions.filter(txn => txn.type === selectedType);
 
   const renderTransactionCard = (type, title, amount, percent) => {
     const config = TRANSACTION_TYPE_MAP[type];
     return (
-      <div
-        className={`flex items-center justify-between p-5 rounded-lg ${config.cardBg} cursor-pointer`}
-        onClick={() => setSelectedType(type)}
-      >
+      <div className={`flex items-center justify-between p-5  shadow-customSoft rounded-lg ${config.cardBg} cursor-pointer`} onClick={() => setSelectedType(type)}>
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-full shadow ${config.bg}`}>{config.icon}</div>
           <div>
@@ -145,21 +159,17 @@ const D1DashboardHome = () => {
 
   return (
     <div className="p-2 md:p-6 space-y-6 overflow-hidden">
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 ;
-">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard title="Monthly Sale" value="₹15.6L" change="12.9%" isPositive type="sale" />
         <StatCard title="Monthly Paid" value="₹12.8L" change="2.3%" isPositive type="paid" />
         <StatCard title="Monthly Pending" value="₹2.8L" change="4.3%" isPositive={false} type="pending" />
       </div>
-      
 
-      {/* Chart & Cashbook */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-4 relative shadow rounded-lg flex flex-col gap-10 justify-around">
-          <div className="flex justify-between md:px-5 lg:pl-10 items-center mb-3">
+        <div className="bg-white p-4 shadow-customSoft rounded-lg">
+          <div className="flex justify-between mb-3">
             <h2 className="text-lg font-semibold text-gray-800">Sales & Collection Overview</h2>
-            <span className="text-sm text-black font-robotoR font-medium border border-[#D1D5DB] rounded-lg px-2 py-1">Last 6 Months</span>
+            <span className="text-sm border rounded px-2 py-1">Last 6 Months</span>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={graphData}>
@@ -167,58 +177,107 @@ const D1DashboardHome = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="sales" fill="#0f9afe" name="Sales" radius={[10, 10, 0, 0]} />
-              <Bar dataKey="collection" fill="#00e0a3" name="Collection" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="sales" fill="#0f9afe" radius={[10, 10, 0, 0]} />
+              <Bar dataKey="collection" fill="#00e0a3" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <div className='flex rotate-[-90deg] absolute top-1/2 -left-10 hidden md:block'>Amount (in Lakhs ₹) </div>
         </div>
+<div className='w-full justify-items-end'>
+  <img src={midsection} alt="" />
+</div>
 
-        {/* Cashbook Transactions */}
-        <div className="bg-white p-4 shadow rounded-lg">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Cashbook Transactions</h2>
-          <div className="space-y-3">
-            {renderTransactionCard("Purchase", "Purchase", "₹8.5L", "+5.2%")}
-            {renderTransactionCard("Expense", "Expense", "₹3.2L", "-2.1%")}
-            {renderTransactionCard("Collection", "Collection Calls", "156", "+18.3%")}
-          </div>
-        </div>
       </div>
 
-        <div className="bg-white p-4 shadow rounded-lg">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Cashbook Transactions</h2>
-          <div className="space-y-3 flex flex-row justify-between w-full">
-            {renderTransactionCard("Purchase", "Purchase", "₹8.5L", "+5.2%")}
-            {renderTransactionCard("Expense", "Expense", "₹3.2L", "-2.1%")}
-            {renderTransactionCard("Collection", "Collection Calls", "156", "+18.3%")}
-          </div>
-        </div>
+<div className="w-full">
+  <div className="bg-white p-4 shadow-customSoft rounded-lg">
+    <h2 className="text-lg font-semibold text-gray-800 mb-4">
+      Cashbook Transactions
+    </h2>
 
-      {/* Transactions Table */}
-      <div className="bg-white p-4 shadow rounded-lg gap-5 flex flex-col" id='Recenttransaction'>
-        <div className="flex justify-between items-center mb-4">
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full">
+  <div>
+    {renderTransactionCard("Purchase", "Purchase", "₹8.5L", "+5.2%")}
+  </div>
+  <div>
+    {renderTransactionCard("Expense", "Expense", "₹3.2L", "-2.1%")}
+  </div>
+  <div>
+    {renderTransactionCard("Collection", "Collection Calls", "156", "+18.3%")}
+  </div>
+</div>
+
+
+
+  </div>
+</div>
+
+
+      <div className="bg-white p-4 shadow-customSoft rounded-lg">
+        <div className="flex justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-800">Recent Transactions</h2>
           <button onClick={() => setSelectedType('All')} className="text-sm text-blue-600 hover:underline">View All</button>
         </div>
-        <div className="w-full overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="min-w-[640px] text-left w-full">
             <thead>
               <tr className="text-gray-500 text-sm border-b">
-                <th className="p-5">Date</th>
-                <th className="p-5">Type</th>
-                <th className="p-5">Description</th>
-                <th className="p-5">Amount</th>
-                <th className="p-5">Status</th>
+                {selectedType === "Collection" ? (
+                  <>
+                    <th className="p-5">Customer</th>
+                    <th className="p-5">Due Amount</th>
+                    <th className="p-5">Due Date</th>
+                    <th className="p-5">Contact</th>
+                    <th className="p-5">Status</th>
+                    <th className="p-5">Action</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="p-5">Date</th>
+                    <th className="p-5">Type</th>
+                    <th className="p-5">Description</th>
+                    <th className="p-5">Amount</th>
+                    <th className="p-5">Status</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
               {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((txn, idx) => (
-                  <TransactionItem key={idx} {...txn} />
-                ))
+                selectedType === "Collection" ? (
+                  filteredTransactions.map((txn, idx) => (
+                    <tr key={idx} className="border-t text-sm bg-white">
+                      <td className="p-5 text-gray-700">{txn.name}</td>
+                      <td className="p-5 text-gray-800 font-medium">{txn.dueAmount}</td>
+                      <td className="p-5 text-gray-700">{txn.dueDate}</td>
+                      <td className="p-5 text-gray-700">{txn.contact}</td>
+                      <td className="p-5">
+                        <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                          txn.status === "Pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : txn.status === "Reminder Sent"
+                            ? "bg-blue-100 text-blue-700"
+                            : txn.status === "Overdue"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}>
+                          {txn.status}
+                        </span>
+                      </td>
+                      <td className="p-5 flex gap-3 text-[20px] text-gray-600">
+                        <FaPhoneAlt className="cursor-pointer hover:text-green-600  text-[#2563EB]" />
+                        <FaWhatsapp className="cursor-pointer hover:text-green-500 text-[#60D669]" />
+                        <FaEnvelope className="cursor-pointer hover:text-blue-500 text-[#2563EB]" />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  filteredTransactions.map((txn, idx) => (
+                    <TransactionItem key={idx} {...txn} />
+                  ))
+                )
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center p-5 text-gray-500">No transactions found.</td>
+                  <td colSpan="6" className="text-center p-5 text-gray-500">No transactions found.</td>
                 </tr>
               )}
             </tbody>
@@ -226,10 +285,9 @@ const D1DashboardHome = () => {
         </div>
       </div>
 
-      {/* Add Button */}
-      <div className='w-full justify-center items-center align-middle flex py-5 md:py-10 lg:py-20'>
-        <div className='bg-[#EB2525] px-6 py-4 rounded-full w-fit justify-center items-center align-middle text-white flex flex-row gap-5 shadow-[0_4px_4px_0px_#00000040]'>
-          <FaPlus color='white' /> Add Button
+      <div className='w-full justify-center flex py-10'>
+        <div className='bg-[#EB2525] px-6 py-4 rounded-full text-white flex gap-5 shadow-md'>
+          <FaPlus /> Add Button
         </div>
       </div>
     </div>
@@ -238,11 +296,3 @@ const D1DashboardHome = () => {
 
 export default D1DashboardHome;
 
-const graphData = [
-  { month: 'Jul 2024', sales: 18, collection: 16 },
-  { month: 'Aug 2024', sales: 19, collection: 17 },
-  { month: 'Sep 2024', sales: 18, collection: 18 },
-  { month: 'Oct 2024', sales: 19, collection: 19 },
-  { month: 'Nov 2024', sales: 18, collection: 18 },
-  { month: 'Dec 2024', sales: 18, collection: 17 }
-];

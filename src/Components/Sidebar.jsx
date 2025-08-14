@@ -17,7 +17,8 @@ const sections = [
   {
     title: "Business Profile",
     items: [
-      { label: "Basic Details", icon: <FaBuilding />, path: "/dashboard/basic-details" },
+      { label: "Information", icon: <FaBuilding />, path: "/dashboard/information" },
+      { label: "Bussiness-details", icon: <FaBuilding />, path: "/dashboard/bussinessList" },
     ],
   },
   {

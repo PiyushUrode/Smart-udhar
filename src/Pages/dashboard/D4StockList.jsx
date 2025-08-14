@@ -230,7 +230,7 @@ const D4StockList = () => {
             Download PDF
           </button>
         </div>
-        <div className="flex items-center gap-2 text-sm">
+        {/* <div className="flex items-center gap-2 text-sm">
           <label className="relative cursor-pointer">
             <input
               type="checkbox"
@@ -249,7 +249,7 @@ const D4StockList = () => {
           <label htmlFor="gst" className="text-black font-robotoR">
             GST Inclusive Pricing
           </label>
-        </div>
+        </div> */}
       </div>
 
       {/* Stock Update Modal */}

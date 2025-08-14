@@ -65,7 +65,7 @@ const D4ProductList = () => {
     if (activeTab === "product") {
       return (
         <table className="w-full bg-white rounded-lg overflow-hidden shadow-sm text-sm">
-          <thead className=" text-left text-gray-600 text-nowrap">
+          <thead className=" text-left text-[#6B7280] font-robotoM text-nowrap">
             <tr>
               <th className="p-3 font-medium">Image</th>
               <th className="p-3 font-medium">Name</th>
@@ -75,6 +75,7 @@ const D4ProductList = () => {
               <th className="p-3 font-medium">Stock</th>
               <th className="p-3 font-medium">Status</th>
               <th className="p-3 font-medium">Actions</th>
+              <th className="p-3 font-medium">New Stock </th>
             </tr>
           </thead>
           <tbody>
@@ -93,16 +94,16 @@ const D4ProductList = () => {
                     />
                   </td>
                   <td className="p-3">
-                    <div className="font-medium text-gray-800 ">
+                    <div className="font-medium text-[#111827] ">
                       {item.name}
                     </div>
                     <div className="text-xs text-gray-500">{item.category}</div>
                   </td>
-                  <td className="p-3 text-gray-700">{item.unit}</td>
-                  <td className="p-3 font-semibold text-gray-800">
+                  <td className="p-3 text-[#111827]">{item.unit}</td>
+                  <td className="p-3 font-semibold text-[#111827]">
                     ₹{item.salePrice.toLocaleString()}
                   </td>
-                  <td className="p-3 text-gray-700">
+                  <td className="p-3 text-[#111827]">
                     ₹{item.purchasePrice.toLocaleString()}
                   </td>
                   <td
@@ -145,6 +146,12 @@ const D4ProductList = () => {
                       </button>
                     </div>
                   </td>
+                                    <td className="p-3 align-middle text-center">
+                                      <div className="text-white px-3 py-2 bg-lightbluecol font-robotoR text-sm rounded-lg">
+
+                   Stock
+                                      </div>
+                  </td>
                 </tr>
               );
             })}
@@ -181,14 +188,14 @@ const D4ProductList = () => {
                   />
                 </td>
                 <td className="p-3">
-                  <div className="font-medium text-gray-800">{item.name}</div>
+                  <div className="font-medium text-[#111827]">{item.name}</div>
                   <div className="text-xs text-gray-500">{item.category}</div>
                 </td>
-                <td className="p-3 text-gray-700">{item.unit}</td>
-                <td className="p-3 font-semibold text-gray-800">
+                <td className="p-3 text-[#111827]">{item.unit}</td>
+                <td className="p-3 font-semibold text-[#111827]">
                   ₹{item.salePrice.toLocaleString()}
                 </td>
-                <td className="p-3 text-gray-700">
+                <td className="p-3 text-[#111827]">
                   ₹{item.purchasePrice.toLocaleString()}
                 </td>
                 <td
@@ -236,7 +243,7 @@ const D4ProductList = () => {
     <div className=" mx-auto mt-5  p-4 ">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 border-b px-6 py-3">
-        <h1 className="text-xl font-semibold text-gray-800">Items</h1>
+        <h1 className="text-xl font-semibold text-[#111827]">Items</h1>
         <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm flex items-center gap-2">
           <FaPlus />
           Add New Item
@@ -262,7 +269,7 @@ const D4ProductList = () => {
 
       {/* Filters */}
       <div className="flex flex-row gap-5 flex-wrap  border-b md:px-6 py-3  items-center mb-4">
-        <div className="w-full md:w-52 relative">
+        <div className="w-full md:w-60 relative">
           <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">
             <CiSearch size={18} />
           </span>
@@ -273,22 +280,11 @@ const D4ProductList = () => {
           />
         </div>
 
-        <div className="flex flex-row gap-3">
-          <input
-            type="text"
-            placeholder=""
-            className="w-[20%] p-2 border rounded bg-[#F6F8FA] text-sm"
-          />
-          {activeTab === "product" && (
-            <div className="bg-orange-100 text-orange-600 text-xs px-3 py-1 rounded-md flex flex-row w-fit items-center gap-2">
-              ⚠️ Low Stock
-            </div>
-          )}
-        </div>
+
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto  md:px-10 md:py-10 bg-[#00000000] ">
+      <div className="overflow-x-auto  p-3 border-2 shadow-customSoft rounded-lg bg-[#00000000] ">
         {renderTable()}
       </div>
 
@@ -304,52 +300,7 @@ const D4ProductList = () => {
             Download PDF
           </button>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <label
-            style={{
-              display: "inline-block",
-              position: "relative",
-              cursor: "pointer",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={isChecked}
-              onChange={toggleCheckbox}
-              style={{
-                appearance: "none",
-                WebkitAppearance: "none",
-                MozAppearance: "none",
-                position: "absolute",
-                width: 0,
-                height: 0,
-                overflow: "hidden",
-              }}
-            />
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "20px",
-                height: "20px",
-                border: "2px solid #ccc",
-                borderRadius: "6px",
-                backgroundColor: isChecked ? "#22c55e" : "#fff",
-                color: "white",
-                fontSize: "16px",
-                fontWeight: "bold",
-                transition: "background-color 0.2s ease",
-              }}
-            >
-              {isChecked ? "✔" : ""}
-            </span>
-          </label>
 
-          <label htmlFor="gst" className="text-black font-robotoR">
-            GST Inclusive Pricing
-          </label>
-        </div>
       </div>
     </div>
   );

@@ -56,6 +56,7 @@ export default function D7CreateInvoice() {
   ]);
 
   const [showStep4, setShowStep4] = useState(false);
+  const [showStep3, setShowStep3] = useState(false);
 
   const handleAddRow = () => {
     setRows([
@@ -91,18 +92,19 @@ export default function D7CreateInvoice() {
 
   const handlePaymentMode = (mode) => {
     setShowStep4(mode === 'debt');
+    setShowStep3(mode === 'cash');
   };
 
 
   return (
-    <div className="max-w-7xl mx-auto p-6 sm:p-6 mt-5 md:mt-10  bg-gray-50 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="max-w-7xl mx-auto p-6 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
         <h1 className="text-2xl font-robotoB text-[#1F2937] mb-4">Create New Invoice</h1>
 
         {/* Steps 1 to 6 (same as before) */}
         <div className="space-y-6">
           {/* Step 1: Select Customer */}
-          <div className="bg-white shadow-lg shadow-[#0000001A] rounded-md p-5">
+          <div className="bg-white shadow-customCard rounded-lg p-5">
             <h2 className="flex items-center gap-2 text-lg  font-robotoSb mb-4">
               <div className="bg-[#2563EB] p-2.5 rounded-full">
                 <FaSearch color="white" size={14} />
@@ -119,20 +121,20 @@ export default function D7CreateInvoice() {
                 <input
                   type="text"
                   placeholder="Search by name or mobile number"
-                  className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <IoIosSearch
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60"
                   size={24}
                 />
               </div>
-              <button className="bg-green-600 font-robotoR hover:bg-green-700 text-white px-5 py-3 rounded-md text-md whitespace-nowrap">
+              <button className="bg-green-600 font-robotoR hover:bg-green-700 text-white px-5 py-3 rounded-lg text-md whitespace-nowrap">
                 + Add New Customer
               </button>
             </div>
 
             {/* Customer Details */}
-            <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+            <div className="text-sm text-gray-700 bg-white p-3 rounded">
               <div className="flex flex-wrap gap-x-6 gap-y-2">
                 <p className="font-robotoR">
                   <strong className="text-black font-robotoM">Name:</strong>{" "}
@@ -163,10 +165,10 @@ export default function D7CreateInvoice() {
 
 
 {/* Step 2: Add Products/Services */}
- <div className="max-w-7xl mx-auto  mt-5 md:mt-10 bg-gray-50  gap-6">
+ <div className="max-w-7xl mx-auto  my-5 md:mt-10 bg-white  gap-6">
       <div className="lg:col-span-2 space-y-6">
         {/* Step 2: Add Products */}
-        <div className="bg-white rounded-md font-robotoB shadow-lg shadow-[#0000001A] p-4 sm:p-6 w-full max-w-6xl space-y-4">
+        <div className="bg-white rounded-lg font-robotoB shadow-customCard p-4 sm:p-6 w-full max-w-6xl space-y-4">
           <h2 className="flex items-center gap-3 text-base sm:text-lg font-robotoSb text-gray-800">
             <div className="bg-[#2563EB] p-2 sm:p-3 rounded-full flex items-center justify-center">
               <FaBox color="white" size={16} />
@@ -176,7 +178,7 @@ export default function D7CreateInvoice() {
 
           <div className="w-full overflow-x-auto">
             <div className="min-w-[700px] flex flex-col space-y-5">
-              <div className="grid grid-cols-7 gap-2 sm:gap-4 text-sm font-semibold text-gray-700 border-b pb-3">
+              <div className="grid grid-cols-7 gap-2 sm:gap-4 text-sm font-semibold text-gray-700 border-b py-3">
                 <div className="col-span-2 text-black">Product/Service</div>
                 <div className="text-black">Qty</div>
                 <div className="text-black">Unit</div>
@@ -185,11 +187,11 @@ export default function D7CreateInvoice() {
                 <div className="text-black">Total</div>
               </div>
               {rows.map((row) => (
-                <div key={row.id} className="grid grid-cols-7 gap-2 sm:gap-4 items-center text-sm">
+                <div key={row.id} className="grid grid-cols-7 gap-2 sm:gap-4 items-center py-3 text-sm">
                   <input className="col-span-2 border px-2 py-1 rounded bg-white" placeholder="Search products..." />
-                  <input type="number" defaultValue={row.qty} className="border px-2 py-1 rounded bg-white" />
+                  <input type="string" defaultValue={row.qty} className="border px-2 py-1 rounded bg-white" />
                   <input placeholder="Unit" className="border px-2 py-1 rounded bg-white" />
-                  <input type="number" placeholder="0.00" className="border px-2 py-1 rounded bg-white" />
+                  <input type="string" placeholder="0.00" className="border px-2 py-1 rounded bg-white" />
                   <input type="text" value="18%" readOnly className="border px-2 py-1 rounded bg-white" />
                   <div className="flex items-center gap-2">
                     ₹0.00
@@ -206,7 +208,7 @@ export default function D7CreateInvoice() {
 
 
   {/* Step 3: Payment Mode */}
-        <div className="bg-white rounded-md shadow-lg shadow-[#0000001A] p-4">
+        <div className="bg-white rounded-lg shadow-customCard p-4">
           <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
             <div className=" bg-[#2563EB] p-2.5 rounded-full">
               <FaRegCreditCard color="white" size={14} />
@@ -223,10 +225,39 @@ export default function D7CreateInvoice() {
           </div>
         </div>
 
+
+{/* step 3 */}
+ {showStep3 && (
+          <>
+
+
+            <div className="bg-white rounded-lg shadow-customCard p-4">
+              <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
+                <div className="bg-[#2563EB] p-2.5 rounded-full">
+                  <FaCalculator color="white" size={14} />
+                </div>
+                Step 4: Payment Method
+              </h2>
+
+              <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
+                <div>Payment Method</div>
+                <div>Transaction ID / UTR </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3 ">
+                <input className="border px-2 py-1 rounded bg-white" placeholder="Cash/UPI/Cheque/DD" />
+                <input className="border px-2 py-1 rounded bg-white" placeholder="Enter Transaction reference" />
+              </div>
+
+              <button className="text-bluecol font-robotoR text-md mt-2">+ Add Milestone</button>
+            </div>
+          </>
+        )}
+
         {/* Step 4: Promise Date and Payment Method */}
         {showStep4 && (
           <>
-            <div className="bg-white rounded-md shadow-lg shadow-[#0000001A] p-4 sm:p-6">
+            <div className="bg-white rounded-lg shadow-customCard p-4 sm:p-6">
               <h2 className="flex items-center gap-2 text-base sm:text-lg font-robotoSb mb-3">
                 <div className="bg-[#2563EB] p-2.5 rounded-full">
                   <FaCalculator color="white" size={14} />
@@ -244,15 +275,15 @@ export default function D7CreateInvoice() {
               {milestones.map((ms) => (
                 <div key={ms.id} className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded">
                   <input className="border px-2 py-1 rounded bg-white" placeholder="Milestone Name" defaultValue={ms.name} />
-                  <input className="border px-2 py-1 rounded bg-white" placeholder="0.00" type="number" />
+                  <input className="border px-2 py-1 rounded bg-white" placeholder="0.00" type="string" />
                   <input className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white" type="date" />
-                  <input className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Status" />
+                  <input className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Status" />
                 </div>
               ))}
               <button onClick={handleAddMilestone} className="text-bluecol font-robotoR text-sm sm:text-md mt-2">+ Add Milestone</button>
             </div>
 
-            <div className="bg-white rounded-md shadow-lg shadow-[#0000001A] p-4">
+            <div className="bg-white rounded-lg shadow-customCard p-4">
               <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
                 <div className="bg-[#2563EB] p-2.5 rounded-full">
                   <FaCalculator color="white" size={14} />
@@ -278,7 +309,7 @@ export default function D7CreateInvoice() {
     </div>
 
           {/* Step 5: Additional Charges */}
-          <div className="bg-white rounded-md shadow-lg shadow-[#0000001A] p-4">
+          <div className="bg-white rounded-lg shadow-customCard p-4">
             <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
               {/* <img src={add} alt="add" /> */}
               <div className="bg-[#2563EB] p-2.5 rounded-full">
@@ -329,7 +360,7 @@ export default function D7CreateInvoice() {
 
 box-shadow: 0px 2px 4px 0px #0000001A;
  */}
-          <div className="bg-white rounded-md shadow-lg  shadow-[#0000001A] p-4">
+          <div className="bg-white rounded-lg shadow-lg  shadow-[#0000001A] p-4 shadow-customCard">
             <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
               <div className="bg-[#2563EB] p-2.5 rounded-full">
                 <FaEdit color="white" size={14} />
@@ -352,11 +383,15 @@ box-shadow: 0px 2px 4px 0px #0000001A;
             <LuNewspaper size={24} />
             Generate Invoice
           </button>
+                    <button className="flex justify-center items-center gap-2 text-bluecol bg-white border-bluecol border-2 font-robotoM text-md px-4 py-2 rounded">
+            <LuNewspaper size={24} />
+            Generate Quotation
+          </button>
         </div>
       </div>
 
       {/* Sidebar */}
-      <div className="bg-white shadow-lg shadow-[#0000001A] rounded-md p-4">
+      <div className="bg-white shadow-customCard rounded-lg p-4">
         <h2 className="text-lg font-robotoSb mb-4">Invoice Summary</h2>
         <ul className="text-sm font-robotoR text-black space-y-3">
           <li className="flex justify-between">
@@ -417,7 +452,7 @@ box-shadow: 0px 2px 4px 0px #0000001A;
           {previousInvoices.map((inv, index) => (
             <div
               key={index}
-              className="flex justify-between items-center shadow-lg shadow-[#0000001A] border-2 rounded-md border-[#E5E7EB] text-sm p-2 mb-2"
+              className="flex justify-between items-center shadow-customCard border-2 rounded-lg border-[#E5E7EB] text-sm p-2 mb-2"
             >
               <div>
                 <p className="font-robotoSb text-[16px]">{inv.name}</p>

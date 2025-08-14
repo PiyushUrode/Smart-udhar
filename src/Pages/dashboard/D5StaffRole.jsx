@@ -1,4 +1,4 @@
-import React from "react";
+
 import {
   FaUserPlus,
   FaUsers,
@@ -14,6 +14,7 @@ import { FiSearch } from "react-icons/fi";
 import { FaCircle } from "react-icons/fa";
 import { FaClock } from "react-icons/fa";
 import { FaUserShield } from "react-icons/fa6";
+import { useState } from "react";
 
 // ----------------- DATA -----------------
 
@@ -132,6 +133,20 @@ const StatCard = ({ label, value, type }) => {
 // ----------------- MAIN COMPONENT -----------------
 
 const D5StaffRole = () => {
+
+const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+  const [selectedFilter, setSelectedFilter] = useState("Monthly");
+
+  const handleFilterChange = (option) => {
+    setSelectedFilter(option);
+    setOpenDropdownIndex(null); // close after selecting
+    console.log("Selected Filter:", option);
+  };
+
+  const toggleDropdown = (index) => {
+    setOpenDropdownIndex((prev) => (prev === index ? null : index));
+  
+  };
   return (
     <div className="px-4 py-12 md:px-10 max-w-screen-xl mx-auto space-y-6 bg-white">
 
@@ -148,11 +163,11 @@ const D5StaffRole = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <StatCard label="Total Staff" value="12" type="staff" />
         <StatCard label="Active Roles" value="4" type="roles" />
         <StatCard label="Online Now" value="8" type="online" />
-        <StatCard label="Pending Invites" value="3" type="invites" />
+
       </div>
 
       {/* Team Members & Role Overview */}
@@ -178,41 +193,82 @@ const D5StaffRole = () => {
             </div>
           </div>
 
-          <div className="space-y-3">
-            {members.map((member, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 border rounded-md"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div>
-                    <div className="text-sm font-medium text-[#1F2937]">
-                      {member.name}
-                    </div>
-                    <div className="text-xs text-gray-500">{member.email}</div>
-                  </div>
+ <div className=" mx-auto space-y-6 bg-white">
+      {/* Team Members */}
+      <div className="space-y-3">
+        {members.map((member, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between p-3 border rounded-md"
+          >
+            <div className="flex items-center gap-3">
+              <img
+                src={member.avatar}
+                alt={member.name}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <div>
+                <div className="text-sm font-medium text-[#1F2937]">
+                  {member.name}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${member.roleColor}`}
-                  >
-                    {member.role}
-                  </span>
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      member.online ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                  ></span>
-                  <FaEllipsisV className="text-gray-400 cursor-pointer" />
-                </div>
+                <div className="text-xs text-gray-500">{member.email}</div>
               </div>
-            ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span
+                className={`text-xs px-2 py-1 rounded-full font-medium ${member.roleColor}`}
+              >
+                {member.role}
+              </span>
+              <span
+                className={`w-2.5 h-2.5 rounded-full ${
+                  member.online ? "bg-green-500" : "bg-gray-400"
+                }`}
+              ></span>
+
+              {/* Dropdown Button */}
+              <div className="relative">
+                <button
+                  className="text-sm text-[#1E40AF] hover:underline flex items-center gap-1"
+                  onClick={() => toggleDropdown(index)}
+                >
+                  <FaEllipsisV size={16} />
+                </button>
+
+                {openDropdownIndex === index && (
+                  <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
+                    {[
+                      "Sales",
+                      "Expense",
+                      "Invoice",
+                      "Customer",
+                      "Reminder",
+                      "Report",
+                      "Dashboard",
+                      "All Access",
+                    ].map((option) => (
+                      <div
+                        key={option}
+                        onClick={() => handleFilterChange(option)}
+                        className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${
+                          selectedFilter === option
+                            ? "bg-gray-100 font-medium"
+                            : ""
+                        }`}
+                      >
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+        ))}
+      </div>
+    </div>
+
         </div>
 
         {/* Role Overview */}

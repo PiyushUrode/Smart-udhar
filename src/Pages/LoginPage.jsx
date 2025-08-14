@@ -118,8 +118,8 @@ const LoginPage = () => {
                     />
                   ))}
                 </div>
-                <button className="btn otp mt-5" onClick={handleVerifyOtp}>
-                  Verify & Continue
+                <button className="btn otp mt-5 font" onClick={handleVerifyOtp}>
+                  Confirm
                 </button>
               </>
             )}

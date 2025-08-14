@@ -21,35 +21,7 @@ const D8PaymentCollection = () => {
   return (
     <section className="w-full min-h-screen bg-[#f9f9ff] mt-5 px-4 md:px-10 py-6">
       {/* Top Summary Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white flex flex-row justify-between shadow-md  border-green-500 p-4 rounded-xl min-h-[100px]">
-          <div className="flex flex-col">
-            <p className="text-sm text-[#4B5563] font-robotoM leading-5 ">Today’s Collection</p>
-            <h2 className="text-xl font-bold text-green-600">₹45,250</h2>
-          </div>
-          <div className="px-3 py-3 rounded-xl h-fit bg-[#DCFCE7]">
-            <FaWallet className="text-[#16A34A]" />
-          </div>
-        </div>
-        <div className="bg-white flex flex-row justify-between shadow-md  border-red-500 p-4 rounded-xl min-h-[100px]">
-          <div className="flex flex-col">
-            <p className="text-sm text-[#4B5563] font-robotoM leading-5">Overdue by Days</p>
-            <h2 className="text-xl font-bold text-red-600">12 Days</h2>
-          </div>
-          <div className="px-3 py-3 rounded-xl h-fit bg-[#FEE2E2]">
-            <FaClock className="text-[#DC2626]" />
-          </div>
-        </div>
-        <div className="bg-white flex flex-row justify-between shadow-md  border-blue-500 p-4 rounded-xl min-h-[100px]">
-          <div className="flex flex-col ">
-            <p className="text-sm text-[#4B5563] font-robotoM leading-5">Total Collection</p>
-            <h2 className="text-xl font-bold text-blue-600">₹2,45,780</h2>
-          </div>
-          <div className="px-3 py-3 rounded-xl h-fit bg-[#DBEAFE]">
-            <RxHamburgerMenu className="text-[#2563EB] " />
-          </div>
-        </div>
-      </div>
+   
 
       {/* Search & Actions */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -62,9 +34,9 @@ const D8PaymentCollection = () => {
           <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
+          {/* <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
             <MdUpdate /> Update Milestone
-          </button>
+          </button> */}
           <button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow">
             <IoMdAddCircle /> Generate Receipt
           </button>
@@ -105,32 +77,32 @@ const D8PaymentCollection = () => {
             <ul className="space-y-2">
               <li className="bg-[#F0FDF4] border border-green-400 rounded p-5 flex justify-between">
                 <div className="flex flex-col">
-                  <span>Milestone 1</span>
-                  <span className="text-[#16A34A] font-medium">₹25000 - Due 2025-07-15</span>
+                  <span>Invoice 1</span>
+                  <span className="text-[#16A34A] font-medium">Invoice no: INV123</span>
                 </div>
                 <div className="px-3 py-3 rounded-xl h-fit bg-[#DCFCE7]">
-                  <span className=" font-medium  text-[#166534] "> Paid</span>
+                  <span className=" font-medium  text-[#166534] "> View Milestone</span>
                 </div>
               </li>
-              <li className="bg-yellow-100 border border-yellow-400 rounded p-5 flex justify-between items-center">
+              <li className="bg-[#FEFCE8] border border-yellow-400 rounded p-5 flex justify-between items-center">
                 <div className="flex flex-col">
-                  <span>Milestone 2</span>
-                  <span className="text-yellow-800 font-medium">₹25000 - Due 2025-07-15</span>
+                  <span>Invoice 2</span>
+                  <span className="text-yellow-800 font-medium">Invoice no: INV123</span>
                 </div>
                 <button
                   onClick={handleMarkAsPaid}
-                  className="ml-3 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded flex items-center gap-1"
+                  className="ml-3 px-3 py-1 text-sm bg-[#FFFAC9] text-[#b86608] hover:bg-[#FFFAC9] text-white rounded flex items-center gap-1"
                 >
-                  <FaCheck /> Mark as Paid
+                  <FaCheck /> View Milestone
                 </button>
               </li>
               <li className="bg-[#F9FAFB] border border-[#E5E7EB] rounded p-5 flex justify-between">
                 <div className="flex flex-col">
-                  <span>Milestone 1</span>
-                  <span className="text-[#4B5563] font-robotoM leading-5 font-medium">₹25000 - Due 2025-07-15</span>
+                  <span>Invoice 1</span>
+                  <span className="text-[#4B5563] font-robotoM leading-5 font-medium">Invoice no: INV123</span>
                 </div>
                 <div className="px-3 py-3 rounded-xl h-fit bg-[#F3F4F6] border-[#E5E7EB border-2]">
-                  <span className=" font-medium  text-[#1F2937] "> Paid</span>
+                  <span className=" font-medium  text-[#1F2937] "> View Milestone</span>
                 </div>
               </li>
             </ul>

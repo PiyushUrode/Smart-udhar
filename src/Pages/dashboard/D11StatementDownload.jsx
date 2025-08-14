@@ -93,7 +93,7 @@ const D11StatementDownload = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-10">
+    <div className=" py-5 sm:py-7  lg:py-14 max-w-6xl mx-auto space-y-10">
       {/* Header */}
       <div className="bg-[#2563EB] border py-10 border-blue-300 rounded-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-10">
         <div>

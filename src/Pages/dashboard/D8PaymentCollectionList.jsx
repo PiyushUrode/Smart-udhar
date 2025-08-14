@@ -1,14 +1,13 @@
 import {
   FaEdit,
-  FaClock,
-  FaWallet
+  FaSearch,
+  FaFilePdf
 } from "react-icons/fa";
+import { FaFileExcel } from "react-icons/fa6";
+import { RiBankCardFill } from "react-icons/ri";
+import { FaChartPie } from "react-icons/fa";
+import { FaRegChartBar } from "react-icons/fa6";
 import React, { useState } from "react";
-import { MdCollectionsBookmark } from "react-icons/md";
-import { FaFilePdf } from "react-icons/fa6";
-import { FaSearch,  } from "react-icons/fa";
-import { IoIosArrowDown } from "react-icons/io";
-import { ChevronDown } from 'lucide-react'; // make sure this is at the top
 
 const data = [
   {
@@ -53,148 +52,144 @@ const data = [
   },
 ];
 
-const statusColors = {
-  "Due Soon": "text-yellow-600",
-  Overdue: "text-red-600",
-  Upcoming: "text-blue-600",
-};
-
 const D8PaymentCollectionList = () => {
-const [showFilter, setShowFilter] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("");
-
-  const handleFilterSelect = (value) => {
-    setSelectedFilter(value);
-    setShowFilter(false);
-    // 👉 You can trigger your data filter logic here
-  };
-  
   return (
-    <div className="p-6  md:p-6  mt-5 bg-white min-h-screen">
-      <h1 className="text-xl md:text-2xl  font-robotoB mb-6">
+    <div className="p-6 md:p-6 mt-5 bg-white min-h-screen">
+      <h1 className="text-xl md:text-2xl font-robotoB mb-6">
         Payment Collection List
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="flex items-center justify-between p-4 bg-white shadow border border-[#E5E7EB] rounded-md">
-          <div>
-            <p className="text-[#4B5563] font-robotoM text-sm">
-              Today's Collection
-            </p>
-            <h2 className="text-[#16A34A] font-robotoB text-xl md:text-2xl">₹45,250</h2>
+      {/* Flex container for table and collection section */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        
+        {/* Left side - Table */}
+        <div className="flex-1">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center p-4 mb-4 gap-4">
+            <div className="relative w-full md:max-w-2xl flex-1">
+              <input
+                type="text"
+                placeholder="Search by User ID, Name, or Mobile"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+            </div>
           </div>
-          <div className="bg-[#DCFCE7] h-14 w-12 rounded-lg flex justify-center items-center">
-            <FaWallet size={14} color="#16A34A" className="w-[20px] h-[22px]" />
+
+          <div className="overflow-auto">
+            <table className="w-full min-w-[600px] text-left bg-white rounded-md shadow border-separate border-spacing-y-2">
+              <thead className="bg-gray-200 text-[#6B7280] text-xs font-robotoM">
+                <tr>
+                  <th className="p-3">Customer Name</th>
+                  <th className="p-3">Mobile Number</th>
+                  <th className="p-3">Pending Amount</th>
+                  <th className="p-3">Due Date</th>
+                  <th className="p-3">Next Milestone</th>
+                  <th className="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...data, ...data].map((entry, index) => (
+                  <tr
+                    key={index}
+                    className=" border-2 shadow-md rounded-xl font-robotoR text-[12px] sm:text-[14px] md:text-[16px] text-[#111827]"
+                  >
+                    <td className="p-3  whitespace-nowrap">{entry.customer}</td>
+                    <td className="p-3  whitespace-nowrap">{entry.mobile}</td>
+                    <td className="p-3  whitespace-nowrap">{entry.amount}</td>
+                    <td className="p-3  whitespace-nowrap">{entry.dueDate}</td>
+                    <td className="p-3  whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {entry.milestone} <FaEdit color="#EB2525" />
+                      </div>
+                    </td>
+                    <td className="p-3 font-medium whitespace-nowrap">
+                      {entry.status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-white shadow border border-[#E5E7EB] rounded-md">
-          <div>
-            <p className="text-[#4B5563] font-robotoM text-sm">
-              Overdues by Days
-            </p>
-            <h2 className="text-[#DC2626] font-robotoB text-xl md:text-2xl">12 Days</h2>
-          </div>
-          <div className="bg-[#FEE2E2] h-14 w-12 rounded-lg flex justify-center items-center">
-            <FaClock className="text-red-600 text-xl" />
-          </div>
-        </div>
+        {/* Right side - Collection Summary */}
+        <div className="w-full lg:w-80 flex-shrink-0">
+          <div className="bg-white border rounded-lg shadow p-4">
+            <div className="flex flex-row gap-5 items-center py-2  align-middle">  
+         < FaChartPie size={20} color="#22C55E" />
+            <h2 className="text-lg font-interSb text-[#1F2937] ">Collection</h2>
+            </div>
+            {/* Today's Collection */}
+            <div className=" border border-green-200 rounded-lg p-4 mb-4 flex flex-row  justify-between align-middle items-center">
+      <div>
+                <p className="text-gray-500 font-robotoM text-sm">Today's Collection</p>
+              <p className="text-[#16A34A] font-robotoSb text-2xl ">₹45,250</p>
 
-        <div className="flex items-center justify-between p-4 bg-white shadow border border-[#E5E7EB] rounded-md">
-          <div>
-            <p className="text-[#4B5563] font-robotoM text-sm">
-              Total Collection
-            </p>
-            <h2 className="text-[#2563EB] font-robotoB text-xl md:text-2xl">₹2,45,780</h2>
-          </div>
-          <div className="bg-[#DBEAFE] h-14 w-12 rounded-lg flex justify-center items-center">
-            <MdCollectionsBookmark color="#2563EB" className="w-[20px] h-[22px]" />
-          </div>
-        </div>
       </div>
+              <div className=" p-3 bg-[#DCFCE7] rounded-xl"> 
 
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center border p-4 mb-4 gap-4">
-         <div className="relative w-full md:w-auto flex-1">
-                 <input
-                   type="text"
-                   placeholder="Search by User ID, Name, or Mobile"
-                   className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                 />
-                 <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
-               </div>
+              <RiBankCardFill  size={20} color="#16A34A" />
+</div>
+            </div>
 
-        <div className="flex gap-2 items-center">
-          <button className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-base font-robotoR">
-            <FaFilePdf color="blue" /> Download PDF
-          </button>
+            {/* Total Collection */}
+            <div className=" border border-blue-200 rounded-lg p-4 mb-4 flex flex-row  justify-between align-middle items-center">
+<div>
+                <p className="text-gray-500  font-robotoM text-sm">Total Collection</p>
+              <p className="text-[#2563EB] font-robotoSb text-2xl ">₹2,45,780</p>  
+</div>
+<div className=" p-3 bg-[#DBEAFE] rounded-xl"> 
 
-<div className="relative inline-block text-left">
-      <button
-        onClick={() => setShowFilter(!showFilter)}
-        className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-base text-[#2563EB] font-robotoM"
-      >
-        Filters <IoIosArrowDown className="ml-2" />
-      </button>
+              <FaRegChartBar size={20} color="#2563EB" />
+</div>
+            </div>
 
-      {showFilter && (
-        <ul className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-md shadow-md z-50">
-          {["Overdue", "Due Soon", "Paid", "This Week"].map((filter) => (
-            <li
-              key={filter}
-              onClick={() => handleFilterSelect(filter)}
-              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-            >
-              {filter}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+            {/* Top Collections */}
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-600 mb-2">Top Collections</h3>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 font-interR text-[#374151]">
+                    <span className="w-3 h-3 rounded-full bg-[#3B82F6]"></span> This week
+                  </span>
+                  <span className="font-interM text-[#1F2937]">₹18,500</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 font-interR text-[#374151]">
+                    <span className="w-3 h-3 rounded-full  bg-[#22C55E]"></span> This month
+                  </span>
+                  <span className="font-interM text-[#1F2937]">₹12,300</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 font-interR text-[#374151]">
+                    <span className="w-3 h-3 rounded-full bg-[#EAB308]"></span> This year
+                  </span>
+                  <span className="font-interM text-[#1F2937]">₹10,000</span>
+                </li>
+              </ul>
+            </div>
 
+            {/* Download buttons */}
+            <div className="flex flex-col mt-5 border-t-2">      
+                     <div> 
+              <h1 className="text-sm font-interM text-[#374151] py-5 leading-tight tracking-tight"> Downloadable Reports</h1>
+            </div>
+            <div className="flex gap-3">
+              <button className="flex-1 flex items-center justify-center gap-2 bg-[#FEF2F2] text-[#DC2626] font-interM px-3 py-2 rounded-md shadow hover:bg-red-600">
+                <FaFilePdf color="#DC2626" /> PDF
+              </button>
+              <button className="flex-1 flex items-center justify-center gap-2 bg-[#F0FDF4] text-[#16A34A] font-interM px-3 py-2 rounded-md shadow hover:bg-green-600">
+                <FaFileExcel /> Excel
+              </button>
+            </div>
+            </div>
 
-
-
-
-
-
+          </div>
         </div>
-      </div>
 
-      <div className="overflow-auto">
-        <table className="w-full min-w-[600px] text-left bg-white rounded-md shadow border-separate border-spacing-y-2">
-          <thead className="bg-gray-200 text-[#6B7280] text-xs font-robotoM">
-            <tr>
-              <th className="p-3">Customer Name</th>
-              <th className="p-3">Mobile Number</th>
-              <th className="p-3">Pending Amount</th>
-              <th className="p-3">Due Date</th>
-              <th className="p-3">Next Milestone</th>
-              <th className="p-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...data, ...data].map((entry, index) => (
-              <tr
-                key={index}
-                className="border shadow-md rounded-xl font-robotoR text-[12px] sm:text-[14px] md:text-[16px] text-[#111827]"
-              >
-                <td className="p-3 whitespace-nowrap">{entry.customer}</td>
-                <td className="p-3 whitespace-nowrap">{entry.mobile}</td>
-                <td className="p-3 whitespace-nowrap">{entry.amount}</td>
-                <td className="p-3 whitespace-nowrap">{entry.dueDate}</td>
-                <td className="p-3 whitespace-nowrap"><div className="flex items-center gap-2">{entry.milestone} <FaEdit color="#EB2525" /></div> </td>
-                <td className={`p-3 font-medium whitespace-nowrap`}>
-                  {entry.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );
 };
 
-
-
-export default D8PaymentCollectionList
+export default D8PaymentCollectionList;

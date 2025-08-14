@@ -8,6 +8,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 
 import D1DashboardHome from './Pages/dashboard/D1DashboardHome';
 import D2BasicDetails from './Pages/dashboard/D2BasicDetails';
+import D2BussinessList from './Pages/dashboard/D2BussinessList';
 import D3Product from './Pages/dashboard/D3Product';
 import D4ProductList from './Pages/dashboard/D4ProductList';
 import D4StockList from "./Pages/dashboard/D4StockList"
@@ -45,7 +46,8 @@ function App() {
 
         <Route path="/dashboard/*" element={<DashboardLayout />}>
           <Route index element={<D1DashboardHome />} />
-          <Route path="basic-details" element={<D2BasicDetails />} />
+          <Route path="information" element={<D2BasicDetails />} />
+          <Route path="bussinessList" element={<D2BussinessList />} />
 
           <Route path="product" element={<D3Product />} />
           <Route path="product-list" element={<D4ProductList />} />

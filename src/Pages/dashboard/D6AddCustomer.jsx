@@ -123,7 +123,7 @@ const D6AddCustomer = () => {
       <div className="mt-8 flex flex-wrap justify-center items-center align-middle gap-4">
         <button className="bg-bluecol text-white px-4 py-2 rounded-md text-sm font-medium">Clear Fields</button>
         <button className="border border-gray-300 bg-white text-black px-4 py-2 rounded-md text-sm font-medium flex flex-row gap-3"> <FaUpload color="bluecol"/>Import CSV</button>
-        <button className="text-sm text-gray-700">Add Customer</button>
+        {/* <button className="text-sm text-gray-700">Add Customer</button> */}
       </div>
     </div>
   );

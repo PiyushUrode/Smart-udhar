@@ -141,9 +141,23 @@ const D5StaffDetails = () => {
                 className="p-2 border rounded-md focus:outline-none focus:ring w-full  bg-[#F6F8FA]"
               />
             </div>
-          </div>
 
-          {/* Upload */}
+
+                        <div>
+              <label
+                htmlFor="state"
+                className="block text-sm font-medium text-[#374151] mb-1"
+              >
+                Staff Role 
+              </label>
+              <input
+                id="state"
+                type="text"
+                placeholder="Staff Role "
+                className="p-2 border rounded-md focus:outline-none focus:ring w-full  bg-[#F6F8FA]"
+              />
+            </div>
+                      {/* Upload */}
           <div className="border border-dashed border-gray-400 p-6 mt-4 justify-center flex flex-col items-center text-center rounded-md">
               <FaCloudUploadAlt  size={30} color="#9CA3AF"  />
             <label htmlFor="upload" className="cursor-pointer">
@@ -154,6 +168,9 @@ const D5StaffDetails = () => {
             </label>
             <p className="mt-2 text-sm font-semibold">Upload Image Here</p>
           </div>
+          </div>
+
+
 
           {/* Submit */}
           <div className="text-right">

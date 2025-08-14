@@ -8,13 +8,17 @@ export default {
     extend: {
       colors: {
         bluecol: '#2563EB', // your custom blue
-
+        lightbluecol: '#3B82F6', // your custom blue
+        lightblack: '#374151', // your custom blue
+        
 
       },
 
 
       boxShadow: {
         customCard: '0px 10px 15px 0px #0000001A, 0px 4px 6px 0px #0000001A',
+        customSoft : '0px 2px 2px 2px #0000000D',
+     
       },
 
       fontFamily: {
@@ -41,5 +45,7 @@ export default {
       }
     }
   },
+
+  
   plugins: [],
 }
