@@ -165,26 +165,24 @@ const D1DashboardHome = () => {
         <StatCard title="Monthly Pending" value="₹2.8L" change="4.3%" isPositive={false} type="pending" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1  ">
         <div className="bg-white p-4 shadow-customSoft rounded-lg">
           <div className="flex justify-between mb-3">
             <h2 className="text-lg font-semibold text-gray-800">Sales & Collection Overview</h2>
             <span className="text-sm border rounded px-2 py-1">Last 6 Months</span>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={400}>
             <BarChart data={graphData}>
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
               <Legend />
               <Bar dataKey="sales" fill="#0f9afe" radius={[10, 10, 0, 0]} />
-              <Bar dataKey="collection" fill="#00e0a3" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="collection" fill="#00e0a3" radius={[14, 14, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-<div className='w-full justify-items-end'>
-  <img src={midsection} alt="" />
-</div>
+
 
       </div>
 
