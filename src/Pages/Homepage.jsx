@@ -1,48 +1,48 @@
 import { useState } from "react";
 import "../Styles/Homepage.css";
 import logo from "../assets/logo/logo_hr.png";
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import Testimonial from '../Components/Homepage/Testimonial';
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import Testimonial from "../Components/Homepage/Testimonial";
 import FAQSection from "../Components/Homepage/FAQSection";
 import Blogs from "../Components/Homepage/Blogs";
 
-import womanImage from '../assets/homepage/hero-img.png';
-import community from '../assets/homepage/community.png';
-import connectImg from '../assets/homepage/connect.png';
+import womanImage from "../assets/homepage/hero-img.png";
+import community from "../assets/homepage/community.png";
+import connectImg from "../assets/homepage/connect.png";
 
-import whyImage from '../assets/homepage/secure/whywebuild.jpg';
-import howImage from '../assets/homepage/secure/whywebuild.jpg';
-import whoImage from '../assets/homepage/secure/whywebuild.jpg';
-import hicon from '../assets/homepage/secure/icon-head.png';
-import icon1 from '../assets/homepage/secure/icon1.png';
-import icon2 from '../assets/homepage/secure/icon2.png';
-import icon3 from '../assets/homepage/secure/icon3.png';
+import whyImage from "../assets/homepage/secure/whywebuild.jpg";
+import howImage from "../assets/homepage/secure/whywebuild.jpg";
+import whoImage from "../assets/homepage/secure/whywebuild.jpg";
+import hicon from "../assets/homepage/secure/icon-head.png";
+import icon1 from "../assets/homepage/secure/icon1.png";
+import icon2 from "../assets/homepage/secure/icon2.png";
+import icon3 from "../assets/homepage/secure/icon3.png";
 
-import one from '../assets/homepage/Why Smart Udhar/1.png';
-import digiicon from '../assets/homepage/Why Smart Udhar/icon.png';
-import two from '../assets/homepage/Why Smart Udhar/2.png';
-import three from '../assets/homepage/Why Smart Udhar/3.png';
-import four from '../assets/homepage/Why Smart Udhar/4.png';
+import one from "../assets/homepage/Why Smart Udhar/1.png";
+import digiicon from "../assets/homepage/Why Smart Udhar/icon.png";
+import two from "../assets/homepage/Why Smart Udhar/2.png";
+import three from "../assets/homepage/Why Smart Udhar/3.png";
+import four from "../assets/homepage/Why Smart Udhar/4.png";
 
 import apple from "../assets/homepage/appdowload/apple store.png";
 import playstore from "../assets/homepage/appdowload/google play.png";
 import app from "../assets/homepage/appdowload/SMART UDHAR.png";
 
-import flogo from '../assets/logo/logo_hr.png';
+import flogo from "../assets/logo/logo_hr.png";
 import { FaClock } from "react-icons/fa";
 import downloadBtn from "../assets/homepage/app-download.png";
-import facebook from '../assets/homepage/Footer/facebook.png';
-import twitter from '../assets/homepage/Footer/twitter.png';
-import instagram from '../assets/homepage/Footer/instagram.png';
-import telegram from '../assets/homepage/Footer/telegram.png';
-import call from '../assets/homepage/Footer/call.png';
-import whatsapp from '../assets/homepage/Footer/logos_whatsapp-icon.png';
-import mail from '../assets/homepage/Footer/logos_google-gmail.png';
+import facebook from "../assets/homepage/Footer/facebook.png";
+import twitter from "../assets/homepage/Footer/twitter.png";
+import instagram from "../assets/homepage/Footer/instagram.png";
+import telegram from "../assets/homepage/Footer/telegram.png";
+import call from "../assets/homepage/Footer/call.png";
+import whatsapp from "../assets/homepage/Footer/logos_whatsapp-icon.png";
+import mail from "../assets/homepage/Footer/logos_google-gmail.png";
 
 const Homepage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('why');
+  const [activeTab, setActiveTab] = useState("why");
   const { i18n } = useTranslation();
 
   const toggleMobileMenu = () => {
@@ -54,7 +54,7 @@ const Homepage = () => {
   };
 
   return (
-    <div className='homepage' style={{ backgroundColor: '#F6F6F6' }}>
+    <div className="homepage" style={{ backgroundColor: "#F6F6F6" }}>
       {/* header start */}
       <header>
         <div className="h-logo">
@@ -86,27 +86,32 @@ const Homepage = () => {
               <a href="/login">Login/Signup</a>
             </button>
             <button className="app-btn font-InriaR font-normal ">
-              <a target='blank' href="/">SmartUdhar App</a>
+              <a target="blank" href="/">
+                SmartUdhar App
+              </a>
             </button>
           </div>
         </nav>
 
-        <div className="translator-dropdown" style={{ display: 'flex', alignItems: 'center', flex: '0.050' }}>
+        <div
+          className="translator-dropdown"
+          style={{ display: "flex", alignItems: "center", flex: "0.050" }}
+        >
           <select onChange={(e) => changeLanguage(e.target.value)}>
             <option value="en">EN </option>
           </select>
         </div>
-
 
         <div className="nav-buttons desktop-visible">
           <button className="login-btn">
             <a href="/login">Login/Signup</a>
           </button>
           <button className="app-btn">
-            <a target='blank' href="/">SmartUdhar App</a>
+            <a target="blank" href="/">
+              SmartUdhar App
+            </a>
           </button>
         </div>
-
 
         <div className="mobile-menu-toggle" onClick={toggleMobileMenu}>
           <span className="hamburger-icon"></span>
@@ -118,21 +123,26 @@ const Homepage = () => {
 
       {/* hero section start */}
       <section className="hero-section">
-        <h2 className="hero-title">Generate The <span>Credit History</span> Of customers</h2>
-        <p className="he-des">Empowering India's small businesses to build trust, improve credit scores, and manage udhar smartly.</p>
-            <div className="mobile-container">
-              <div className="input-wrapper">
-                <select className="country-code">
-                  <option value="+91">+91</option>
-                </select>
-                <input
-                  type="tel"
-                  className="mobile-input"
-                  placeholder="Enter mobile number"
-                />
-              </div>
-              <button className="get-started-btn font-InriaR">Get Started</button>
-            </div>
+        <h2 className="hero-title">
+          Generate The <span>Credit History</span> Of customers
+        </h2>
+        <p className="he-des">
+          Empowering India's small businesses to build trust, improve credit
+          scores, and manage udhar smartly.
+        </p>
+        <div className="mobile-container">
+          <div className="input-wrapper">
+            <select className="country-code">
+              <option value="+91">+91</option>
+            </select>
+            <input
+              type="tel"
+              className="mobile-input"
+              placeholder="Enter mobile number"
+            />
+          </div>
+          <button className="get-started-btn font-InriaR">Get Started</button>
+        </div>
         <div className="hero-content">
           <div className="content-left">
             {/* <p className="he-des">Empowering India's small businesses to build trust, improve credit scores, and manage udhar smartly.</p>
@@ -154,11 +164,11 @@ const Homepage = () => {
             <img src={womanImage} alt="" />
           </div>
           <div className="content-right">
-
             <div className="trust-container">
               <h3 className="trust-title">Trust Badges:</h3>
               <p className="trust-subtitle">
-                Trusted by 1000+ merchants | Backed by leading fintech advisors | Safe, secure, & verified platform
+                Trusted by 1000+ merchants | Backed by leading fintech advisors
+                | Safe, secure, & verified platform
               </p>
 
               <div className="trust-section">
@@ -188,65 +198,90 @@ const Homepage = () => {
       {/* About section Start */}
 
       <section className="secure-section">
-      <div className="secure-h">
-        <h2 className="secure-title">
-          Secure
-          <img src={hicon} alt="" />
-          your <span className="highlight">Debts</span> Smartly
-        </h2>
-      </div>
+        <div className="secure-h">
+          <h2 className="secure-title">
+            Secure
+            <img src={hicon} alt="" />
+            your <span className="highlight">Debts</span> Smartly
+          </h2>
+        </div>
         <p className="secure-subtext">
-          Manage credit, track payments, send reminders, and grow your business effortlessly with SMARTUDHAR's intelligent accounting
-          tools designed for smarter, faster, and more reliable repayment management.
+          Manage credit, track payments, send reminders, and grow your business
+          effortlessly with SMARTUDHAR's intelligent accounting tools designed
+          for smarter, faster, and more reliable repayment management.
         </p>
 
         <div className="tabs">
           <button
-            className={`tab-btn ${activeTab === 'why' ? 'active' : ''}`}
-            onClick={() => setActiveTab('why')}
+            className={`tab-btn ${activeTab === "why" ? "active" : ""}`}
+            onClick={() => setActiveTab("why")}
           >
             Why We Built Smart Udhar?
           </button>
           <button
-            className={`tab-btn ${activeTab === 'how' ? 'active' : ''}`}
-            onClick={() => setActiveTab('how')}
+            className={`tab-btn ${activeTab === "how" ? "active" : ""}`}
+            onClick={() => setActiveTab("how")}
           >
             How Smart Udhar Works
           </button>
           <button
-            className={`tab-btn ${activeTab === 'who' ? 'active' : ''}`}
-            onClick={() => setActiveTab('who')}
+            className={`tab-btn ${activeTab === "who" ? "active" : ""}`}
+            onClick={() => setActiveTab("who")}
           >
             Who It's For
           </button>
         </div>
 
         <div className="tab-content">
-          {activeTab === 'why' && (
+          {activeTab === "why" && (
             <>
               <div className="content-box">
                 <h3>Why We Built Smart Udhar?</h3>
                 <p>
-                  Small businesses across India run on trust — but there’s no system to prove that trust. Thousands repay on time, but still struggle to get credit, discounts, or partnerships.
+                  Small businesses across India run on trust — but there’s no
+                  system to prove that trust. Thousands repay on time, but still
+                  struggle to get credit, discounts, or partnerships.
                 </p>
                 <h4>Smart Udhar is India's first platform to:</h4>
                 <ul>
-                  <li style={{ display: 'flex', alignItems: 'center' }}>
-                    <img src={icon1} alt="icon1" style={{ width: '24px', height: '24px', marginRight: '20px' }} />
+                  <li style={{ display: "flex", alignItems: "center" }}>
+                    <img
+                      src={icon1}
+                      alt="icon1"
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        marginRight: "20px",
+                      }}
+                    />
                     Track real udhar (credit) transactions.
                   </li>
 
-                  <li style={{ display: 'flex', alignItems: 'center' }}>
-                    <img src={icon2} alt="icon2" style={{ width: '24px', height: '24px', marginRight: '20px' }} />
+                  <li style={{ display: "flex", alignItems: "center" }}>
+                    <img
+                      src={icon2}
+                      alt="icon2"
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        marginRight: "20px",
+                      }}
+                    />
                     Build a verifiable digital credit score
                   </li>
 
-                  <li style={{ display: 'flex', alignItems: 'center' }}>
-                    <img src={icon3} alt="icon3" style={{ width: '24px', height: '24px', marginRight: '20px' }} />
+                  <li style={{ display: "flex", alignItems: "center" }}>
+                    <img
+                      src={icon3}
+                      alt="icon3"
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        marginRight: "20px",
+                      }}
+                    />
                     Help small businesses grow with credibility
                   </li>
-
-
                 </ul>
               </div>
               <div className="image-box">
@@ -255,12 +290,15 @@ const Homepage = () => {
             </>
           )}
 
-          {activeTab === 'how' && (
+          {activeTab === "how" && (
             <>
               <div className="content-box">
                 <h3>How Smart Udhar Works</h3>
                 <p>
-                  Smart Udhar enables you to record every credit (udhar) transaction digitally. Whether you're giving credit or receiving it, every entry gets timestamped and securely stored.
+                  Smart Udhar enables you to record every credit (udhar)
+                  transaction digitally. Whether you're giving credit or
+                  receiving it, every entry gets timestamped and securely
+                  stored.
                 </p>
                 <h4>What happens next?</h4>
                 <ul>
@@ -275,12 +313,14 @@ const Homepage = () => {
             </>
           )}
 
-          {activeTab === 'who' && (
+          {activeTab === "who" && (
             <>
               <div className="content-box">
                 <h3>Who It’s For</h3>
                 <p>
-                  Smart Udhar is built for India’s small and medium businesses that want to grow but face barriers due to lack of credit history or informal systems.
+                  Smart Udhar is built for India’s small and medium businesses
+                  that want to grow but face barriers due to lack of credit
+                  history or informal systems.
                 </p>
                 <h4>Perfect for:</h4>
                 <ul>
@@ -304,8 +344,8 @@ const Homepage = () => {
       <section className="why-smart-udhar">
         <div className="heading">
           <h2>
-            <span className="highlight">Why Smart Udhar?</span> Because India's Businessmen
-            deserves a credit history of their clients.
+            <span className="highlight">Why Smart Udhar?</span> Because India's
+            Businessmen deserves a credit history of their clients.
           </h2>
         </div>
 
@@ -314,7 +354,11 @@ const Homepage = () => {
             <div className="card-left">
               <h3>Timely Repayment Alerts</h3>
               <p className="link">Never miss a due date again</p>
-              <p>Get automatic reminders for money you need to pay or collect — straight to your phone. Smart alerts keep your business on track and your relationships strong.</p>
+              <p>
+                Get automatic reminders for money you need to pay or collect —
+                straight to your phone. Smart alerts keep your business on track
+                and your relationships strong.
+              </p>
             </div>
             <div className="card-right">
               <img src={one} alt="Timely Repayment" className="feature-img" />
@@ -327,10 +371,17 @@ const Homepage = () => {
                 <img src={digiicon} alt="" />
                 <h3>Digital Credit Score</h3>
               </div>
-              <p>SMARTUDHAR's Digital Credit Score builds business trust with suppliers, lenders, and platforms using payment behavior.</p>
+              <p>
+                SMARTUDHAR's Digital Credit Score builds business trust with
+                suppliers, lenders, and platforms using payment behavior.
+              </p>
             </div>
             <div className="two-card-right">
-              <img src={two} alt="Digital Credit Score" className="feature-img score-img" />
+              <img
+                src={two}
+                alt="Digital Credit Score"
+                className="feature-img score-img"
+              />
             </div>
           </div>
         </div>
@@ -339,22 +390,42 @@ const Homepage = () => {
           <div className="feature-card-three">
             <div className="three-card-left">
               <h3>Smart Ledger & Billing</h3>
-              <p className="link">Track every <span className="bold">rupee</span> with ease</p>
-              <p>Record all udhar transactions, send professional invoices, and manage your accounts — all in one simple, easy-to-use dashboard.</p>
+              <p className="link">
+                Track every <span className="bold">rupee</span> with ease
+              </p>
+              <p>
+                Record all udhar transactions, send professional invoices, and
+                manage your accounts — all in one simple, easy-to-use dashboard.
+              </p>
             </div>
             <div className="three-card-right">
-              <img src={three} alt="Smart Ledger" className="feature-img icon-img" />
+              <img
+                src={three}
+                alt="Smart Ledger"
+                className="feature-img icon-img"
+              />
             </div>
           </div>
 
           <div className="feature-card-four">
             <div className="four-card-left">
               <h3>Your business reputation, now verified</h3>
-              <p className="link">Your business reputation, <span className="bold">now verified</span></p>
-              <p>Smart Udhar automatically builds a credit score based on your real repayment activity — so you can earn trust and unlock better business opportunities.</p>
+              <p className="link">
+                Your business reputation,{" "}
+                <span className="bold">now verified</span>
+              </p>
+              <p>
+                Smart Udhar automatically builds a credit score based on your
+                real repayment activity — so you can earn trust and unlock
+                better business opportunities.
+              </p>
             </div>
             <div className="four-card-right">
-              <img src={four} alt="Business Reputation" className="feature-img" />
+              <img
+                src={four}
+                alt="Business Reputation"
+                className="feature-img"
+              />
             </div>
           </div>
         </div>
@@ -371,28 +442,28 @@ const Homepage = () => {
 
       {/* App section start */}
       <section className="smart-udhar-section">
-            <div className="smart-left">
-              <h2>
-                Smart Credit. Easy Collections. 
-                Get <span className="highlight">SmartUdhar</span> Free!
-              </h2>
-              <p>
-                Track payments, send reminders, manage udhar, invoices,
-                and credit scores - all-in-one app to grow your business faster.
-              </p>
-              <div className="store-buttons">
-                <a href="#" className="store-btn">
-                  <img src={apple} alt="Apple Store" />
-                </a>
-                <a href="#" className="store-btn">
-                  <img src={playstore} alt="Google Play" />
-                </a>
-              </div>
-            </div>
-            <div className="smart-right">
-              <img src={app} alt="App Screenshot 1" className="phone-img" />
-            </div>
-          </section>
+        <div className="smart-left">
+          <h2>
+            Smart Credit. Easy Collections. Get{" "}
+            <span className="highlight">SmartUdhar</span> Free!
+          </h2>
+          <p>
+            Track payments, send reminders, manage udhar, invoices, and credit
+            scores - all-in-one app to grow your business faster.
+          </p>
+          <div className="store-buttons">
+            <a href="#" className="store-btn">
+              <img src={apple} alt="Apple Store" />
+            </a>
+            <a href="#" className="store-btn">
+              <img src={playstore} alt="Google Play" />
+            </a>
+          </div>
+        </div>
+        <div className="smart-right">
+          <img src={app} alt="App Screenshot 1" className="phone-img" />
+        </div>
+      </section>
       {/* App section end */}
 
       <FAQSection />
@@ -402,11 +473,19 @@ const Homepage = () => {
         <div className="footer-content">
           {/* Left Section */}
           <div className="footer-section start">
-            <h3>Ready to <span className="highlight">Get Started?</span></h3>
+            <h3>
+              Ready to <span className="highlight">Get Started?</span>
+            </h3>
             <p>
-              Join thousands of businesses using SmartUdhar to manage credit, track payments, and grow smarter—start free today with just your mobile.
+              Join thousands of businesses using SmartUdhar to manage credit,
+              track payments, and grow smarter—start free today with just your
+              mobile.
             </p>
-            <img src={downloadBtn} alt="Download SmartUdhar" className="download-btn" />
+            <img
+              src={downloadBtn}
+              alt="Download SmartUdhar"
+              className="download-btn"
+            />
           </div>
 
           {/* Center Section */}
@@ -426,20 +505,34 @@ const Homepage = () => {
             <ul>
               <li>
                 {/* <FaPhoneAlt /> */}
-                <img src={call} style={{ width: '16px', height: 'auto' }} alt="" />
+                <img
+                  src={call}
+                  style={{ width: "16px", height: "auto" }}
+                  alt=""
+                />
                 +91-XXXXXXXXXX
               </li>
               <li>
                 {/* <MdEmail />  */}
-                <img src={mail} style={{ width: '16px', height: 'auto' }} alt="" />
+                <img
+                  src={mail}
+                  style={{ width: "16px", height: "auto" }}
+                  alt=""
+                />
                 support@smartudhar.in
               </li>
               <li>
-                <img src={whatsapp} style={{ width: '16px', height: 'auto' }} alt="" />
+                <img
+                  src={whatsapp}
+                  style={{ width: "16px", height: "auto" }}
+                  alt=""
+                />
                 {/* <FaWhatsapp />  */}
                 WhatsApp Support
               </li>
-              <li><FaClock size={16} /> Mon-Sat, 10am - 7pm</li>
+              <li>
+                <FaClock size={16} /> Mon-Sat, 10am - 7pm
+              </li>
             </ul>
           </div>
 
@@ -447,10 +540,10 @@ const Homepage = () => {
           <div className="footer-section brand">
             <img src={flogo} alt="SmartUdhar" className="brand-logo" />
             <div className="social-icons">
-              <img src={facebook} alt=""  className="w-14" />
-              <img src={twitter} alt=""   className="w-14"/>
+              <img src={facebook} alt="" className="w-14" />
+              <img src={twitter} alt="" className="w-14" />
               <img src={instagram} alt="" className="w-14" />
-              <img src={telegram} alt=""  className="w-14" />
+              <img src={telegram} alt="" className="w-14" />
             </div>
           </div>
         </div>

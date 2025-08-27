@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaPlus,
   FaTrash,
@@ -8,110 +8,196 @@ import {
   FaFilePdf,
 } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
-
+import axios from "axios";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import product1 from "../../assets/dummyimage/product1.png";
-import product2 from "../../assets/dummyimage/product2.png";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const D4ProductList = () => {
   const [activeTab, setActiveTab] = useState("product");
+  const [items, setItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(2);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
-  const products = [
-    {
-      id: 1,
-      name: "Pen Drive 32GB",
-      category: "Electronics",
-      image: product1,
-      unit: "pcs",
-      salePrice: 400,
-      purchasePrice: 320,
-      stock: 50,
-    },
-    {
-      id: 2,
-      name: "HP Printer",
-      category: "Hardware",
-      image: product2,
-      unit: "nos",
-      salePrice: 15000,
-      purchasePrice: 13500,
-      stock: 5,
-    },
-  ];
+  // Fetch items from API
+  const fetchItems = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const store_id = Cookies.get("store_id") || "68ad40eddafa4b0b7080b486"; // Match creation response
+      const store_profile_id = localStorage.getItem("store_profile_id") || "68ad4720dafa4b0b7080b4d1";
+      const token = Cookies.get("authToken");
 
-  const services = [
-    {
-      id: 1,
-      name: "HP Printer",
-      category: "Hardware",
-      image: product2,
-      unit: "nos",
-      salePrice: 15000,
-      purchasePrice: 13500,
-      stock: 5,
-    },
-    {
-      id: 2,
-      name: "Pen Drive 32GB",
-      category: "Electronics",
-      image: product1,
-      unit: "pcs",
-      salePrice: 400,
-      purchasePrice: 320,
-      stock: 50,
-    },
-  ];
+      console.log("🔍 Fetching with:", { store_id, store_profile_id, token });
+
+      if (!store_id || !store_profile_id || !token) {
+        throw new Error("Missing store information or auth. Please login again.");
+      }
+
+      const response = await axios.get(
+        `${API_BASE}/store-product/find-all/${store_id}/${store_profile_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          params: { page, limit },
+        }
+      );
+
+      console.log("✅ API Response:", JSON.stringify(response.data, null, 2));
+
+      // Handle various response formats
+      let fetchedItems = [];
+      if (Array.isArray(response.data)) {
+        fetchedItems = response.data;
+      } else if (response.data.products) {
+        fetchedItems = response.data.products;
+      } else if (response.data.data) {
+        fetchedItems = response.data.data;
+      } else if (response.data.items) {
+        fetchedItems = response.data.items;
+      } else {
+        console.warn("⚠️ Unexpected response format:", response.data);
+      }
+
+      setItems(fetchedItems);
+      console.log("🔍 Fetched Items:", fetchedItems);
+
+      setTotalPages(
+        response.data.totalPages ||
+          Math.ceil((response.data.totalItems || fetchedItems.length) / limit) ||
+          1
+      );
+    } catch (err) {
+      console.error("❌ Fetch Error:", err.response?.data || err.message);
+      const errorMsg = err.response?.data?.message || "Failed to fetch items.";
+      setError(errorMsg);
+      toast.error(errorMsg, { position: "top-right" });
+      if (err.message.includes("login") || err.response?.status === 401) {
+        navigate("/login");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch items on mount and when tab or page changes
+  useEffect(() => {
+    fetchItems();
+  }, [activeTab, page]);
+
+  // Filter items by search query
+  useEffect(() => {
+    const filtered = items.filter(
+      (item) =>
+        (item.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.category || "").toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredItems(filtered);
+    console.log("🔍 Filtered Items:", filtered);
+  }, [items, searchQuery]);
+
+  // Handle search input
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter items based on active tab
+  const displayedItems = filteredItems.filter(
+    (item) => item.product_type === (activeTab === "product" ? "inventory" : "service")
+  );
+
+  console.log("🔍 Displayed Items:", displayedItems);
+
+  // Pagination controls
+  const handlePreviousPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
 
   const renderTable = () => {
-    if (activeTab === "product") {
-      return (
-        <table className="w-full bg-white rounded-lg overflow-hidden shadow-sm text-sm">
-          <thead className=" text-left text-[#6B7280] font-robotoM text-nowrap">
+    const isProductTab = activeTab === "product";
+    return (
+      <table className="w-full bg-white rounded-lg overflow-hidden shadow-sm text-sm">
+        <thead className="text-left text-[#6B7280] font-robotoM text-nowrap">
+          <tr>
+            <th className="p-3 font-medium">Image</th>
+            <th className="p-3 font-medium">Name</th>
+            <th className="p-3 font-medium">Unit</th>
+            <th className="p-3 font-medium">Sale Price</th>
+            <th className="p-3 font-medium">Purchase Price</th>
+            <th className="p-3 font-medium">Stock</th>
+            <th className="p-3 font-medium">Status</th>
+            <th className="p-3 font-medium">Actions</th>
+            {isProductTab && <th className="p-3 font-medium">New Stock</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
             <tr>
-              <th className="p-3 font-medium">Image</th>
-              <th className="p-3 font-medium">Name</th>
-              <th className="p-3 font-medium">Unit</th>
-              <th className="p-3 font-medium">Sale Price</th>
-              <th className="p-3 font-medium">Purchase Price</th>
-              <th className="p-3 font-medium">Stock</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium">Actions</th>
-              <th className="p-3 font-medium">New Stock </th>
+              <td colSpan={isProductTab ? 9 : 8} className="p-3 text-center">
+                Loading...
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {products.map((item) => {
-              const isLow = item.stock < 10;
+          ) : error ? (
+            <tr>
+              <td colSpan={isProductTab ? 9 : 8} className="p-3 text-center text-red-500">
+                {error}
+              </td>
+            </tr>
+          ) : displayedItems.length === 0 ? (
+            <tr>
+              <td colSpan={isProductTab ? 9 : 8} className="p-3 text-center">
+                No {activeTab}s found.
+              </td>
+            </tr>
+          ) : (
+            displayedItems.map((item) => {
+              const isLow = (item.sold_quantity || 0) < 10;
               return (
                 <tr
-                  key={item.id}
+                  key={item._id || item.name}
                   className="border-t hover:bg-gray-50 text-nowrap"
                 >
                   <td className="p-3">
                     <img
-                      src={item.image}
-                      alt={item.name}
+                      src={item.product_image || item.service_image || product1}
+                      alt={item.name || "Product"}
                       className="w-12 h-12 object-cover rounded"
+                      onError={(e) => (e.target.src = product1)}
                     />
                   </td>
                   <td className="p-3">
-                    <div className="font-medium text-[#111827] ">
-                      {item.name}
-                    </div>
-                    <div className="text-xs text-gray-500">{item.category}</div>
+                    <div className="font-medium text-[#111827]">{item.name || "N/A"}</div>
+                    <div className="text-xs text-gray-500">{item.category || "N/A"}</div>
                   </td>
-                  <td className="p-3 text-[#111827]">{item.unit}</td>
+                  <td className="p-3 text-[#111827]">{item.unit || "N/A"}</td>
                   <td className="p-3 font-semibold text-[#111827]">
-                    ₹{item.salePrice.toLocaleString()}
+                    ₹{Number(item.sales_price || 0).toLocaleString()}
                   </td>
                   <td className="p-3 text-[#111827]">
-                    ₹{item.purchasePrice.toLocaleString()}
+                    ₹{Number(item.purchase_price || 0).toLocaleString()}
                   </td>
                   <td
                     className={`p-3 font-semibold ${
                       isLow ? "text-red-600" : "text-green-600"
                     }`}
                   >
-                    {item.stock}
+                    {item.sold_quantity || 0}
                   </td>
                   <td className="p-3">
                     <span
@@ -129,12 +215,14 @@ const D4ProductList = () => {
                       <button
                         title="Edit"
                         className="text-blue-600 text-xl hover:scale-110 transition-transform"
+                        onClick={() => navigate(`/products/edit/${item._id}`)}
                       >
                         <FaEdit />
-                      </button>
+                      </button> 
                       <button
                         title="Delete"
                         className="text-red-500 text-xl hover:scale-110 transition-transform"
+                        onClick={() => handleDelete(item._id)}
                       >
                         <FaTrash />
                       </button>
@@ -146,112 +234,61 @@ const D4ProductList = () => {
                       </button>
                     </div>
                   </td>
-                                    <td className="p-3 align-middle text-center">
-                                      <div className="text-white px-3 py-2 bg-lightbluecol font-robotoR text-sm rounded-lg">
-
-                   Stock
-                                      </div>
-                  </td>
+                  {isProductTab && (
+                    <td className="p-3 align-middle text-center">
+                      <div className="text-white px-3 py-2 bg-blue-500 font-robotoR text-sm rounded-lg">
+                        Stock
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
-            })}
-          </tbody>
-        </table>
-      );
-    }
-
-    // Service Table
-    return (
-      <table className="w-full bg-white rounded-lg overflow-hidden shadow-sm text-sm">
-        <thead className="bg-[#F6F8FA] text-left text-gray-600">
-          <tr>
-            <th className="p-3 font-medium">Image</th>
-            <th className="p-3 font-medium">Name</th>
-            <th className="p-3 font-medium">Unit</th>
-            <th className="p-3 font-medium">Sale Price</th>
-            <th className="p-3 font-medium">Purchase Price</th>
-            <th className="p-3 font-medium">Stock</th>
-            <th className="p-3 font-medium">Status</th>
-            <th className="p-3 font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {services.map((item) => {
-            const isLow = item.stock < 10;
-            return (
-              <tr key={item.id} className="border-t hover:bg-gray-50 ">
-                <td className="p-3">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-12 h-12 object-cover rounded"
-                  />
-                </td>
-                <td className="p-3">
-                  <div className="font-medium text-[#111827]">{item.name}</div>
-                  <div className="text-xs text-gray-500">{item.category}</div>
-                </td>
-                <td className="p-3 text-[#111827]">{item.unit}</td>
-                <td className="p-3 font-semibold text-[#111827]">
-                  ₹{item.salePrice.toLocaleString()}
-                </td>
-                <td className="p-3 text-[#111827]">
-                  ₹{item.purchasePrice.toLocaleString()}
-                </td>
-                <td
-                  className={`p-3 font-semibold ${
-                    isLow ? "text-red-600" : "text-green-600"
-                  }`}
-                >
-                  {item.stock}
-                </td>
-                <td className="p-3">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      isLow
-                        ? "bg-orange-100 text-orange-600"
-                        : "bg-green-100 text-green-600"
-                    }`}
-                  >
-                    {isLow ? "Low Stock" : "In Stock"}
-                  </span>
-                </td>
-                <td className="p-3 flex gap-3 text-blue-600">
-                  <button title="Edit">
-                    <FaEdit />
-                  </button>
-                  <button title="Delete" className="text-red-500">
-                    <FaTrash />
-                  </button>
-                  <button title="Stock">
-                    <FaBoxOpen />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+            })
+          )}
         </tbody>
       </table>
     );
   };
 
-  // Checkbox state for GST Inclusive Pricing
-  const [isChecked, setIsChecked] = useState(false);
-  const toggleCheckbox = () => setIsChecked((prev) => !prev);
+  // Delete product
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    try {
+      const token = Cookies.get("authToken");
+      await axios.post(
+        `${API_BASE}/store-product/delete/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      toast.success("Product deleted successfully", { position: "top-right" });
+      fetchItems(); // Refresh the list
+    } catch (err) {
+      console.error("❌ Delete Error:", err.response?.data || err.message);
+      toast.error(err.response?.data?.message || "Failed to delete product", {
+        position: "top-right",
+      });
+    }
+  };
 
   return (
-    <div className=" mx-auto mt-5  p-4 ">
-      {/* Header */}
+    <div className="mx-auto mt-5 p-4">
+      <ToastContainer />
       <div className="flex justify-between items-center mb-6 border-b px-6 py-3">
         <h1 className="text-xl font-semibold text-[#111827]">Items</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm flex items-center gap-2">
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm flex items-center gap-2"
+          onClick={() => navigate("/products/add")}
+        >
           <FaPlus />
           Add New Item
         </button>
       </div>
-
-      {/* Tabs */}
-      <div className="border-b mb-4 flex gap-6 text-sm border-b   md:px-6 py-3">
+      <div className="border-b mb-4 flex gap-6 text-sm border-b md:px-6 py-3">
         {["product", "service"].map((tab) => (
           <button
             key={tab}
@@ -266,9 +303,7 @@ const D4ProductList = () => {
           </button>
         ))}
       </div>
-
-      {/* Filters */}
-      <div className="flex flex-row gap-5 flex-wrap  border-b md:px-6 py-3  items-center mb-4">
+      <div className="flex flex-row gap-5 flex-wrap border-b md:px-6 py-3 items-center mb-4">
         <div className="w-full md:w-60 relative">
           <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">
             <CiSearch size={18} />
@@ -277,30 +312,57 @@ const D4ProductList = () => {
             type="text"
             placeholder="Search by name or category"
             className="w-full pl-8 pr-2 py-2 border rounded bg-[#F6F8FA] text-sm placeholder:text-gray-500"
+            value={searchQuery}
+            onChange={handleSearch}
           />
         </div>
-
-
       </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto  p-3 border-2 shadow-customSoft rounded-lg bg-[#00000000] ">
+      <div className="overflow-x-auto p-3 border-2 shadow-customSoft rounded-lg bg-[#00000000]">
         {renderTable()}
       </div>
-
-      {/* Footer Buttons */}
+      <div className="flex justify-between items-center mt-4">
+        <div>
+          Showing {(page - 1) * limit + 1} to{" "}
+          {Math.min(page * limit, displayedItems.length)} of {items.length} items
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handlePreviousPage}
+            disabled={page === 1}
+            className="px-4 py-2 border rounded text-sm disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            onClick={handleNextPage}
+            disabled={page === totalPages}
+            className="px-4 py-2 border rounded text-sm disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 gap-4 shadow-customCard py-5 px-5 border rounded-md">
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 border px-4 py-2 rounded text-sm text-blue-600 hover:bg-gray-100">
+          <button
+            className="flex items-center gap-2 border px-4 py-2 rounded text-sm text-blue-600 hover:bg-gray-100"
+            onClick={() =>
+              window.location.href = `${API_BASE}/store-product/export-excel/68ad40eddafa4b0b7080b486/68ad4720dafa4b0b7080b4d1`
+            }
+          >
             <FaDownload />
             Export Inventory
           </button>
-          <button className="flex items-center gap-2 border px-4 py-2 rounded text-sm text-blue-600 hover:bg-gray-100">
+          <button
+            className="flex items-center gap-2 border px-4 py-2 rounded text-sm text-blue-600 hover:bg-gray-100"
+            onClick={() =>
+              window.location.href = `${API_BASE}/store-product/export-pdf/68ad40eddafa4b0b7080b486/68ad4720dafa4b0b7080b4d1`
+            }
+          >
             <FaFilePdf />
             Download PDF
           </button>
         </div>
-
       </div>
     </div>
   );

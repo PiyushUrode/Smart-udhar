@@ -44,40 +44,44 @@ function App() {
         <Route path="/login" element={<LoginPage setAuth={setIsAuthenticated} />} />
         <Route path="/signup" element={<SignUpPage />} />
 
-        <Route path="/dashboard/*" element={<DashboardLayout />}>
-          <Route index element={<D1DashboardHome />} />
-          <Route path="information" element={<D2BasicDetails />} />
-          <Route path="bussinessList" element={<D2BussinessList />} />
+<Route path="/dashboard/*" element={<DashboardLayout />}>
+  <Route index element={<D1DashboardHome />} />
+  
+  {/* ✅ relative paths, no leading slash */}
+  <Route path="information" element={<D2BasicDetails />} />
+  <Route path="information/:id" element={<D2BasicDetails />} />
 
-          <Route path="product" element={<D3Product />} />
-          <Route path="product-list" element={<D4ProductList />} />
-          <Route path="stock-list" element={<D4StockList />} />
-          
-          <Route path="staff-role" element={<D5StaffRole />} />
-          <Route path="staff-details" element={<D5StaffDetails />} />
-          
-          <Route path="add-customer" element={<D6AddCustomer />} />
-          <Route path="customer-details" element={<D6CustomerDetails />} />
-          
-          <Route path="create-invoice" element={<D7CreateInvoice />} />
-          <Route path="payment-collection" element={<D8PaymentCollection />} />
-          <Route path="payment-collectionList" element={<D8PaymentCollectionList />} />
+  <Route path="bussinessList" element={<D2BussinessList />} />
+  <Route path="product" element={<D3Product />} />
+  <Route path="product-list" element={<D4ProductList />} />
+  <Route path="stock-list" element={<D4StockList />} />
+  
+  <Route path="staff-role" element={<D5StaffRole />} />
+  <Route path="staff-details" element={<D5StaffDetails />} />
+  
+  <Route path="add-customer" element={<D6AddCustomer />} />
+  <Route path="customer-details" element={<D6CustomerDetails />} />
+  
+  <Route path="create-invoice" element={<D7CreateInvoice />} />
+  <Route path="payment-collection" element={<D8PaymentCollection />} />
+  <Route path="payment-collectionList" element={<D8PaymentCollectionList />} />
 
-          <Route path="credit-score" element={<D9CreditScore />} />
-          <Route path="expenses" element={<D10Expenses />} />
-          <Route path="expenses-list" element={<D10ExpensesList />} />
-          <Route path="statement-download" element={<D11StatementDownload />} />
-          <Route path="setting" element={<D12Setting />} />
-          <Route path="notification" element={<D13Notification />} />
-          <Route path="gst-calculator" element={<D14GstCalculator />} />
-          <Route path="gstreceipt" element={<D14GstCalReceipt />} />
-          <Route path="reward" element={<D15Reward />} />
-          <Route path="commingsoon" element={<D16Commingsoon />} />
-          <Route path="updates" element={<D17Updates />} />
-          <Route path="supports" element={<D18Supports />} />
-          <Route path="amount-collection" element={<A1AmountCollection />} />
-          <Route path="average-credit-score" element={<A2AverageCreditScore />} />
-        </Route>
+  <Route path="credit-score" element={<D9CreditScore />} />
+  <Route path="expenses" element={<D10Expenses />} />
+  <Route path="expenses-list" element={<D10ExpensesList />} />
+  <Route path="statement-download" element={<D11StatementDownload />} />
+  <Route path="setting" element={<D12Setting />} />
+  <Route path="notification" element={<D13Notification />} />
+  <Route path="gst-calculator" element={<D14GstCalculator />} />
+  <Route path="gstreceipt" element={<D14GstCalReceipt />} />
+  <Route path="reward" element={<D15Reward />} />
+  <Route path="commingsoon" element={<D16Commingsoon />} />
+  <Route path="updates" element={<D17Updates />} />
+  <Route path="supports" element={<D18Supports />} />
+  <Route path="amount-collection" element={<A1AmountCollection />} />
+  <Route path="average-credit-score" element={<A2AverageCreditScore />} />
+</Route>
+
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

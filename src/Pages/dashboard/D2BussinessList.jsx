@@ -1,161 +1,160 @@
-import React, { useState } from "react";
-import { FaPlusCircle, FaTrash, FaEdit, FaDownload, FaFilePdf } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { FaPlusCircle, FaEdit, FaTrash } from "react-icons/fa";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
-const D2BussinessList = () => {
-  const [activeTab, setActiveTab] = useState("business");
-  const [editItem, setEditItem] = useState(null);
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  const businesses = [
-    {
-      id: 1,
-      name: "Tech Solutions Pvt Ltd",
-      gst: "27AAECT1234F1Z5",
-      cityState: "Mumbai, Maharashtra",
-      mobile: "+91 98765 43210",
-      email: "info@techsolutions.com",
-      lastActivity: "2025-08-05 14:32",
-    },
-    {
-      id: 2,
-      name: "Green Earth Organics",
-      gst: "29AACCG1234E1Z3",
-      cityState: "Bangalore, Karnataka",
-      mobile: "+91 99887 77665",
-      email: "support@greenearth.com",
-      lastActivity: "2025-08-04 09:15",
-    },
-    {
-      id: 3,
-      name: "Urban Fashion Hub",
-      gst: "07AACCU1234H1Z1",
-      cityState: "Delhi, Delhi NCR",
-      mobile: "+91 91234 56789",
-      email: "contact@urbanfashion.com",
-      lastActivity: "2025-08-03 18:50",
-    },
-  ];
+const D2BusinessList = () => {
+  const [businesses, setBusinesses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const renderTable = () => {
-    const data = activeTab === "business" ? businesses : [];
+  const store_id = Cookies.get("store_id");
+  const token = Cookies.get("authToken");
+  const navigate = useNavigate();
 
-    return (
-<table className="w-full bg-white rounded-lg overflow-hidden shadow text-sm border border-gray-200 ">
-  <thead className="bg-[#E8E8E8] text-left text-[#111827] font-robotoM text-base border-b border-gray-300">
-    <tr>
-      <th className="p-4">Business Name</th>
-      <th className="p-4">GST Number</th>
-      <th className="p-4">City / State</th>
-      <th className="p-4">Mobile Number</th>
-      <th className="p-4">Email</th>
-      <th className="p-4">Last Activity</th>
-      <th className="p-4">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {data.map((item) => (
-      <tr
-        key={item.id}
-        className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
-      >
-        <td className="p-4 font-robotoR text-[#111827]">{item.name}</td>
-        <td className="p-4  font-robotoR  text-[#111827]">{item.gst}</td>
-        <td className="p-4  font-robotoR text-[#111827]">{item.cityState}</td>
-        <td className="p-4  font-robotoR text-[#111827]">{item.mobile}</td>
-        <td className="p-4  font-robotoR text-[#111827]">{item.email}</td>
-        <td className="p-4  font-robotoR text-[#111827]">{item.lastActivity}</td>
-        <td className="p-4 flex gap-3 text-lg">
-          <button
-            title="Edit"
-            className="text-white px-5 py-1 font-robotoR rounded-md  bg-lightbluecol text-sm   hover:scale-110 transition-transform"
-          >
-            {/* <FaEdit /> */}
-            Edit
-          </button>
+  // ✅ Fetch all businesses
+  const fetchBusinesses = async () => {
+    try {
+      if (!store_id || !token) {
+        alert("⚠️ Store ID or Token missing. Please login again.");
+        return;
+      }
 
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+      const res = await axios.get(
+        `${API_BASE}/store-business-profile/find-all/${store_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    );
+      console.log("📌 API Response:", res.data);
+      let data = res.data;
+
+      if (Array.isArray(data)) {
+        setBusinesses(data);
+      } else if (Array.isArray(data.businesses)) {
+        setBusinesses(data.businesses);
+      } else if (Array.isArray(data.data)) {
+        setBusinesses(data.data);
+      } else {
+        setBusinesses([]);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching businesses:", err);
+      setBusinesses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBusinesses();
+  }, [store_id, token]);
+
+  // ✅ Delete handler
+  const handleDelete = async (id) => {
+    if (!window.confirm("⚠️ Are you sure you want to delete this business?")) return;
+
+    try {
+      await axios.delete(`${API_BASE}/store-business-profile/delete/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("✅ Deleted successfully");
+      fetchBusinesses(); // refresh list
+    } catch (error) {
+      console.error("❌ Delete error:", error.response?.data || error.message);
+      alert("❌ Failed to delete business");
+    }
+  };
+
+  // ✅ Edit handler
+  const handleEdit = (business) => {
+    navigate(`/dashboard/information/${business._id}`); // update route
+  };
+
+  // ✅ Add New Business
+  const handleAdd = () => {
+    navigate("/dashboard/information/new"); // create route
   };
 
   return (
-    <>  
-    <div className="mx-auto py-2 px-2 md:mt-5">
-      {/* Header */}
-      <div className="flex justify-between items-center bg-white px-5 py-5">
-        <h1 className="text-xl font-semibold text-[#1F2937] font-robotoB">
-          Business List
-        </h1>
-        <div className="text-sm lg:text-base font-semibold text-white p-2 bg-lightbluecol flex gap-3 items-center cursor-pointer rounded">
-      <FaPlusCircle />    Add Business 
-        </div>
-      </div>
-        </div>
-
-      {/* Table */}
-
-          <div className="mx-auto py-2 px-2 md:mt-5"> 
-      <div className="overflow-x-auto p-2 lg:p-5">{renderTable()}</div>
-      </div>
-
-      {/* Bottom Action Bar */}
-                <div className="mx-auto py-2 px-2 md:mt-5"> 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 gap-4 shadow-customCard py-5 px-5 border rounded-md">
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 border px-4 py-2 rounded text-sm text-blue-600 hover:bg-gray-100">
-            <FaDownload />
-            Export List
-          </button>
-          <button className="flex items-center gap-2 border px-4 py-2 rounded text-sm text-blue-600 hover:bg-gray-100">
-            <FaFilePdf />
-            Download PDF
-          </button>
-        </div>
-      </div>
-        </div>
-
-
-                <div className="mx-auto py-2 px-2 md:mt-5"> 
-      {/* Edit Modal */}
-      {editItem && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 shadow-lg w-[90%] max-w-md">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              Edit "{editItem.name}"
-            </h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1 text-gray-700">
-                Business Name
-              </label>
-              <input
-                type="text"
-                defaultValue={editItem.name}
-                className="w-full border rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setEditItem(null)}
-                className="px-4 py-2 rounded border text-gray-600 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setEditItem(null)}
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
+    <>
+      <div className="mx-auto py-2 px-2 md:mt-5">
+        <div className="flex justify-between items-center bg-white px-5 py-5">
+          <h1 className="text-xl font-semibold text-[#1F2937] font-robotoB">
+            Business List
+          </h1>
+          <div
+            className="text-sm lg:text-base font-semibold text-white p-2 bg-lightbluecol flex gap-3 items-center cursor-pointer rounded"
+            onClick={handleAdd}
+          >
+            <FaPlusCircle /> Add Business
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Table */}
+      <div className="mx-auto py-2 px-2 md:mt-5">
+        <div className="overflow-x-auto p-2 lg:p-5">
+          {loading ? (
+            <p>Loading businesses...</p>
+          ) : businesses.length === 0 ? (
+            <p className="text-gray-600">No businesses found</p>
+          ) : (
+            <table className="w-full bg-white rounded-lg overflow-hidden shadow text-sm border border-gray-200">
+              <thead className="bg-[#E8E8E8] text-left text-[#111827] font-robotoM text-base border-b border-gray-300">
+                <tr>
+                  <th className="p-4">Business Name</th>
+                  <th className="p-4">GST Number</th>
+                  <th className="p-4">Address</th>
+                  <th className="p-4">Mobile</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4">Industry</th>
+                  <th className="p-4">Created At</th>
+                  <th className="p-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {businesses.map((item) => (
+                  <tr
+                    key={item._id}
+                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="p-4">{item.businessName}</td>
+                    <td className="p-4">{item.gstNumber}</td>
+                    <td className="p-4">{item.address}</td>
+                    <td className="p-4">{item.mobile}</td>
+                    <td className="p-4">{item.email}</td>
+                    <td className="p-4">{item.industry}</td>
+                    <td className="p-4">
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleDateString()
+                        : "-"}
+                    </td>
+                    <td className="p-4 flex gap-3">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                      >
+                        <FaEdit /> Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(item._id)}
+                        className="flex items-center gap-1 text-red-600 hover:text-red-800"
+                      >
+                        <FaTrash /> Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-        </>
+      </div>
+    </>
   );
 };
 
-export default D2BussinessList;
+export default D2BusinessList;
