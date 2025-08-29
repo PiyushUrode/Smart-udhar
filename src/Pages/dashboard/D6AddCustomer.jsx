@@ -1,135 +1,247 @@
-import React from "react";
 import { FaUpload } from "react-icons/fa6";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { CustomerService } from "../../api/customerService";
 
 const D6AddCustomer = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // If coming from Edit
+  const editingCustomer = location.state?.customer || null;
+
+  const [formData, setFormData] = useState({
+    _id: "", 
+    name: "",
+    mobile: "",
+    email: "",
+    address: "",
+    pin: "",
+    city: "",
+    state: "",
+    aadharCardNumber: "",
+    panNumber: "",
+    companyName: "",
+    gstNumber: "",
+  });
+
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  // Prefill when editing
+  useEffect(() => {
+    if (editingCustomer) {
+      setFormData({
+        _id: editingCustomer.id || editingCustomer._id || "",
+        name: editingCustomer.name ||  "",
+        mobile: editingCustomer.mobile || "",
+        email: editingCustomer.email || "",
+        address: editingCustomer.address || "",
+        pin: editingCustomer.pin || "",
+        city: editingCustomer.city || "",
+        state: editingCustomer.state || "",
+        aadharCardNumber: editingCustomer.aadharCardNumber || "",
+        panNumber: editingCustomer.panNumber || "",
+        companyName: editingCustomer.companyName || "",
+        gstNumber: editingCustomer.gstNumber || "",
+      });
+    }
+  }, [editingCustomer]);
+
+  // handle change
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
+  };
+
+  // frontend validation
+  const validate = () => {
+    let newErrors = {};
+    if (!formData.name) newErrors.name = "Name is required";
+    if (!formData.mobile) newErrors.mobile = "Mobile number is required";
+    if (!formData.email) newErrors.email = "Email is required";
+    if (!formData.address) newErrors.address = "Address is required";
+    if (!formData.city) newErrors.city = "City is required";
+    if (!formData.state) newErrors.state = "State is required";
+    return newErrors;
+  };
+
+  // submit handler (create or update)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      alert("⚠️ Please fill all required fields!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = { ...formData };
+
+      let res;
+      if (formData._id) {
+        // 🔹 UPDATE FLOW
+        res = await CustomerService.updateCustomer(payload);
+        alert("✅ Customer updated successfully!");
+      } else {
+        // 🔹 CREATE FLOW
+        res = await CustomerService.createCustomer(payload);
+        alert(
+          `✅ Customer added successfully\nUnique ID: ${
+            res?.data?.customerId || res?.customerId || ""
+          }`
+        );
+
+        // reset form only after creating new customer
+        setFormData({
+          _id: "",
+          name: "",
+          mobile: "",
+          email: "",
+          address: "",
+          pin: "",
+          city: "",
+          state: "",
+          aadharCardNumber: "",
+          panNumber: "",
+          companyName: "",
+          gstNumber: "",
+        });
+      }
+
+      console.log("Response:", res);
+
+      // after save → go back to customer list
+      navigate("/dashboard/customers");
+    } catch (error) {
+      console.error("❌ Error saving customer:", error);
+      alert(
+        error?.message ||
+          "Something went wrong while saving the customer. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClear = () => {
+    if (formData._id) {
+      // if editing, just reset to original values
+      setFormData({
+        _id: editingCustomer.id || editingCustomer._id || "",
+        name: editingCustomer.name || "",
+        mobile: editingCustomer.mobile || "",
+        email: editingCustomer.email || "",
+        address: editingCustomer.address || "",
+        pin: editingCustomer.pin || "",
+        city: editingCustomer.city || "",
+        state: editingCustomer.state || "",
+        aadharCardNumber: editingCustomer.aadharCardNumber || "",
+        panNumber: editingCustomer.panNumber || "",
+        companyName: editingCustomer.companyName || "",
+        gstNumber: editingCustomer.gstNumber || "",
+      });
+    } else {
+      // if creating, clear everything
+      setFormData({
+        _id: "",
+        name: "",
+        mobile: "",
+        email: "",
+        address: "",
+        pin: "",
+        city: "",
+        state: "",
+        aadharCardNumber: "",
+        panNumber: "",
+        companyName: "",
+        gstNumber: "",
+      });
+    }
+    setErrors({});
+  };
+
   return (
     <div className="max-w-5xl mx-auto mt-5 md:mt-10 pb-10 bg-white rounded-lg shadow-xl">
-      <div className="flex justify-between bg-bluecol rounded-t-xl px-4  md:px-10 py-4 items-center mb-8">
-        <h1 className=" text-lg md:text-2xl font-bold text-white">Customer Details </h1>
-        <button className="bg-[#F6F8FA] text-[#636878] px-5 py-2 rounded-md text-sm font-medium">Add Customer</button>
+      {/* HEADER */}
+      <div className="flex justify-between bg-bluecol rounded-t-xl px-4 md:px-10 py-4 items-center mb-8">
+        <h1 className="text-lg md:text-2xl font-bold text-white">
+          {formData._id ? "Edit Customer" : "Add Customer"}
+        </h1>
       </div>
 
-      <form className="grid   grid-cols-1 md:grid-cols-2 gap-6 px-10 max-w-5xl">
-        <div>
-          <label className="block text-sm text-gray-600">Unique ID</label>
-          <input
-            type="text"
-            placeholder="Auto Generated"
-            disabled
-            className="w-full border rounded-md px-4 py-2 mt-1 bg-gray-100 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Name</label>
-          <input
-            type="text"
-            placeholder="Enter Customer Name"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Mobile</label>
-          <input
-            type="text"
-            placeholder="Enter Mobile Number"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Email</label>
-          <input
-            type="email"
-            placeholder="Enter Email Address"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Address</label>
-          <input
-            type="text"
-            placeholder="Enter Address"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">PIN</label>
-          <input
-            type="text"
-            placeholder="Enter PIN Code"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">City</label>
-          <input
-            type="text"
-            placeholder="Enter City"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">State</label>
-          <input
-            type="text"
-            placeholder="Enter State"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Aadhar Card Number</label>
-          <input
-            type="text"
-            placeholder="Enter Aadhar Card Number"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">PAN Number</label>
-          <input
-            type="text"
-            placeholder="Enter PAN Number"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">Company Name</label>
-          <input
-            type="text"
-            placeholder="Enter Company Name"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">GST Number</label>
-          <input
-            type="text"
-            placeholder="Enter GST Number"
-            className="w-full border rounded-md px-4 py-2 mt-1 text-sm bg-gray-100"
-          />
-        </div>
+      {/* FORM */}
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 px-10 max-w-5xl"
+      >
+        {[
+          { key: "name", label: "Name *" },
+          { key: "mobile", label: "Mobile *" },
+          { key: "email", label: "Email *", type: "email" },
+          { key: "address", label: "Address *" },
+          { key: "pin", label: "PIN" },
+          { key: "city", label: "City *" },
+          { key: "state", label: "State *" },
+          { key: "aadharCardNumber", label: "Aadhar Card Number" },
+          { key: "panNumber", label: "PAN Number" },
+          { key: "companyName", label: "Company Name" },
+          { key: "gstNumber", label: "GST Number" },
+        ].map((field) => (
+          <div key={field.key}>
+            <label className="block text-sm text-gray-600">{field.label}</label>
+            <input
+              type={field.type || "text"}
+              name={field.key}
+              value={formData[field.key]}
+              onChange={handleChange}
+              placeholder={`Enter ${field.label}`}
+              className={`w-full border rounded-md px-4 py-2 mt-1 text-sm ${
+                errors[field.key] ? "border-red-500" : "bg-gray-100"
+              }`}
+            />
+            {errors[field.key] && (
+              <p className="text-red-500 text-xs mt-1">{errors[field.key]}</p>
+            )}
+          </div>
+        ))}
       </form>
 
-      <div className="mt-8 flex flex-wrap justify-center items-center align-middle gap-4">
-        <button className="bg-bluecol text-white px-4 py-2 rounded-md text-sm font-medium">Clear Fields</button>
-        <button className="border border-gray-300 bg-white text-black px-4 py-2 rounded-md text-sm font-medium flex flex-row gap-3"> <FaUpload color="bluecol"/>Import CSV</button>
-        {/* <button className="text-sm text-gray-700">Add Customer</button> */}
+      {/* ACTION BUTTONS */}
+      <div className="mt-8 flex flex-wrap justify-center items-center gap-4">
+        <button
+          onClick={handleClear}
+          disabled={loading}
+          className="bg-bluecol text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-60"
+        >
+          {formData._id ? "Reset Fields" : "Clear Fields"}
+        </button>
+
+        <button
+          type="submit"
+          onClick={handleSubmit}
+          disabled={loading}
+          className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-60"
+        >
+          {loading
+            ? "Saving..."
+            : formData._id
+            ? "Update Customer"
+            : "Submit"}
+        </button>
+
+        <button
+          type="button"
+          className="border border-gray-300 bg-white text-black px-4 py-2 rounded-md text-sm font-medium flex flex-row gap-3"
+        >
+          <FaUpload color="bluecol" />
+          Import CSV
+        </button>
       </div>
     </div>
   );
 };
 
-
-
-
-export default D6AddCustomer
+export default D6AddCustomer;

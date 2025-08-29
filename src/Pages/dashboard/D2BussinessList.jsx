@@ -74,7 +74,7 @@ const D2BusinessList = () => {
 
   // ✅ Add New Business
   const handleAdd = () => {
-    navigate("/dashboard/information/new"); // create route
+    navigate("/dashboard/information"); // create route
   };
 
   return (

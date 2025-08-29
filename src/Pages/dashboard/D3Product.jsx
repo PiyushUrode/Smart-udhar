@@ -143,7 +143,7 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${errors.category ? 'border-red-500' : 'border-gray-300'}`}
         value={formData.category || ""}
         onChange={handleChange}
-      >
+      > 
         <option value="">Select Category</option>
         <option value="Electronics">Electronics</option>
         <option value="Pendrive">Pendrive</option>

@@ -1,0 +1,27 @@
+hamare pass backend and frontend hai ab logic materail strong bnana hai or api integration karna hai so first we start we signup and login so we made already so you check and help me 
+remember first few point we follow our bussiness
+1:- dont change the UI and css and form filed 
+2:- company standard follow for api to manage easy and clean code
+3:- in console we check every point so know easy and well 
+4:- commnet every point to understand and learn so you help me to learn for lifetime 
+
+Share you code strcutue and folder 
+
+.env :- FRONTEND_URL=http://localhost:5173
+VITE_API_URL=http://localhost:5000
+
+NODE_ENV=development
+folder :-
+api - api.js , authservice.js for login signuo , axiosclient.js , customer service.js , productservice.js profileservice.js and staffdetails.js
+assests
+common - button.jsx where write a code for button so we get failed , detail completed , success , processing show depend backend show result
+config - constand.js
+context and hook but not idea what i write for this project
+pages :- dashboard , signup and login pages 
+app.jsx
+
+so where we start and which code i send you so you first review and start working and helping me
+first go with important first we need storeid- and storeprofile id and we make 3 storeprofile id so we stored data in each id and check and main login when we changed or switch to new or second id so data changes 
+jese ek zymbussines - ek groceiersbussiness - sports bussiness to sabke product alag rahege customer alag rahege to jese me zym bussiness se grociersbussiness me jaoga tab mujhe mere grociersbussiness ke product user details sab dekehge na ki zym ke
+and jese hi login s enter hoge to bussines details me jayge so jinka bussiness hoga to apne bussiness select karke dashboard k page me jyda or yadi new user na bussiness create nh kiya hai to vo pehle bussiness create karega tb hi baki dashbaord access kar payega
+

@@ -24,21 +24,50 @@ export const StaffService = {
     return data;
   },
 
-  async listStaff() {
+async getAllStaff() {
+  const token = AuthService.getToken();
+  const storeId = AuthService.getStoreId();
+  const storeProfileId = localStorage.getItem("store_profile_id");
+
+  if (!token || !storeId || !storeProfileId) {
+    throw new Error("Missing authentication or store details");
+  }
+
+  const { data } = await axiosClient.get(
+    `/store-staff/find-all/${storeId}/${storeProfileId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  // ✅ return pure backend response
+  return data; 
+},
+
+
+  async findStaffById(id) {
+    const token = AuthService.getToken();
+    const { data } = await axiosClient.get(`/store-staff/findBy-id/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return data;
+  },
+
+  async findStaffByName(name) {
     const token = AuthService.getToken();
     const storeId = AuthService.getStoreId();
     const storeProfileId = localStorage.getItem("store_profile_id");
 
     const { data } = await axiosClient.get(
-      `/store-staff/find-all/${storeId}/${storeProfileId}`,
+      `/store-staff/findBy-name/${storeId}/${storeProfileId}?name=${encodeURIComponent(
+        name
+      )}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return data;
   },
 
-  async getStaff(id) {
+  async findStaffDetails(id) {
     const token = AuthService.getToken();
-    const { data } = await axiosClient.get(`/store-staff/findBy-id/${id}`, {
+    const { data } = await axiosClient.get(`/store-staff/details/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return data;

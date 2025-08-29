@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { AuthService } from "../api/authService";
+import { AuthService } from "../api/authservice";
 import logo from "../assets/logo/logo_hr.png";
 import lockImage from "../assets/login/login side img.webp";
 import icon from "../assets/login/icon.webp";
