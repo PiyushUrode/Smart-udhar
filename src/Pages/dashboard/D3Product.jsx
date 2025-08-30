@@ -145,6 +145,9 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         onChange={handleChange}
       > 
         <option value="">Select Category</option>
+        <option value="Food">Cakes </option>
+        <option value="Bakery">Cakes </option>
+        <option value="Grociers">Cakes </option>
         <option value="Electronics">Electronics</option>
         <option value="Pendrive">Pendrive</option>
         <option value="Hardisk">Hardisk</option>

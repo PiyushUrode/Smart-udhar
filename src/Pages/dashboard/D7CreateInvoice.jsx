@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaCommentSms } from "react-icons/fa6";
 import { FaWhatsapp } from "react-icons/fa";
 import { FaPrint } from "react-icons/fa6";
@@ -14,15 +14,54 @@ import { FaBox } from "react-icons/fa6";
 import { IoIosSearch } from "react-icons/io";
 import { FaSearch } from "react-icons/fa";
 import { CiCalendarDate } from "react-icons/ci";
+import { InvoiceService } from "../../api/Invoice.js"
 
-export default function D7CreateInvoice() {
-  const [customer, setCustomer] = useState({
-    name: "John Doe",
-    id: "CUST001",
-    phone: "+91 9876543210",
-    balance: 2500,
-    creditScore: "N/A",
-  });
+export default function D7CreateInvoice({ onCustomerSelect  }) {
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [searchTriggered, setSearchTriggered] = useState(false); // ✅ for "No result" msg
+
+
+
+  // 🔹 Fetch all customers (once)
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        const { success, customers } = await InvoiceService.fetchCustomersForInvoice();
+        if (success && Array.isArray(customers)) {
+          setCustomers(customers);
+        } else {
+          setCustomers([]);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching customers:", err);
+        setCustomers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCustomers();
+  }, []);
+
+  const filteredCustomers = searchTerm
+    ? customers.filter((cust) => {
+      const name = cust?.name?.toLowerCase() || "";
+      const phone = cust?.phone?.toLowerCase() || "";
+      return name.includes(searchTerm.toLowerCase()) || phone.includes(searchTerm.toLowerCase());
+    })
+    : [];
+
+
+  // 🔹 Handle selecting a customer
+  const handleSelectCustomer = (cust) => {
+    setSelectedCustomer(cust);   // details niche show ho
+    setSearchTerm("");           // search input clear
+    setSearchTriggered(false);
+    if (onCustomerSelect) onCustomerSelect(cust);
+  };
 
   const previousInvoices = [
     { name: "Anamika Traders", lastPaid: "16/06/2025", due: "10/06/2025" },
@@ -95,6 +134,9 @@ export default function D7CreateInvoice() {
     setShowStep3(mode === 'cash');
   };
 
+// product herer
+// product end
+
 
   return (
     <div className="max-w-7xl mx-auto p-6 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -105,7 +147,7 @@ export default function D7CreateInvoice() {
         <div className="space-y-6">
           {/* Step 1: Select Customer */}
           <div className="bg-white shadow-customCard rounded-lg p-5">
-            <h2 className="flex items-center gap-2 text-lg  font-robotoSb mb-4">
+            <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-4">
               <div className="bg-[#2563EB] p-2.5 rounded-full">
                 <FaSearch color="white" size={14} />
               </div>
@@ -121,192 +163,188 @@ export default function D7CreateInvoice() {
                 <input
                   type="text"
                   placeholder="Search by name or mobile number"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setSearchTriggered(true);
+                  }}
                   className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-                <IoIosSearch
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60"
-                  size={24}
-                />
+                <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60" />
               </div>
               <button className="bg-green-600 font-robotoR hover:bg-green-700 text-white px-5 py-3 rounded-lg text-md whitespace-nowrap">
                 + Add New Customer
               </button>
             </div>
 
-            {/* Customer Details */}
-            <div className="text-sm text-gray-700 bg-white p-3 rounded">
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                <p className="font-robotoR">
-                  <strong className="text-black font-robotoM">Name:</strong>{" "}
-                  John Doe
-                </p>
-                <p className="font-robotoR">
-                  <strong className="text-black font-robotoM">ID:</strong>{" "}
-                  CUST001
-                </p>
-                <p className="font-robotoR">
-                  <strong className="text-black font-robotoM">Phone:</strong>{" "}
-                  +91 9876543210
-                </p>
-                <p className="font-robotoR">
-                  <strong className="text-black font-robotoM">Balance:</strong>{" "}
-                  ₹2,500
-                </p>
-                <p className="font-robotoR">
-                  <strong className="text-black font-robotoM">
-                    Credit Score:
-                  </strong>{" "}
-                  N/A
-                </p>
+            {/* Customers List (Search Results) */}
+            {loading ? (
+              <p className="text-gray-500 text-sm">Loading customers...</p>
+            ) : searchTriggered && filteredCustomers.length === 0 ? (
+              <p className="text-red-500 text-sm">No customer found.</p>
+            ) : (
+              searchTerm && (
+                <ul className="border bg-white rounded mt-2 shadow max-h-40 overflow-y-auto">
+                  {filteredCustomers.map((cust) => (
+                    <li
+                      key={cust._id}
+                      onClick={() => handleSelectCustomer(cust)}
+                      className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                    >
+                      {cust.name} ({cust.phone})
+                    </li>
+                  ))}
+                </ul>
+              )
+            )}
+
+            {/* Selected Customer Details */}
+            {selectedCustomer && (
+              <div className="text-sm text-gray-700 bg-white p-3 rounded mt-3">
+                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                  <p className="font-robotoR">
+                    <strong className="text-black font-robotoM">Name:</strong>{" "}
+                    {selectedCustomer.name}
+                  </p>
+                  <p className="font-robotoR">
+                    <strong className="text-black font-robotoM">ID:</strong>{" "}
+                    {selectedCustomer._id}
+                  </p>
+                  <p className="font-robotoR">
+                    <strong className="text-black font-robotoM">Phone:</strong>{" "}
+                    {selectedCustomer.phone}
+                  </p>
+                  <p className="font-robotoR">
+                    <strong className="text-black font-robotoM">Balance:</strong>{" "}
+                    ₹{selectedCustomer.balance || 0}
+                  </p>
+                  <p className="font-robotoR">
+                    <strong className="text-black font-robotoM">Credit Score:</strong>{" "}
+                    {selectedCustomer.creditScore || "N/A"}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
 
+          {/* Step 2: Add Products/Services */}
+          <div className="max-w-7xl mx-auto  my-5 md:mt-10 bg-white  gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Step 2: Add Products */}
+              {/* Step 2: Add Products */} <div className="bg-white rounded-lg font-robotoB shadow-customCard p-4 sm:p-6 w-full max-w-6xl space-y-4">
+                 <h2 className="flex items-center gap-3 text-base sm:text-lg font-robotoSb text-gray-800"> 
+                  <div className="bg-[#2563EB] p-2 sm:p-3 rounded-full flex items-center justify-center"> <FaBox color="white" size={16} /> 
+                  </div> Step 2: Add Products/Services </h2> <div className="w-full overflow-x-auto"> 
+                    <div className="min-w-[700px] flex flex-col space-y-5"> 
+                      <div className="grid grid-cols-7 gap-2 sm:gap-4 text-sm font-semibold text-gray-700 border-b py-3"> 
+                        <div className="col-span-2 text-black">Product/Service</div> <div className="text-black">Qty</div> 
+                        <div className="text-black">Unit</div> 
+                        <div className="text-black">Price</div> 
+                        <div className="text-black">Tax</div>
+                         <div className="text-black">Total</div> 
+                         </div> {rows.map((row) => (<div key={row.id} 
+                         className="grid grid-cols-7 gap-2 sm:gap-4 items-center py-3 text-sm"> 
+                         <input className="col-span-2 border px-2 py-1 rounded bg-white" placeholder="Search products..." /> 
+                         <input type="string" defaultValue={row.qty} className="border px-2 py-1 rounded bg-white" /> 
+                         <input placeholder="Unit" className="border px-2 py-1 rounded bg-white" /> <input type="string" placeholder="0.00"
+                          className="border px-2 py-1 rounded bg-white" /> 
+                          <input type="text" value="18%" readOnly className="border px-2 py-1 rounded bg-white" /> 
+                          <div className="flex items-center gap-2"> ₹0.00 <button onClick={() => handleRemoveRow(row.id)}
+                           className="text-red-500 hover:text-red-700"> <FaTrash />
+                            </button>
+                             </div> 
+                             </div>))} </div> 
+                             </div> 
+                             <button onClick={handleAddRow} className="text-bluecol font-robotoM text-sm sm:text-md mt-2">+ Add Row</button>
+                              </div>
 
-{/* Step 2: Add Products/Services */}
- <div className="max-w-7xl mx-auto  my-5 md:mt-10 bg-white  gap-6">
-      <div className="lg:col-span-2 space-y-6">
-        {/* Step 2: Add Products */}
-        <div className="bg-white rounded-lg font-robotoB shadow-customCard p-4 sm:p-6 w-full max-w-6xl space-y-4">
-          <h2 className="flex items-center gap-3 text-base sm:text-lg font-robotoSb text-gray-800">
-            <div className="bg-[#2563EB] p-2 sm:p-3 rounded-full flex items-center justify-center">
-              <FaBox color="white" size={16} />
-            </div>
-            Step 2: Add Products/Services
-          </h2>
 
-          <div className="w-full overflow-x-auto">
-            <div className="min-w-[700px] flex flex-col space-y-5">
-              <div className="grid grid-cols-7 gap-2 sm:gap-4 text-sm font-semibold text-gray-700 border-b py-3">
-                <div className="col-span-2 text-black">Product/Service</div>
-                <div className="text-black">Qty</div>
-                <div className="text-black">Unit</div>
-                <div className="text-black">Price</div>
-                <div className="text-black">Tax</div>
-                <div className="text-black">Total</div>
-              </div>
-              {rows.map((row) => (
-                <div key={row.id} className="grid grid-cols-7 gap-2 sm:gap-4 items-center py-3 text-sm">
-                  <input className="col-span-2 border px-2 py-1 rounded bg-white" placeholder="Search products..." />
-                  <input type="string" defaultValue={row.qty} className="border px-2 py-1 rounded bg-white" />
-                  <input placeholder="Unit" className="border px-2 py-1 rounded bg-white" />
-                  <input type="string" placeholder="0.00" className="border px-2 py-1 rounded bg-white" />
-                  <input type="text" value="18%" readOnly className="border px-2 py-1 rounded bg-white" />
-                  <div className="flex items-center gap-2">
-                    ₹0.00
-                    <button onClick={() => handleRemoveRow(row.id)} className="text-red-500 hover:text-red-700">
-                      <FaTrash />
-                    </button>
+
+
+
+
+              {/* Step 3: Payment Mode */}
+              <div className="bg-white rounded-lg shadow-customCard p-4">
+                <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
+                  <div className=" bg-[#2563EB] p-2.5 rounded-full">
+                    <FaRegCreditCard color="white" size={14} />
                   </div>
+                  Step 3: Payment Mode
+                </h2>
+                <div className="flex flex-col sm:flex-row space-x-3">
+                  <button onClick={() => handlePaymentMode('cash')} className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol ml-3 my-1 px-4 py-1 rounded font-robotoM text-md">
+                    <GiCash size={18} /> Cash
+                  </button>
+                  <button onClick={() => handlePaymentMode('debt')} className="flex justify-center items-center gap-2 border border-bluecol  hover:bg-bluecol hover:text-white text-bluecol my-1 px-4 py-1 rounded font-robotoM text-md">
+                    <FaCalculator size={18} /> Debt
+                  </button>
                 </div>
-              ))}
+              </div>
+
+
+              {/* step 3 */}
+              {showStep3 && (
+                <>
+
+
+                  <div className="bg-white rounded-lg shadow-customCard p-4">
+                    <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
+                      <div className="bg-[#2563EB] p-2.5 rounded-full">
+                        <FaCalculator color="white" size={14} />
+                      </div>
+                      Step 4: Payment Method
+                    </h2>
+
+                    <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
+                      <div>Payment Method</div>
+                      <div>Transaction ID / UTR </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3 ">
+                      <input className="border px-2 py-1 rounded bg-white" placeholder="Cash/UPI/Cheque/DD" />
+                      <input className="border px-2 py-1 rounded bg-white" placeholder="Enter Transaction reference" />
+                    </div>
+
+                    <button className="text-bluecol font-robotoR text-md mt-2">+ Add Milestone</button>
+                  </div>
+                </>
+              )}
+
+              {/* Step 4: Promise Date and Payment Method */}
+              {showStep4 && (
+                <>
+                  <div className="bg-white rounded-lg shadow-customCard p-4 sm:p-6">
+                    <h2 className="flex items-center gap-2 text-base sm:text-lg font-robotoSb mb-3">
+                      <div className="bg-[#2563EB] p-2.5 rounded-full">
+                        <FaCalculator color="white" size={14} />
+                      </div>
+                      Step 4: Promise Date
+                    </h2>
+
+                    <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
+                      <div>Milestone Name</div>
+                      <div>Amount (₹)</div>
+                      <div>Due Date</div>
+                      <div>Status</div>
+                    </div>
+
+                    {milestones.map((ms) => (
+                      <div key={ms.id} className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded">
+                        <input className="border px-2 py-1 rounded bg-white" placeholder="Milestone Name" defaultValue={ms.name} />
+                        <input className="border px-2 py-1 rounded bg-white" placeholder="0.00" type="string" />
+                        <input className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white" type="date" />
+                        <input className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Status" />
+                      </div>
+                    ))}
+                    <button onClick={handleAddMilestone} className="text-bluecol font-robotoR text-sm sm:text-md mt-2">+ Add Milestone</button>
+                  </div>
+
+
+                </>
+              )}
             </div>
           </div>
-          <button onClick={handleAddRow} className="text-bluecol font-robotoM text-sm sm:text-md mt-2">+ Add Row</button>
-        </div>
-
-
-  {/* Step 3: Payment Mode */}
-        <div className="bg-white rounded-lg shadow-customCard p-4">
-          <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
-            <div className=" bg-[#2563EB] p-2.5 rounded-full">
-              <FaRegCreditCard color="white" size={14} />
-            </div>
-            Step 3: Payment Mode
-          </h2>
-          <div className="flex flex-col sm:flex-row space-x-3">
-            <button onClick={() => handlePaymentMode('cash')} className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol ml-3 my-1 px-4 py-1 rounded font-robotoM text-md">
-              <GiCash size={18} /> Cash
-            </button>
-            <button onClick={() => handlePaymentMode('debt')} className="flex justify-center items-center gap-2 border border-bluecol  hover:bg-bluecol hover:text-white text-bluecol my-1 px-4 py-1 rounded font-robotoM text-md">
-              <FaCalculator size={18} /> Debt
-            </button>
-          </div>
-        </div>
-
-
-{/* step 3 */}
- {showStep3 && (
-          <>
-
-
-            <div className="bg-white rounded-lg shadow-customCard p-4">
-              <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-                <div className="bg-[#2563EB] p-2.5 rounded-full">
-                  <FaCalculator color="white" size={14} />
-                </div>
-                Step 4: Payment Method
-              </h2>
-
-              <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-                <div>Payment Method</div>
-                <div>Transaction ID / UTR </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3 ">
-                <input className="border px-2 py-1 rounded bg-white" placeholder="Cash/UPI/Cheque/DD" />
-                <input className="border px-2 py-1 rounded bg-white" placeholder="Enter Transaction reference" />
-              </div>
-
-              <button className="text-bluecol font-robotoR text-md mt-2">+ Add Milestone</button>
-            </div>
-          </>
-        )}
-
-        {/* Step 4: Promise Date and Payment Method */}
-        {showStep4 && (
-          <>
-            <div className="bg-white rounded-lg shadow-customCard p-4 sm:p-6">
-              <h2 className="flex items-center gap-2 text-base sm:text-lg font-robotoSb mb-3">
-                <div className="bg-[#2563EB] p-2.5 rounded-full">
-                  <FaCalculator color="white" size={14} />
-                </div>
-                Step 4: Promise Date
-              </h2>
-
-              <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-                <div>Milestone Name</div>
-                <div>Amount (₹)</div>
-                <div>Due Date</div>
-                <div>Status</div>
-              </div>
-
-              {milestones.map((ms) => (
-                <div key={ms.id} className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded">
-                  <input className="border px-2 py-1 rounded bg-white" placeholder="Milestone Name" defaultValue={ms.name} />
-                  <input className="border px-2 py-1 rounded bg-white" placeholder="0.00" type="string" />
-                  <input className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white" type="date" />
-                  <input className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Status" />
-                </div>
-              ))}
-              <button onClick={handleAddMilestone} className="text-bluecol font-robotoR text-sm sm:text-md mt-2">+ Add Milestone</button>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-customCard p-4">
-              <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-                <div className="bg-[#2563EB] p-2.5 rounded-full">
-                  <FaCalculator color="white" size={14} />
-                </div>
-                Step 4: Payment Method
-              </h2>
-
-              <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-                <div>Payment Method</div>
-                <div>Transaction ID / UTR </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3 ">
-                <input className="border px-2 py-1 rounded bg-white" placeholder="Cash/UPI/Cheque/DD" />
-                <input className="border px-2 py-1 rounded bg-white" placeholder="Enter Transaction reference" />
-              </div>
-
-              <button className="text-bluecol font-robotoR text-md mt-2">+ Add Milestone</button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
 
           {/* Step 5: Additional Charges */}
           <div className="bg-white rounded-lg shadow-customCard p-4">
@@ -383,7 +421,7 @@ box-shadow: 0px 2px 4px 0px #0000001A;
             <LuNewspaper size={24} />
             Generate Invoice
           </button>
-                    <button className="flex justify-center items-center gap-2 text-bluecol bg-white border-bluecol border-2 font-robotoM text-md px-4 py-2 rounded">
+          <button className="flex justify-center items-center gap-2 text-bluecol bg-white border-bluecol border-2 font-robotoM text-md px-4 py-2 rounded">
             <LuNewspaper size={24} />
             Generate Quotation
           </button>

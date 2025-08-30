@@ -17,8 +17,8 @@ const CustomerDetailsForm = () => {
       setLoading(true);
       const res = await CustomerService.getAllCustomers();
       if (res?.customers) {
-        const formatted = res.customers.map((cust, idx) => ({
-          id: cust._id || cust.id || `CUST${idx + 1}`,
+        const formatted = res.customers.map((cust) => ({
+ id: cust.customId,
           name: cust.name,
           mobile: cust.mobile,
           email: cust.email,

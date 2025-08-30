@@ -1,6 +1,6 @@
 // src/components/D2BusinessList.jsx
 import React, { useEffect, useState } from "react";
-import { FaPlusCircle, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlusCircle, FaEdit, FaTrash, FaCheckCircle } from "react-icons/fa";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,9 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const D2BusinessList = () => {
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeBusinessId, setActiveBusinessId] = useState(
+    localStorage.getItem("activeBusinessId") || null
+  );
 
   const store_id = Cookies.get("store_id");
   const token = Cookies.get("authToken");
@@ -31,7 +34,6 @@ const D2BusinessList = () => {
 
       console.log("📌 API Response:", res.data);
 
-      // Normalize API response
       let data =
         res.data?.businesses ||
         res.data?.data ||
@@ -60,21 +62,30 @@ const D2BusinessList = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("✅ Deleted successfully");
-      fetchBusinesses(); // refresh list
+      fetchBusinesses();
     } catch (error) {
       console.error("❌ Delete error:", error.response?.data || error.message);
       alert("❌ Failed to delete business");
     }
   };
 
-const handleEdit = (business) => {
-  navigate(`/dashboard/information/${business._id}`); // ✅ make sure _id goes in URL
-};
-
+  // ✅ Edit handler
+  const handleEdit = (business) => {
+    console.log("✏️ Edit Business ID:", business._id);
+    navigate(`/dashboard/information/${business._id}`);
+  };
 
   // ✅ Add New Business
   const handleAdd = () => {
     navigate("/dashboard/information");
+  };
+
+  // ✅ Set Active Business
+  const handleSetActive = (id) => {
+    setActiveBusinessId(id);
+    localStorage.setItem("activeBusinessId", id);
+    console.log("✅ Active Business ID:", id);
+    alert("✔️ Active business set successfully!");
   };
 
   return (
@@ -119,9 +130,18 @@ const handleEdit = (business) => {
                 {businesses.map((item) => (
                   <tr
                     key={item._id}
-                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                    className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                      activeBusinessId === item._id ? "bg-green-50" : ""
+                    }`}
                   >
-                    <td className="p-4">{item.businessName || "-"}</td>
+                    <td className="p-4 font-medium">
+                      {item.businessName || "-"}{" "}
+                      {activeBusinessId === item._id && (
+                        <span className="ml-2 text-green-600 font-semibold">
+                          (Active)
+                        </span>
+                      )}
+                    </td>
                     <td className="p-4">{item.gstNumber || "-"}</td>
                     <td className="p-4">{item.address || "-"}</td>
                     <td className="p-4">{item.mobile || "-"}</td>
@@ -133,6 +153,19 @@ const handleEdit = (business) => {
                         : "-"}
                     </td>
                     <td className="p-4 flex gap-3">
+                      <button
+                        onClick={() => handleSetActive(item._id)}
+                        className={`flex items-center gap-1 ${
+                          activeBusinessId === item._id
+                            ? "text-green-600"
+                            : "text-gray-600 hover:text-green-600"
+                        }`}
+                      >
+                        <FaCheckCircle />{" "}
+                        {activeBusinessId === item._id
+                          ? "Active"
+                          : "Set Active"}
+                      </button>
                       <button
                         onClick={() => handleEdit(item)}
                         className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
