@@ -83,12 +83,18 @@ const handleSubmit = async (e) => {
 
     let res;
     if (id) {
+      // 🔄 UPDATE profile
       res = await ProfileService.updateProfile(id, formData, signatureImage, logoImage);
+      console.log("✅ Profile Updated Successfully!");
     } else {
+      // 🆕 CREATE profile
       res = await ProfileService.createProfile(formData, signatureImage, logoImage);
+      console.log("✅ Profile Created Successfully!");
     }
 
-    console.log("✅ handleSubmit -> Final API Response:", res);
+    // 🕵️‍♂️ Debugging Console Logs
+    console.log("📌 Store ID:", res?.data?.store_id || res?.store_id || "Not Found");
+    console.log("📌 Profile ID:", res?.data?.id || res?.id || "Not Found");
 
     // ✅ Step 3: Success
     setPopupType("success");
@@ -98,6 +104,7 @@ const handleSubmit = async (e) => {
     setPopupType("error");
   }
 };
+
 
 
 useEffect(() => {

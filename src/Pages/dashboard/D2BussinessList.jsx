@@ -1,3 +1,4 @@
+// src/components/D2BusinessList.jsx
 import React, { useEffect, useState } from "react";
 import { FaPlusCircle, FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
@@ -16,29 +17,27 @@ const D2BusinessList = () => {
 
   // ✅ Fetch all businesses
   const fetchBusinesses = async () => {
-    try {
-      if (!store_id || !token) {
-        alert("⚠️ Store ID or Token missing. Please login again.");
-        return;
-      }
+    if (!store_id || !token) {
+      alert("⚠️ Store ID or Token missing. Please login again.");
+      setLoading(false);
+      return;
+    }
 
+    try {
       const res = await axios.get(
         `${API_BASE}/store-business-profile/find-all/${store_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("📌 API Response:", res.data);
-      let data = res.data;
 
-      if (Array.isArray(data)) {
-        setBusinesses(data);
-      } else if (Array.isArray(data.businesses)) {
-        setBusinesses(data.businesses);
-      } else if (Array.isArray(data.data)) {
-        setBusinesses(data.data);
-      } else {
-        setBusinesses([]);
-      }
+      // Normalize API response
+      let data =
+        res.data?.businesses ||
+        res.data?.data ||
+        (Array.isArray(res.data) ? res.data : []);
+
+      setBusinesses(data);
     } catch (err) {
       console.error("❌ Error fetching businesses:", err);
       setBusinesses([]);
@@ -53,7 +52,8 @@ const D2BusinessList = () => {
 
   // ✅ Delete handler
   const handleDelete = async (id) => {
-    if (!window.confirm("⚠️ Are you sure you want to delete this business?")) return;
+    if (!window.confirm("⚠️ Are you sure you want to delete this business?"))
+      return;
 
     try {
       await axios.delete(`${API_BASE}/store-business-profile/delete/${id}`, {
@@ -67,41 +67,42 @@ const D2BusinessList = () => {
     }
   };
 
-  // ✅ Edit handler
-  const handleEdit = (business) => {
-    navigate(`/dashboard/information/${business._id}`); // update route
-  };
+const handleEdit = (business) => {
+  navigate(`/dashboard/information/${business._id}`); // ✅ make sure _id goes in URL
+};
+
 
   // ✅ Add New Business
   const handleAdd = () => {
-    navigate("/dashboard/information"); // create route
+    navigate("/dashboard/information");
   };
 
   return (
     <>
+      {/* Header */}
       <div className="mx-auto py-2 px-2 md:mt-5">
-        <div className="flex justify-between items-center bg-white px-5 py-5">
+        <div className="flex justify-between items-center bg-white px-5 py-5 rounded shadow">
           <h1 className="text-xl font-semibold text-[#1F2937] font-robotoB">
             Business List
           </h1>
-          <div
-            className="text-sm lg:text-base font-semibold text-white p-2 bg-lightbluecol flex gap-3 items-center cursor-pointer rounded"
+          <button
+            className="text-sm lg:text-base font-semibold text-white px-3 py-2 bg-lightbluecol flex gap-2 items-center cursor-pointer rounded"
             onClick={handleAdd}
           >
             <FaPlusCircle /> Add Business
-          </div>
+          </button>
         </div>
       </div>
 
       {/* Table */}
       <div className="mx-auto py-2 px-2 md:mt-5">
-        <div className="overflow-x-auto p-2 lg:p-5">
+        <div className="overflow-x-auto p-2 lg:p-5 bg-white rounded shadow">
           {loading ? (
             <p>Loading businesses...</p>
           ) : businesses.length === 0 ? (
             <p className="text-gray-600">No businesses found</p>
           ) : (
-            <table className="w-full bg-white rounded-lg overflow-hidden shadow text-sm border border-gray-200">
+            <table className="w-full text-sm border border-gray-200">
               <thead className="bg-[#E8E8E8] text-left text-[#111827] font-robotoM text-base border-b border-gray-300">
                 <tr>
                   <th className="p-4">Business Name</th>
@@ -120,12 +121,12 @@ const D2BusinessList = () => {
                     key={item._id}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="p-4">{item.businessName}</td>
-                    <td className="p-4">{item.gstNumber}</td>
-                    <td className="p-4">{item.address}</td>
-                    <td className="p-4">{item.mobile}</td>
-                    <td className="p-4">{item.email}</td>
-                    <td className="p-4">{item.industry}</td>
+                    <td className="p-4">{item.businessName || "-"}</td>
+                    <td className="p-4">{item.gstNumber || "-"}</td>
+                    <td className="p-4">{item.address || "-"}</td>
+                    <td className="p-4">{item.mobile || "-"}</td>
+                    <td className="p-4">{item.email || "-"}</td>
+                    <td className="p-4">{item.industry || "-"}</td>
                     <td className="p-4">
                       {item.created_at
                         ? new Date(item.created_at).toLocaleDateString()
@@ -138,7 +139,6 @@ const D2BusinessList = () => {
                       >
                         <FaEdit /> Edit
                       </button>
-
                       <button
                         onClick={() => handleDelete(item._id)}
                         className="flex items-center gap-1 text-red-600 hover:text-red-800"

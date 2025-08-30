@@ -1,6 +1,6 @@
 // src/api/customerService.js
 import axiosClient from "./axiosClient";
-import { AuthService } from "./authservice";
+import { AuthService } from "./authservice.js";
 
 const getStoreProfileId = () =>
   (typeof AuthService.getStoreProfileId === "function" &&
