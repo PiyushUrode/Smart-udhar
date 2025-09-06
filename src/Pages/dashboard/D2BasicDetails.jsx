@@ -34,7 +34,7 @@ const [formData, setFormData] = useState({
   pincode: "",
   mobile: "",
   email: "",
-  bio: "",
+  shortBio: "",
   industry: "",
   fbURL: "",
   twitterURL: "",
@@ -45,22 +45,101 @@ const [formData, setFormData] = useState({
 });
 
   const validateForm = () => {
-  const requiredFields = ["businessName", "address", "pincode", "mobile", "email"];
-  const newErrors = {};
+    const requiredFields = ["businessName", "address", "pincode", "mobile", "email"];
+    const newErrors = {};
 
-  requiredFields.forEach((field) => {
-    if (!formData[field] || formData[field].trim() === "") {
-      newErrors[field] = `${field} is required`;
+    // Required fields
+    requiredFields.forEach((field) => {
+      if (!formData[field] || formData[field].trim() === "") {
+        newErrors[field] = `${field} is required`;
+      }
+    });
+
+    // Business Name → only letters, numbers, spaces, . - &
+    if (formData.businessName && !/^[a-zA-Z0-9\s&.-]{3,50}$/.test(formData.businessName)) {
+      newErrors.businessName = "Business name must be 3-50 chars (letters, numbers, . - & allowed)";
     }
-  });
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    // GST → 15 char alphanumeric
+    if (formData.gstNumber && !/^[0-9A-Z]{15}$/.test(formData.gstNumber.toUpperCase())) {
+      newErrors.gstNumber = "Invalid GST number format (15 alphanumeric chars)";
+    }
+
+    // Pincode → 6 digits
+    if (formData.pincode && !/^[1-9][0-9]{5}$/.test(formData.pincode)) {
+      newErrors.pincode = "Pincode must be 6 digits";
+    }
+
+    // Mobile → 10 digits starting with 6-9
+    if (formData.mobile && !/^[6-9]\d{9}$/.test(formData.mobile)) {
+      newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
+    }
+
+    // Email → basic format check
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.toLowerCase())) {
+      newErrors.email = "Invalid email format";
+    }
+
+    // Short Bio → max 160 words
+    if (formData.shortBio && formData.shortBio.split(" ").length > 160) {
+      newErrors.shortBio = "Short bio cannot exceed 160 words";
+    }
+
+    // Social Media Links → optional but if filled, must be valid URL
+    const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/\S*)?$/;
+    if (formData.fbURL && !urlPattern.test(formData.fbURL)) {
+      newErrors.fbURL = "Enter a valid Facebook URL";
+    }
+    if (formData.twitterURL && !urlPattern.test(formData.twitterURL)) {
+      newErrors.twitterURL = "Enter a valid Twitter URL";
+    }
+    if (formData.linkedInURL && !urlPattern.test(formData.linkedInURL)) {
+      newErrors.linkedInURL = "Enter a valid LinkedIn URL";
+    }
+    if (formData.instagramURL && !urlPattern.test(formData.instagramURL)) {
+      newErrors.instagramURL = "Enter a valid Instagram URL";
+    }
+    if (formData.websiteURL && formData.websiteURL.length > 0 && !urlPattern.test(formData.websiteURL)) {
+      newErrors.websiteURL = "Enter a valid Website URL";
+    }
+
+    // File Uploads → size & type check
+    if (signatureImage) {
+      if (!["image/jpeg", "image/png", "image/jpg"].includes(signatureImage.type)) {
+        newErrors.signatureImage = "Signature must be JPG/PNG only";
+      }
+      if (signatureImage.size > 2 * 1024 * 1024) {
+        newErrors.signatureImage = "Signature must be less than 2MB";
+      }
+    }
+    if (logoImage) {
+      if (!["image/jpeg", "image/png", "image/jpg"].includes(logoImage.type)) {
+        newErrors.logoImage = "Logo must be JPG/PNG only";
+      }
+      if (logoImage.size > 2 * 1024 * 1024) {
+        newErrors.logoImage = "Logo must be less than 2MB";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+
+    // Auto-format rules
+    if (name === "gstNumber") {
+      value = value.toUpperCase(); // GST always uppercase
+    }
+    if (name === "email") {
+      value = value.toLowerCase(); // email always lowercase
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
+
 
   const handleFileChange = (e, type) => {
     if (type === "signature") setSignatureImage(e.target.files[0]);
@@ -234,17 +313,17 @@ useEffect(() => {
 
             <div className="mt-4">
               <label className="text-sm mb-1 block">
-                Short Bio{" "}
+                Short shortBio{" "}
                 <span className="text-xs text-gray-500">(160 words max)</span>
               </label>
               <textarea
-                name="bio"
-                value={formData.bio}
+                name="shortBio"
+                value={formData.shortBio}
                 onChange={handleChange}
                 rows="3"
                 className="w-full border rounded px-3 py-2 outline-none bg-white"
-              />  {errors.bio && (
-    <p className="text-red-500 text-xs mt-1">{errors.bio}</p>
+              />  {errors.shortBio && (
+    <p className="text-red-500 text-xs mt-1">{errors.shortBio}</p>
   )}
             </div>
           </section>

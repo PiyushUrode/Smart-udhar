@@ -11,7 +11,7 @@ const D6AddCustomer = () => {
   const editingCustomer = location.state?.customer || null;
 
   const [formData, setFormData] = useState({
-    _id: "", 
+    _id: "",
     name: "",
     mobile: "",
     email: "",
@@ -32,8 +32,8 @@ const D6AddCustomer = () => {
   useEffect(() => {
     if (editingCustomer) {
       setFormData({
-        _id: editingCustomer.id || editingCustomer._id || "",
-        name: editingCustomer.name ||  "",
+        _id: editingCustomer._id || editingCustomer.id || "",
+        name: editingCustomer.name || "",
         mobile: editingCustomer.mobile || "",
         email: editingCustomer.email || "",
         address: editingCustomer.address || "",
@@ -85,12 +85,30 @@ const D6AddCustomer = () => {
         // 🔹 UPDATE FLOW
         res = await CustomerService.updateCustomer(payload);
         alert("✅ Customer updated successfully!");
+
+        // overwrite formData with updated one from backend
+        if (res?.customer) {
+          setFormData({
+            _id: res.customer._id,
+            name: res.customer.name || "",
+            mobile: res.customer.mobile || "",
+            email: res.customer.email || "",
+            address: res.customer.address || "",
+            pin: res.customer.pin || "",
+            city: res.customer.city || "",
+            state: res.customer.state || "",
+            aadharCardNumber: res.customer.aadharCardNumber || "",
+            panNumber: res.customer.panNumber || "",
+            companyName: res.customer.companyName || "",
+            gstNumber: res.customer.gstNumber || "",
+          });
+        }
       } else {
         // 🔹 CREATE FLOW
         res = await CustomerService.createCustomer(payload);
         alert(
           `✅ Customer added successfully\nUnique ID: ${
-            res?.data?.customerId || res?.customerId || ""
+            res?.customerId || ""
           }`
         );
 
@@ -127,10 +145,10 @@ const D6AddCustomer = () => {
   };
 
   const handleClear = () => {
-    if (formData._id) {
+    if (formData._id && editingCustomer) {
       // if editing, just reset to original values
       setFormData({
-        _id: editingCustomer.id || editingCustomer._id || "",
+        _id: editingCustomer._id || editingCustomer.id || "",
         name: editingCustomer.name || "",
         mobile: editingCustomer.mobile || "",
         email: editingCustomer.email || "",

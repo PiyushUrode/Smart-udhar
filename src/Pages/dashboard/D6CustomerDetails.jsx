@@ -35,6 +35,11 @@ const CustomerDetailsForm = () => {
     }
   };
 
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this customer?"))
       return;
@@ -49,10 +54,6 @@ const CustomerDetailsForm = () => {
   const handleEdit = (customer) => {
     navigate("/dashboard/add-customer", { state: { customer } });
   };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
 
   const getScoreColor = (score) => {
     if (score < 40) return "text-red-600";

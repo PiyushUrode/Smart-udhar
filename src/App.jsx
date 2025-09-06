@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import DashboardGuards from './layouts/DashboardGuards';
+import DashboardLayout from './layouts/DashboardLayout';
 import Homepage from './Pages/Homepage';
 import LoginPage from './Pages/LoginPage';
 import SignUpPage from './Pages/Signuppage';
-import DashboardLayout from './layouts/DashboardLayout';
 
 import D1DashboardHome from './Pages/dashboard/D1DashboardHome';
 import D2BasicDetails from './Pages/dashboard/D2BasicDetails';
@@ -46,42 +46,48 @@ function App() {
 
 <Route path="/dashboard/*" element={<DashboardLayout />}>
   <Route index element={<D1DashboardHome />} />
-  
-  {/* ✅ relative paths, no leading slash */}
+
+  {/* Ye pages hamesha accessible (guard ke bahar) */}
   <Route path="information" element={<D2BasicDetails />} />
   <Route path="information/:id" element={<D2BasicDetails />} />
-
   <Route path="bussinessList" element={<D2BussinessList />} />
 
-  <Route path="product" element={  <DashboardGuards>   <D3Product /> </DashboardGuards>  } />
-  <Route path="product-list" element={    <DashboardGuards>  <D4ProductList />  </DashboardGuards>              } />
-  
-  <Route path="stock-list"        element={ <DashboardGuards>      <D4StockList /> </DashboardGuards> } />
-  <Route path="staff-role"        element={ <DashboardGuards>      <D5StaffRole /> </DashboardGuards> } />
-  <Route path="staff-details"     element={ <DashboardGuards>      <D5StaffDetails /> </DashboardGuards>} />
-  <Route path="add-customer"      element={ <DashboardGuards>      <D6AddCustomer /> </DashboardGuards>} />
-  <Route path="customer-details"  element={ <DashboardGuards>      <D6CustomerDetails /> </DashboardGuards>} />
-  
-  
-  <Route path="create-invoice" element={    <DashboardGuards>         <D7CreateInvoice />  </DashboardGuards>} />
-  <Route path="payment-collection" element={ <DashboardGuards>   <D8PaymentCollection />    </DashboardGuards> } />
-  <Route path="payment-collectionList" element={ <DashboardGuards>   <D8PaymentCollectionList />    </DashboardGuards> } />
-
-  <Route path="credit-score" element={ <DashboardGuards>   <D9CreditScore />    </DashboardGuards> } />
-  <Route path="expenses" element={ <DashboardGuards>   <D10Expenses />    </DashboardGuards> } />
-  <Route path="expenses-list" element={ <DashboardGuards>   <D10ExpensesList />    </DashboardGuards>  } />
-  <Route path="statement-download" element={ <DashboardGuards>   <D11StatementDownload />    </DashboardGuards> } />
-  <Route path="setting" element={ <DashboardGuards>   <D12Setting />    </DashboardGuards> } />
-  <Route path="notification" element={ <DashboardGuards>   <D13Notification />    </DashboardGuards> } />
-  <Route path="gst-calculator" element={ <DashboardGuards>   <D14GstCalculator />    </DashboardGuards> } />
-  <Route path="gstreceipt" element={ <DashboardGuards>   <D14GstCalReceipt />    </DashboardGuards> } />
-  <Route path="reward" element={ <DashboardGuards>   <D15Reward />    </DashboardGuards> } />
-  <Route path="commingsoon" element={ <DashboardGuards>   <D16Commingsoon />    </DashboardGuards> } />
-  <Route path="updates" element={  <DashboardGuards>  <D17Updates /> </DashboardGuards>  } />
-  <Route path="supports" element={ <DashboardGuards>   <D18Supports />    </DashboardGuards> } />
-  <Route path="amount-collection" element={ <DashboardGuards>   <A1AmountCollection />    </DashboardGuards> } />
-  <Route path="average-credit-score" element={ <DashboardGuards>   <A2AverageCreditScore />    </DashboardGuards> } />
+  {/* ✅ Ye sab guard ke andar */}
+  <Route
+    path="*"
+    element={
+      <DashboardGuards>
+        <Routes>
+          <Route path="product" element={<D3Product />} />
+          <Route path="product-list" element={<D4ProductList />} />
+          <Route path="stock-list" element={<D4StockList />} />
+          <Route path="staff-role" element={<D5StaffRole />} />
+          <Route path="staff-details" element={<D5StaffDetails />} />
+          <Route path="add-customer" element={<D6AddCustomer />} />
+          <Route path="customer-details" element={<D6CustomerDetails />} />
+          <Route path="create-invoice" element={<D7CreateInvoice />} />
+          <Route path="payment-collection" element={<D8PaymentCollection />} />
+          <Route path="payment-collectionList" element={<D8PaymentCollectionList />} />
+          <Route path="credit-score" element={<D9CreditScore />} />
+          <Route path="expenses" element={<D10Expenses />} />
+          <Route path="expenses-list" element={<D10ExpensesList />} />
+          <Route path="statement-download" element={<D11StatementDownload />} />
+          <Route path="setting" element={<D12Setting />} />
+          <Route path="notification" element={<D13Notification />} />
+          <Route path="gst-calculator" element={<D14GstCalculator />} />
+          <Route path="gstreceipt" element={<D14GstCalReceipt />} />
+          <Route path="reward" element={<D15Reward />} />
+          <Route path="commingsoon" element={<D16Commingsoon />} />
+          <Route path="updates" element={<D17Updates />} />
+          <Route path="supports" element={<D18Supports />} />
+          <Route path="amount-collection" element={<A1AmountCollection />} />
+          <Route path="average-credit-score" element={<A2AverageCreditScore />} />
+        </Routes>
+      </DashboardGuards>
+    }
+  />
 </Route>
+
 
 
         <Route path="*" element={<Navigate to="/" />} />

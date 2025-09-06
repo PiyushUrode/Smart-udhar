@@ -6,53 +6,144 @@ import {
 import { FaFileExcel } from "react-icons/fa6";
 import { RiBankCardFill } from "react-icons/ri";
 import { FaChartPie } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { FaRegChartBar } from "react-icons/fa6";
-import React, { useState } from "react";
+import { FiEdit, FiTrash2 } from "react-icons/fi"; // ✅ Added
 
-const data = [
-  {
-    customer: "Rahul Traders",
-    mobile: "9876543210",
-    amount: "₹3,000",
-    dueDate: "05 Jul 2025",
-    milestone: "₹1,500 by 02 Jul",
-    status: "Due Soon",
-  },
-  {
-    customer: "Anaya Enterprises",
-    mobile: "9876543210",
-    amount: "₹5,500",
-    dueDate: "03 Jul 2025",
-    milestone: "₹2,000 by 01 Jul",
-    status: "Overdue",
-  },
-  {
-    customer: "Jatin Garments",
-    mobile: "9876543210",
-    amount: "₹1,800",
-    dueDate: "06 Jul 2025",
-    milestone: "₹1,000 by 04 Jul",
-    status: "Upcoming",
-  },
-  {
-    customer: "Singh Electronics",
-    mobile: "9876543210",
-    amount: "₹7,200",
-    dueDate: "30 Jun 2025",
-    milestone: "₹3,000 by 01 Jul",
-    status: "Overdue",
-  },
-  {
-    customer: "Kiran Agencies",
-    mobile: "9876543210",
-    amount: "₹2,000",
-    dueDate: "04 Jul 2025",
-    milestone: "₹2,000 by 03 Jul",
-    status: "Due Soon",
-  },
-];
+import React, { useState, useEffect } from "react";
+import { Invoice } from "../../api/Invoice"; // ✅ ad
+
+
 
 const D8PaymentCollectionList = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [search, setSearch] = useState("");
+  const navigate = useNavigate();
+  const [summary, setSummary] = useState({
+  today: 0,
+  subtotal: 0,
+  topCollections: {
+    week: 0,
+    month: 0,
+    year: 0,
+  }
+});
+
+const calculateSummary = (data) => {
+  let today = 0;
+  let total = 0;
+  let week = 0;
+  let month = 0;
+  let year = 0;
+
+  const todayDate = new Date().toDateString();
+  const now = new Date();
+
+  // Week start (Monday) & end (Sunday)
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  data.forEach((inv) => {
+    // 👉 तुम यहां collection किससे log करना चाहते हो?
+    // फिलहाल inv.total लिया है
+    const collected = Number(inv.total || 0);
+    const createdAt = new Date(inv.createdAt);
+
+    total += collected;
+
+    // Today's collection
+    if (createdAt.toDateString() === todayDate) {
+      today += collected;
+    }
+
+    // This week
+    if (createdAt >= weekStart && createdAt <= weekEnd) {
+      week += collected;
+    }
+
+    // This month
+    if (
+      createdAt.getMonth() === now.getMonth() &&
+      createdAt.getFullYear() === now.getFullYear()
+    ) {
+      month += collected;
+    }
+
+    // This year
+    if (createdAt.getFullYear() === now.getFullYear()) {
+      year += collected;
+    }
+  });
+
+  setSummary({
+    today,
+    total,
+    topCollections: { week, month, year }
+  });
+};
+
+
+
+useEffect(() => {
+  const fetchInvoices = async () => {
+    const res = await Invoice.getAllInvoices();
+    if (res.success) {
+      setInvoices(res.invoices);
+      calculateSummary(res.invoices); // ✅ summary calculate
+    }
+  };
+  fetchInvoices();
+}, []);
+
+
+  
+
+    const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this invoice?")) return;
+    try {
+      const res = await Invoice.deleteInvoice(id);
+      if (res.success) {
+        setInvoices((prev) => prev.filter((inv) => inv._id !== id));
+      }
+    } catch (err) {
+      console.error("❌ Error deleting:", err);
+    }
+  };
+
+  // ✅ Edit → go to add-invoice page with data
+  const handleEdit = (invoice) => {
+    navigate("/dashboard/payment-collection", { state: { invoice } });
+  };
+  
+
+  // fetch invoices on mount
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      const res = await Invoice.getAllInvoices();
+      if (res.success) {
+        setInvoices(res.invoices);
+      }
+    };
+    fetchInvoices();
+  }, []);
+
+  // filter based on search
+  const filteredData = invoices.filter((entry) => {
+    const query = search.toLowerCase();
+    return (
+      entry?.customerName?.toLowerCase().includes(query) ||
+      entry?.mobile?.toLowerCase().includes(query) ||
+      entry?._id?.toLowerCase().includes(query)
+    );
+  });
+
+
+  
   return (
     <div className="p-6 md:p-6 mt-5 bg-white min-h-screen">
       <h1 className="text-xl md:text-2xl font-robotoB mb-6">
@@ -62,13 +153,16 @@ const D8PaymentCollectionList = () => {
       {/* Flex container for table and collection section */}
       <div className="flex flex-col lg:flex-row gap-6">
         
+
         {/* Left side - Table */}
         <div className="flex-1">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center p-4 mb-4 gap-4">
             <div className="relative w-full md:max-w-2xl flex-1">
               <input
                 type="text"
-                placeholder="Search by User ID, Name, or Mobile"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by User ID, Name, or mobile"
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
               <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
@@ -80,34 +174,93 @@ const D8PaymentCollectionList = () => {
               <thead className="bg-gray-200 text-[#6B7280] text-xs font-robotoM">
                 <tr>
                   <th className="p-3">Customer Name</th>
-                  <th className="p-3">Mobile Number</th>
+                  <th className="p-3">mobile Number</th>
                   <th className="p-3">Pending Amount</th>
                   <th className="p-3">Due Date</th>
                   <th className="p-3">Next Milestone</th>
                   <th className="p-3">Status</th>
+                  <th className="p-3">Edit</th>
                 </tr>
               </thead>
-              <tbody>
-                {[...data, ...data].map((entry, index) => (
-                  <tr
-                    key={index}
-                    className=" border-2 shadow-md rounded-xl font-robotoR text-[12px] sm:text-[14px] md:text-[16px] text-[#111827]"
-                  >
-                    <td className="p-3  whitespace-nowrap">{entry.customer}</td>
-                    <td className="p-3  whitespace-nowrap">{entry.mobile}</td>
-                    <td className="p-3  whitespace-nowrap">{entry.amount}</td>
-                    <td className="p-3  whitespace-nowrap">{entry.dueDate}</td>
-                    <td className="p-3  whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {entry.milestone} <FaEdit color="#EB2525" />
-                      </div>
-                    </td>
-                    <td className="p-3 font-medium whitespace-nowrap">
-                      {entry.status}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+<tbody>
+  {filteredData.length > 0 ? (
+    filteredData.map((entry, index) => {
+      // pick the next milestone (if any)
+      const nextMilestone =
+        entry.milestones?.find(m => m.status !== "Paid") || null;
+
+      return (
+        <tr
+          key={index}
+          className=" border-2 shadow-md rounded-xl font-robotoR text-[12px] sm:text-[14px] md:text-[16px] text-[#111827]"
+        >
+          {/* Customer Name */}
+          <td className="p-3 whitespace-nowrap">
+            {entry.name || "-"}
+          </td>
+
+          {/* mobile Number */}
+          <td className="p-3 whitespace-nowrap">
+            {entry.mobile || "-"}
+          </td>
+
+          {/* Pending Amount */}
+          <td className="p-3 whitespace-nowrap">
+₹{entry.dueBalance ?? entry.balance ?? 0}
+
+          </td>
+
+          {/* Due Date */}
+          <td className="p-3 whitespace-nowrap">
+            {nextMilestone?.dueDate
+              ? new Date(nextMilestone.dueDate).toLocaleDateString("en-IN")
+              : "-"}
+          </td>
+
+          {/* Next Milestone */}
+          <td className="p-3 whitespace-nowrap">
+            <div className="flex items-center gap-2">
+              {nextMilestone?.milestoneName || "-"}
+              {/* <FaEdit color="#EB2525" /> */}
+            </div>
+          </td>
+
+          {/* Status */}
+          <td className="p-3 font-medium whitespace-nowrap">
+            {entry.paymentStatus || "Pending"}
+          </td>
+
+                    {/* Next Milestone */}
+ <td className="p-3 border-y text-center space-x-2">
+                    <button
+                      className="text-[#2563EB] hover:text-blue-700"
+                      onClick={() => handleEdit(entry)}
+                    >
+                      <FiEdit className="w-5 h-5" />
+                    </button>
+                    <button
+                      className="text-[#DC2626] hover:text-red-700"
+                      onClick={() => handleDelete(entry._id)}
+                    >
+                      <FiTrash2 className="w-5 h-5" />
+                    </button>
+
+                  </td>
+          
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td colSpan="6" className="text-center p-4 text-gray-500">
+        No invoices found
+      </td>
+    </tr>
+  )}
+</tbody>
+ 
+
+
             </table>
           </div>
         </div>
@@ -123,7 +276,8 @@ const D8PaymentCollectionList = () => {
             <div className=" border border-green-200 rounded-lg p-4 mb-4 flex flex-row  justify-between align-middle items-center">
       <div>
                 <p className="text-gray-500 font-robotoM text-sm">Today's Collection</p>
-              <p className="text-[#16A34A] font-robotoSb text-2xl ">₹45,250</p>
+<p className="text-[#16A34A] font-robotoSb text-2xl ">₹{summary.today}</p>
+
 
       </div>
               <div className=" p-3 bg-[#DCFCE7] rounded-xl"> 
@@ -136,7 +290,8 @@ const D8PaymentCollectionList = () => {
             <div className=" border border-blue-200 rounded-lg p-4 mb-4 flex flex-row  justify-between align-middle items-center">
 <div>
                 <p className="text-gray-500  font-robotoM text-sm">Total Collection</p>
-              <p className="text-[#2563EB] font-robotoSb text-2xl ">₹2,45,780</p>  
+<p className="text-[#2563EB] font-robotoSb text-2xl ">₹{summary.total}</p>
+
 </div>
 <div className=" p-3 bg-[#DBEAFE] rounded-xl"> 
 
@@ -147,26 +302,27 @@ const D8PaymentCollectionList = () => {
             {/* Top Collections */}
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-600 mb-2">Top Collections</h3>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 font-interR text-[#374151]">
-                    <span className="w-3 h-3 rounded-full bg-[#3B82F6]"></span> This week
-                  </span>
-                  <span className="font-interM text-[#1F2937]">₹18,500</span>
-                </li>
-                <li className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 font-interR text-[#374151]">
-                    <span className="w-3 h-3 rounded-full  bg-[#22C55E]"></span> This month
-                  </span>
-                  <span className="font-interM text-[#1F2937]">₹12,300</span>
-                </li>
-                <li className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 font-interR text-[#374151]">
-                    <span className="w-3 h-3 rounded-full bg-[#EAB308]"></span> This year
-                  </span>
-                  <span className="font-interM text-[#1F2937]">₹10,000</span>
-                </li>
-              </ul>
+<ul className="space-y-2 text-sm">
+  <li className="flex items-center justify-between">
+    <span className="flex items-center gap-2 font-interR text-[#374151]">
+      <span className="w-3 h-3 rounded-full bg-[#3B82F6]"></span> This week
+    </span>
+    <span className="font-interM text-[#1F2937]">₹{summary.topCollections.week}</span>
+  </li>
+  <li className="flex items-center justify-between">
+    <span className="flex items-center gap-2 font-interR text-[#374151]">
+      <span className="w-3 h-3 rounded-full bg-[#22C55E]"></span> This month
+    </span>
+    <span className="font-interM text-[#1F2937]">₹{summary.topCollections.month}</span>
+  </li>
+  <li className="flex items-center justify-between">
+    <span className="flex items-center gap-2 font-interR text-[#374151]">
+      <span className="w-3 h-3 rounded-full bg-[#EAB308]"></span> This year
+    </span>
+    <span className="font-interM text-[#1F2937]">₹{summary.topCollections.year}</span>
+  </li>
+</ul>
+
             </div>
 
             {/* Download buttons */}

@@ -10,13 +10,13 @@ const getStoreProfileId = () =>
 function getAuthContext() {
   const token = AuthService.getToken?.() || null;
   const store_id = AuthService.getStoreId?.() || null;
-  const storeProfile_id = getStoreProfileId() || null;
+  const storeProfileId = getStoreProfileId() || null;
 
   if (!token) throw new Error("Missing auth token");
   if (!store_id) throw new Error("Missing store_id");
-  if (!storeProfile_id) throw new Error("Missing storeProfile_id");
+  if (!storeProfileId) throw new Error("Missing storeProfileId");
 
-  return { token, store_id, storeProfile_id };
+  return { token, store_id, storeProfileId };
 }
 
 const FIELD_LABEL = {
@@ -48,7 +48,7 @@ const ALLOWED_FIELDS = new Set([
   "companyName",
   "gstNumber",
   "store_id",
-  "storeProfile_id",
+  "storeProfileId",
   "_id",
   "id",
 ]);
@@ -85,12 +85,12 @@ function authHeaders(token) {
 
 export const CustomerService = {
   async createCustomer(form = {}, opts = {}) {
-    const { token, store_id, storeProfile_id } = getAuthContext();
+    const { token, store_id, storeProfileId } = getAuthContext();
 
     const payload = {
       ...form,
       store_id: form.store_id || store_id,
-      storeProfile_id: form.storeProfile_id || storeProfile_id,
+      storeProfileId: form.storeProfileId || storeProfileId,
     };
 
     const required = opts.required || DEFAULT_REQUIRED_CREATE;
@@ -114,57 +114,70 @@ export const CustomerService = {
     };
   },
 
-  async updateCustomer(form = {}, opts = {}) {
-    const { token, store_id, storeProfile_id } = getAuthContext();
-    const id = form._id || form.id;
+async updateCustomer(form = {}, opts = {}) {
+  const { token, store_id, storeProfileId } = getAuthContext();
+  const id = form._id || form.id;
 
-    const payload = {
-      ...form,
-      _id: id,
-      id,
-      store_id: form.store_id || store_id,
-      storeProfile_id: form.storeProfile_id || storeProfile_id,
-    };
+  if (!id) {
+    const err = new Error("Missing customer id");
+    err.name = "CustomerValidationError";
+    err.missingFields = ["id"];
+    throw err;
+  }
 
-    const required = opts.required || DEFAULT_REQUIRED_UPDATE;
-    const missing = validateRequired(payload, required);
-    if (missing.length) {
-      const err = new Error(`Missing required fields: ${missing.join(", ")}`);
-      err.name = "CustomerValidationError";
-      err.missingFields = missing;
-      throw err;
-    }a
+  const payload = {
+    ...form,
+    id, // ✅ backend wants this
+    store_id: form.store_id || store_id,
+    storeProfileId: form.storeProfileId || storeProfileId,
+  };
 
-    const clean = sanitizePayload(payload);
-    const { data } = await axiosClient.put("/store-customer/update", clean, {
-      headers: authHeaders(token),
-    });
+  const required = opts.required || DEFAULT_REQUIRED_UPDATE;
+  const missing = validateRequired(payload, required);
+  if (missing.length) {
+    const err = new Error(`Missing required fields: ${missing.join(", ")}`);
+    err.name = "CustomerValidationError";
+    err.missingFields = missing;
+    throw err;
+  }
 
-    return {
-      success: data?.success ?? true,
-      customer: data?.data || data,
-      customerId: data?.data?.customerId || data?.customerId,
-    };
-  },
+  const clean = sanitizePayload(payload);
+  const { data } = await axiosClient.put("/store-customer/update", clean, {
+    headers: authHeaders(token),
+  });
 
-  async deleteCustomer(id) {
-    const { token } = getAuthContext();
-    if (!id) {
-      const err = new Error("Missing customer id");
-      err.name = "CustomerValidationError";
-      err.missingFields = [FIELD_LABEL._id];
-      throw err;
-    }
-    const { data } = await axiosClient.post(
-      `/store-customer/delete/${id}`,
-      null,
-      { headers: authHeaders(token) }
-    );
-    return { success: data?.success ?? true };
-  },
+  return {
+    success: data?.success ?? true,
+    customer: data?.customer || data, // ✅ matches backend response
+    customerId: data?.customer?._id || data?.customerId,
+  };
+}
+,
+
+async deleteCustomer(id) {
+  const { token } = getAuthContext();
+  if (!id) {
+    const err = new Error("Missing customer id");
+    err.name = "CustomerValidationError";
+    err.missingFields = ["id"];
+    throw err;
+  }
+
+  const { data } = await axiosClient.post(
+    `/store-customer/delete/${id}`,
+    null,
+    { headers: authHeaders(token) }
+  );
+
+  return {
+    success: data?.success ?? true,
+    customer: data?.customer || null,
+  };
+}
+,
 
 async getAllCustomers({ page, limit } = {}) {
-  const { token, store_id, storeProfile_id } = getAuthContext();
+  const { token, store_id, storeProfileId } = getAuthContext();
   const qs =
     page || limit
       ? `?${new URLSearchParams({
@@ -174,7 +187,7 @@ async getAllCustomers({ page, limit } = {}) {
       : "";
 
   const { data } = await axiosClient.get(
-    `/store-customer/find-all/${store_id}/${storeProfile_id}${qs}`,
+    `/store-customer/find-all/${store_id}/${storeProfileId}${qs}`,
     { headers: authHeaders(token) }
   );
 
@@ -217,9 +230,9 @@ async getAllCustomers({ page, limit } = {}) {
   },
 
   async searchCustomers(params = {}) {
-    const { token, store_id, storeProfile_id } = getAuthContext();
+    const { token, store_id, storeProfileId } = getAuthContext();
     const { data } = await axiosClient.get(
-      `/store-customer/search/${store_id}/${storeProfile_id}`,
+      `/store-customer/search/${store_id}/${storeProfileId}`,
       { headers: authHeaders(token), params }
     );
     return {
@@ -229,7 +242,7 @@ async getAllCustomers({ page, limit } = {}) {
   },
 
   async uploadExcel(excelFile) {
-    const { token, store_id, storeProfile_id } = getAuthContext();
+    const { token, store_id, storeProfileId } = getAuthContext();
     if (!excelFile) {
       const err = new Error("Please select an Excel file to upload");
       err.name = "CustomerValidationError";
@@ -239,7 +252,7 @@ async getAllCustomers({ page, limit } = {}) {
     const fd = new FormData();
     fd.append("excelFile", excelFile);
     fd.append("store_id", store_id);
-    fd.append("storeProfile_id", storeProfile_id);
+    fd.append("storeProfileId", storeProfileId);
 
     const { data } = await axiosClient.post("/store-customer/upload-excel", fd, {
       headers: { ...authHeaders(token) },
@@ -248,9 +261,9 @@ async getAllCustomers({ page, limit } = {}) {
   },
 
   async exportCustomersToExcel() {
-    const { token, store_id, storeProfile_id } = getAuthContext();
+    const { token, store_id, storeProfileId } = getAuthContext();
     const res = await axiosClient.get(
-      `/store-customer/export-excel/${store_id}/${storeProfile_id}`,
+      `/store-customer/export-excel/${store_id}/${storeProfileId}`,
       { headers: authHeaders(token), responseType: "blob" }
     );
     return res.data;

@@ -1,110 +1,51 @@
+import { useState, useEffect } from "react";
 import { FaTrophy, FaExclamationTriangle, FaGavel } from "react-icons/fa";
 import { FaDownload, FaChartLine } from "react-icons/fa6";
 import ReactSpeedometer from "react-d3-speedometer";
-import { ResponsiveContainer } from "recharts";
+import { Invoice } from "../../api/Invoice"; // apna path check karna
 
 const D9CreditScore = () => {
-  const data = [
-    { name: "Good", value: 30 },
-    { name: "Average", value: 40 },
-    { name: "Poor", value: 30 },
-  ];
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const COLORS = ["#29E100", "#F9E800", "#FF0000"];
+  // 🚀 Fetch data from API
+  useEffect(() => {
+    const loadCustomers = async () => {
+      setLoading(true);
+      const { success, customers } = await Invoice.fetchCustomersForInvoice({
+        page: 1,
+        limit: 50,
+      });
 
-const callList = [
-  { name: "Anshul Kothari", amount: "₹5,230", due: "25 July 2024", mobile: "9876543210" },
-  { name: "Rajesh Kumar", amount: "₹6,890", due: "26 July 2024", mobile: "9123456780" },
-  { name: "Pooja Sharma", amount: "₹4,150", due: "27 July 2024", mobile: "9812345678" },
-  { name: "Amit Verma", amount: "₹7,420", due: "28 July 2024", mobile: "9988776655" },
-  { name: "Sneha Reddy", amount: "₹3,980", due: "29 July 2024", mobile: "9700012345" },
-  { name: "Vikram Singh", amount: "₹9,210", due: "30 July 2024", mobile: "9609876543" },
-  { name: "Neha Patel", amount: "₹8,540", due: "31 July 2024", mobile: "9512345678" },
-  { name: "Arjun Mehta", amount: "₹5,780", due: "1 Aug 2024", mobile: "9409871234" },
-  { name: "Rohit Bansal", amount: "₹6,320", due: "2 Aug 2024", mobile: "9321456789" },
-  { name: "Divya Nair", amount: "₹7,910", due: "3 Aug 2024", mobile: "9256781234" },
-  { name: "Manish Gupta", amount: "₹4,670", due: "4 Aug 2024", mobile: "9198765432" },
-  { name: "Shreya Kapoor", amount: "₹9,560", due: "5 Aug 2024", mobile: "9112233445" },
-  { name: "Harshad Joshi", amount: "₹8,130", due: "6 Aug 2024", mobile: "9876501234" },
-  { name: "Kavita Iyer", amount: "₹6,750", due: "7 Aug 2024", mobile: "9765412309" },
-  { name: "Siddharth Desai", amount: "₹5,940", due: "8 Aug 2024", mobile: "9654321789" },
-  { name: "Priya Yadav", amount: "₹4,880", due: "9 Aug 2024", mobile: "9543217890" },
-  { name: "Aditya Chawla", amount: "₹7,230", due: "10 Aug 2024", mobile: "9432178901" },
-  { name: "Tanvi Saxena", amount: "₹8,910", due: "11 Aug 2024", mobile: "9321789012" },
-  { name: "Ramesh Pillai", amount: "₹6,450", due: "12 Aug 2024", mobile: "9217890123" },
-  { name: "Meena Agarwal", amount: "₹5,330", due: "13 Aug 2024", mobile: "9123450987" },
-  { name: "Karan Malhotra", amount: "₹9,780", due: "14 Aug 2024", mobile: "9012349876" },
-  { name: "Anita Das", amount: "₹4,560", due: "15 Aug 2024", mobile: "9988001122" },
-  { name: "Deepak Tyagi", amount: "₹8,320", due: "16 Aug 2024", mobile: "9876009988" },
-  { name: "Ritika Singh", amount: "₹6,150", due: "17 Aug 2024", mobile: "9760099887" },
-  { name: "Suresh Menon", amount: "₹7,980", due: "18 Aug 2024", mobile: "9650099776" },
-  { name: "Lavanya Rao", amount: "₹5,770", due: "19 Aug 2024", mobile: "9540099665" },
-  { name: "Yash Jain", amount: "₹9,340", due: "20 Aug 2024", mobile: "9430099554" },
-  { name: "Pankaj Chauhan", amount: "₹6,890", due: "21 Aug 2024", mobile: "9320099443" },
-  { name: "Ishita Bhatt", amount: "₹8,210", due: "22 Aug 2024", mobile: "9210099332" },
-  { name: "Sunil Ghosh", amount: "₹4,990", due: "23 Aug 2024", mobile: "9100099221" },
-  { name: "Nidhi Kulkarni", amount: "₹7,640", due: "24 Aug 2024", mobile: "9098765432" },
-];
+      if (success && customers.length > 0) {
+        setCustomers(customers);
+      }
+      setLoading(false);
+    };
+    loadCustomers();
+  }, []);
 
+  // 🔹 Calculate Summary Stats
+  const scores = customers.map((c) => c.creditScore || 0);
+  const avgScore =
+    scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
-  const bestPerformers = [
-    {
-      id: "CU001",
-      name: "Rajesh Kumar",
-      score: 92,
-      onTime: "98%",
-      purchase: "₹45,230",
-      status: "Excellent",
-    },
-    {
-      id: "CU002",
-      name: "Priya Sharma",
-      score: 86,
-      onTime: "96%",
-      purchase: "₹38,450",
-      status: "Excellent",
-    },
-    {
-      id: "CU003",
-      name: "Amit Shah",
-      score: 83,
-      onTime: "94%",
-      purchase: "₹52,100",
-      status: "Very Good",
-    },
-  ];
-
-  const lowPerformers = [
-    {
-      id: "CU004",
-      name: "Anshul Kothari",
-      score: 45,
-      delay: "45 days",
-      penalties: "₹2,340",
-      action: "Legal Action",
-    },
-    {
-      id: "CU005",
-      name: "Sunita Patel",
-      score: 35,
-      delay: "62 days",
-      penalties: "₹3,120",
-      action: "Collection",
-    },
-    {
-      id: "CU006",
-      name: "Suresh Kumar",
-      score: 25,
-      delay: "28 days",
-      penalties: "₹1,890",
-      action: "Warning",
-    },
-  ];
+  const bestPerformers = customers.filter((c) => c.creditScore >= 75);
+  const lowPerformers = customers.filter((c) => c.creditScore < 50);
+  const legalCases = customers.filter((c) => c.status === "Legal Action");
 
   return (
     <div className="p-0 sm:p-6 bg-gray-50 min-h-screen">
       <Header />
-      <SummaryCards />
+
+      {/* Summary Cards */}
+      <SummaryCards
+        avgScore={avgScore}
+        bestCount={bestPerformers.length}
+        lowCount={lowPerformers.length}
+        legalCount={legalCases.length}
+      />
+
       <div className="grid grid-cols-1 gap-4 bg-gray-50 p-0 sm:p-6 rounded-md shadow md:grid-cols-5">
         {/* Gauge Chart */}
         <div className="bg-white p-4 rounded-md shadow md:col-span-3 lg:col-span-2 text-center md:text-left ">
@@ -113,12 +54,12 @@ const callList = [
           </h2>
           <div className="flex justify-center items-center h-full">
             <ReactSpeedometer
-              value={650}
+              value={avgScore}
               minValue={0}
-              maxValue={800}
+              maxValue={100}
               segments={3}
               segmentColors={["#66DD66", "#FFE95B", "#F44336"]}
-              customSegmentStops={[0, 267, 534, 800]}
+              customSegmentStops={[0, 50, 75, 100]}
               needleColor="#6B7280"
               currentValueText=""
               ringWidth={40}
@@ -130,69 +71,77 @@ const callList = [
         </div>
 
         {/* Collection Call List */}
-    {/* Collection Call List */}
-<div className="bg-white p-4 rounded-md shadow md:col-span-2 lg:col-span-3">
-  <h2 className="text-lg text-[#1F2937] font-robotoSb mb-4">
-    Collection Call List
-  </h2>
-  <div className="min-w-[600px] max-h-[320px] overflow-y-auto">
-    <table className="w-full text-sm text-left">
-      <thead className="sticky top-0 bg-white z-10">
-        <tr className="text-[#4B5563] text-[16px] font-semibold border-b">
-          <th className="py-2 pr-4 whitespace-nowrap">Name</th>
-          <th className="py-2 pr-4 whitespace-nowrap">Amount</th>
-          <th className="py-2 pr-4 whitespace-nowrap">Due Date</th>
-          <th className="py-2 pr-4 whitespace-nowrap">Mobile No.</th>
-        </tr>
-      </thead>
-      <tbody>
-        {callList.map((item, idx) => (
-          <tr
-            key={idx}
-            className="border-b text-[16px] last:border-none"
-          >
-            <td className="py-2 pr-4 text-[#1F2937]">{item.name}</td>
-            <td className="py-2 pr-4 font-robotoR text-md">
-              {item.amount}
-            </td>
-            <td className="py-2 pr-4 text-[#4B5563]">{item.due}</td>
-            <td className="py-2 pr-4 text-[#4B5563]">{item.mobile}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
+        <div className="bg-white p-4 rounded-md shadow md:col-span-2 lg:col-span-3">
+          <h2 className="text-lg text-[#1F2937] font-robotoSb mb-4">Collection Call List</h2>
 
+          {loading ? (
+            <p className="text-gray-500 text-center">Loading...</p>
+          ) : customers.length === 0 ? (
+            <p className="text-gray-500 text-center">No data available</p>
+          ) : (
+            <div className="min-w-[600px] max-h-[320px] overflow-y-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="sticky top-0 bg-white z-10">
+                  <tr className="text-[#4B5563] text-[16px] font-semibold border-b">
+                    <th className="py-2 pr-4 whitespace-nowrap">Name</th>
+                    <th className="py-2 pr-4 whitespace-nowrap">Amount</th>
+                    <th className="py-2 pr-4 whitespace-nowrap">Due Date</th>
+                    <th className="py-2 pr-4 whitespace-nowrap">Mobile No.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customers.map((c, idx) => (
+                    <tr key={idx} className="border-b text-[16px] last:border-none">
+                      <td className="py-2 pr-4 text-[#1F2937]">{c.name}</td>
+                      <td className="py-2 pr-4 font-robotoR text-md">
+                        ₹{c.dueAmount || 0}
+                      </td>
+                      <td className="py-2 pr-4 text-[#4B5563]">
+                        {c.dueDate ? new Date(c.dueDate).toLocaleDateString() : "-"}
+                      </td>
+                      <td className="py-2 pr-4 text-[#4B5563]">{c.mobile || "N/A"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* <ChartPlaceholder /> */}
+      {/* Best Performers */}
       <TableSection
-        title="Best Performers (Score: 1-100)"
-        headers={[
-          "Customer",
-          "Credit Score",
-          "On-Time Payments",
-          "Total Purchase",
-          "Status",
-        ]}
+        title="Best Performers (Score: 75-100)"
+        headers={["Customer", "Credit Score", "On-Time Payments", "Total Purchase", "Status"]}
       >
-        {bestPerformers.map((item) => (
-          <BestPerformerRow key={item.id} {...item} />
+        {bestPerformers.map((c, idx) => (
+          <BestPerformerRow
+            key={idx}
+            id={c.customerId}
+            name={c.name}
+            score={c.creditScore}
+            onTime={c.onTime || "N/A"}
+            purchase={c.purchase || "₹0"}
+            status="Excellent"
+          />
         ))}
       </TableSection>
+
+      {/* Low Performers */}
       <TableSection
-        title="Low Performers (Score: 1-50)"
-        headers={[
-          "Customer",
-          "Credit Score",
-          "Delay Days",
-          "Penalties",
-          "Action",
-        ]}
+        title="Low Performers (Score: 0-50)"
+        headers={["Customer", "Credit Score", "Delay Days", "Penalties", "Action"]}
       >
-        {lowPerformers.map((item) => (
-          <LowPerformerRow key={item.id} {...item} />
+        {lowPerformers.map((c, idx) => (
+          <LowPerformerRow
+            key={idx}
+            id={c.customerId}
+            name={c.name}
+            score={c.creditScore}
+            delay={c.delayDays || "-"}
+            penalties={c.penalties || "₹0"}
+            action={c.status || "Warning"}
+          />
         ))}
       </TableSection>
     </div>
@@ -211,33 +160,12 @@ const Header = () => (
   </div>
 );
 
-const SummaryCards = () => (
+const SummaryCards = ({ avgScore, bestCount, lowCount, legalCount }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 ">
-    <SummaryCard
-      icon={<FaChartLine color="blue" />}
-      label="Average Score"
-      value="742"
-
-      color="black"
-    />
-    <SummaryCard
-      icon={<FaTrophy />}
-      label="Best Performers"
-      value="156"
-      color="green"
-    />
-    <SummaryCard
-      icon={<FaExclamationTriangle />}
-      label="Low Performers"
-      value="89"
-      color="red"
-    />
-    <SummaryCard
-      icon={<FaGavel />}
-      label="Legal Cases"
-      value="12"
-      color="orange"
-    />
+    <SummaryCard icon={<FaChartLine color="blue" />} label="Average Score" value={avgScore} color="black" />
+    <SummaryCard icon={<FaTrophy />} label="Best Performers" value={bestCount} color="green" />
+    <SummaryCard icon={<FaExclamationTriangle />} label="Low Performers" value={lowCount} color="red" />
+    <SummaryCard icon={<FaGavel />} label="Legal Cases" value={legalCount} color="orange" />
   </div>
 );
 
@@ -255,9 +183,7 @@ const SummaryCard = ({ icon, label, value, color }) => {
         <p className={`text-2xl font-robotoB ${colors[color].icon}`}>{value}</p>
       </div>
       <div className={`px-3 py-4 rounded-xl ${colors[color].bg}`}>
-        <div
-          className={`w-6 h-6 flex items-center justify-center ${colors[color].icon} text-lg`}
-        >
+        <div className={`w-6 h-6 flex items-center justify-center ${colors[color].icon} text-lg`}>
           {icon}
         </div>
       </div>
@@ -273,10 +199,7 @@ const TableSection = ({ title, headers, children }) => (
         <thead className="bg-gray-100 text-left">
           <tr>
             {headers.map((h, i) => (
-              <th
-                key={i}
-                className="p-3 font-robotoM text-[16px] text-[#4B5563]"
-              >
+              <th key={i} className="p-3 font-robotoM text-[16px] text-[#4B5563]">
                 {h}
               </th>
             ))}
@@ -297,9 +220,7 @@ const BestPerformerRow = ({ id, name, score, onTime, purchase, status }) => (
       </div>
     </td>
     <td className="p-3 text-[#166534] font-robotoM">
-      <div className="text-center bg-[#DCFCE7] w-12 h-6 rounded-2xl">
-        {score}
-      </div>
+      <div className="text-center bg-[#DCFCE7] w-12 h-6 rounded-2xl">{score}</div>
     </td>
     <td className="p-3 font-robotoR text-[16px]">{onTime}</td>
     <td className="p-3 font-robotoR text-[16px]">{purchase}</td>
@@ -311,46 +232,37 @@ const BestPerformerRow = ({ id, name, score, onTime, purchase, status }) => (
   </tr>
 );
 
-const LowPerformerRow = ({ id, name, score, delay, penalties, action }) => {
-  const actionStyles = {
-    "Legal Action": "bg-orange-100 text-[#9A3412]",
-    Collection: "bg-red-100 text-[#991B1B]",
-    Warning: "bg-yellow-100 text-[#854D0E]",
-  };
-  return (
-    <tr className="border-t ">
-      <td className="p-3">
-        <div>
-          <p className="font-robotoM text-[16px] text-[#1F2937]">{name}</p>
-          <p className="font-robotoR text-sm text-[#4B5563]">ID: {id}</p>
-        </div>
-      </td>
-      <td className="p-3 text-[#991B1B] font-bold">
-        <div className="text-center bg-[#FEE2E2] w-12 h-6 rounded-2xl">
-          {score}
-        </div>
-      </td>
-      <td className="p-3 font-robotoR text-[16px]">{delay}</td>
-      <td className="p-3 font-robotoR text-[16px]">{penalties}</td>
-      <td className="p-3">
-        {action === "Legal Action" && (
-          <span className="px-3 py-1 text-sm font-robotoR bg-orange-100 text-[#9A3412] rounded-full">
-            ⚖ Legal Action
-          </span>
-        )}
-        {action === "Collection" && (
-          <span className="px-3 py-1 text-sm font-robotoR bg-red-100 text-[#991B1B] rounded-full">
-            🚫 Collection
-          </span>
-        )}
-        {action === "Warning" && (
-          <span className="px-3 py-1 text-sm font-robotoR bg-yellow-100 text-[#854D0E] rounded-full">
-            ! Warning
-          </span>
-        )}
-      </td>
-    </tr>
-  );
-};
+const LowPerformerRow = ({ id, name, score, delay, penalties, action }) => (
+  <tr className="border-t ">
+    <td className="p-3">
+      <div>
+        <p className="font-robotoM text-[16px] text-[#1F2937]">{name}</p>
+        <p className="font-robotoR text-sm text-[#4B5563]">ID: {id}</p>
+      </div>
+    </td>
+    <td className="p-3 text-[#991B1B] font-bold">
+      <div className="text-center bg-[#FEE2E2] w-12 h-6 rounded-2xl">{score}</div>
+    </td>
+    <td className="p-3 font-robotoR text-[16px]">{delay}</td>
+    <td className="p-3 font-robotoR text-[16px]">{penalties}</td>
+    <td className="p-3">
+      {action === "Legal Action" && (
+        <span className="px-3 py-1 text-sm font-robotoR bg-orange-100 text-[#9A3412] rounded-full">
+          ⚖ Legal Action
+        </span>
+      )}
+      {action === "Collection" && (
+        <span className="px-3 py-1 text-sm font-robotoR bg-red-100 text-[#991B1B] rounded-full">
+          🚫 Collection
+        </span>
+      )}
+      {action === "Warning" && (
+        <span className="px-3 py-1 text-sm font-robotoR bg-yellow-100 text-[#854D0E] rounded-full">
+          ! Warning
+        </span>
+      )}
+    </td>
+  </tr>
+);
 
 export default D9CreditScore;

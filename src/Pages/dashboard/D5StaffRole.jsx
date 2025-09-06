@@ -47,7 +47,41 @@ const StatCard = ({ label, value, type }) => {
     </div>
   );
 };
-
+const roles = [
+  {
+    name: "Admin",
+    description: "Full access to all modules",
+    count: 2,
+    tags: [{ name: "All Access", color: "bg-blue-100 text-bluecol" }],
+  },
+  {
+    name: "Accountant",
+    description: "View/edit expenses, create invoices",
+    count: 3,
+    tags: [
+      { name: "Expense", color: "bg-purple-100 text-purple-600" },
+      { name: "Invoice", color: "bg-purple-100 text-purple-600" },
+    ],
+  },
+  {
+    name: "Sales Staff",
+    description: "View customers, send reminders",
+    count: 5,
+    tags: [
+      { name: "Customer", color: "bg-green-100 text-green-600" },
+      { name: "Reminder", color: "bg-green-100 text-green-600" },
+    ],
+  },
+  {
+    name: "Viewer",
+    description: "Read-only access to reports",
+    count: 2,
+    tags: [
+      { name: "Reports", color: "bg-gray-100 text-gray-600" },
+      { name: "Dashboard", color: "bg-gray-100 text-gray-600" },
+    ],
+  },
+];
 // ----------------- MAIN COMPONENT -----------------
 const D5StaffRole = () => {
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
@@ -217,16 +251,35 @@ const D5StaffRole = () => {
           )}
         </div>
 
-        {/* Role Overview */}
         <div className="bg-white py-4 rounded-lg shadow-md border-2">
           <h2 className="text-lg text-gray-700 mb-4 border-b p-4 font-robotoB">
             Role Overview
           </h2>
           <div className="space-y-4 p-4">
-            {/* TODO: fetch roles API also if available */}
-            <p className="text-sm text-gray-500">
-              Coming soon: roles integration
-            </p>
+            {roles.map((role, index) => (
+              <div
+                key={index}
+                className="border p-4 gap-3 flex justify-start flex-col rounded-md"
+              >
+                <div className="flex justify-between text-sm font-medium text-gray-700">
+                  <span>{role.name}</span>
+                  <span>{role.count} members</span>
+                </div>
+                <div className="text-xs text-gray-500 mb-1">
+                  {role.description}
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {role.tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className={`${tag.color} text-xs px-3 py-2 rounded-md`}
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -239,23 +292,42 @@ const D5StaffRole = () => {
           </h2>
         </div>
         <ul className="text-sm p-4 space-y-4 text-gray-700">
-          {recentActivity.map((activity, idx) => (
-            <li key={idx} className="flex gap-4 items-start">
-              <div className="rounded-full p-2 border-2 bg-[#DBEAFE]">
-                <FaUserPlus color="#2563EB" />
-              </div>
-              <div>
-                {activity.name} - {activity.lastAction}
-                <div className="text-gray-500 text-xs">
-                  {new Date(activity.actionTime).toLocaleString()}
-                </div>
-              </div>
-            </li>
-          ))}
+          <li className="flex gap-4 items-start">
+            <div className="rounded-full p-2 border-2 bg-[#DBEAFE]">
+              <FaUserPlus color="#2563EB" />
+            </div>
+            <div>
+              Rajesh Kumar added new team member
+              <div className="text-gray-500 text-xs">2 hours ago</div>
+            </div>
+          </li>
+          <li className="flex gap-4 items-start">
+            <div className="rounded-full p-2 border-2 bg-[#F3E8FF]">
+              <FaUserShield color="#9333EA" />
+            </div>
+            <div>
+              Priya Sharma role updated to Accountant
+              <div className="text-gray-500 text-xs">5 hours ago</div>
+            </div>
+          </li>
+          <li className="flex gap-4 items-start">
+            <div className="rounded-full p-2 border-2 bg-[#FEE2E2]">
+              <FaUserSlash color="#DC2626" />
+            </div>
+            <div>
+              Vikash Singh access revoked
+              <div className="text-gray-500 text-xs">1 day ago</div>
+            </div>
+          </li>
         </ul>
       </div>
+
     </div>
   );
 };
 
 export default D5StaffRole;
+
+
+
+

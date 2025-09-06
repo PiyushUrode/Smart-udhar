@@ -1,7 +1,10 @@
-// src/api/invoiceService.js
 import axiosClient from "./axiosClient";
 import { AuthService } from "./authservice.js";
+import Cookies from "js-cookie";
+import { API_BASE } from "../config/constant.js";
+import axios from "axios";
 
+// ----------------- Helpers -----------------
 function getStoreProfileId() {
   return (
     (typeof AuthService.getStoreProfileId === "function" &&
@@ -10,26 +13,37 @@ function getStoreProfileId() {
   );
 }
 
-function getAuthContext() {
-  const token = AuthService.getToken?.() || null;
-  const store_id = AuthService.getStoreId?.() || null;
-  const storeProfile_id = getStoreProfileId() || null;
+export function getAuthContext() {
+  const token = AuthService.getToken?.() || Cookies.get("authToken") || null;
+  const store_id = AuthService.getStoreId?.() || Cookies.get("store_id") || null;
+  const storeProfileId = getStoreProfileId() || null;
 
   if (!token) throw new Error("Missing auth token");
   if (!store_id) throw new Error("Missing store_id");
-  if (!storeProfile_id) throw new Error("Missing storeProfile_id");
+  if (!storeProfileId) throw new Error("Missing storeProfileId");
 
-  return { token, store_id, storeProfile_id };
+  return { token, store_id, storeProfileId };
 }
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` };
 }
 
-export const InvoiceService = {
+// ✅ Normalize Array Utils (safe response handling)
+function normalizeArray(data, keys = []) {
+  if (Array.isArray(data)) return data;
+  for (let key of keys) {
+    if (Array.isArray(data?.[key])) return data[key];
+  }
+  return [];
+}
+
+// ----------------- Invoice Service -----------------
+export const Invoice = {
+  // ----------------- Customers -----------------
   async fetchCustomersForInvoice({ page, limit } = {}) {
     try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
+      const { token, store_id, storeProfileId } = getAuthContext();
 
       const qs =
         page || limit
@@ -40,79 +54,360 @@ export const InvoiceService = {
           : "";
 
       const { data } = await axiosClient.get(
-        `/store-customer/find-all/${store_id}/${storeProfile_id}${qs}`,
+        `/store-customer/find-all/${store_id}/${storeProfileId}${qs}`,
         { headers: authHeaders(token) }
       );
 
-      let customers = [];
-      if (Array.isArray(data)) customers = data;
-      else if (Array.isArray(data?.data)) customers = data.data;
-      else if (Array.isArray(data?.customers)) customers = data.customers;
-      else if (Array.isArray(data?.data?.customers))
-        customers = data.data.customers;
+      const customers = normalizeArray(data, [
+        "data",
+        "customers",
+        "data.customers",
+      ]);
 
-      return { success: data?.success ?? true, customers };
+      console.log("✅ [InvoiceService] Customers:", customers);
+
+      return { success: true, customers };
     } catch (err) {
-      console.error("❌ Fetch customers for invoice error:", err);
+      console.error("❌ Fetch customers error:", err);
       return { success: false, customers: [] };
     }
   },
 
-  async fetchProductsForInvoice({ page, limit } = {}) {
+  // ----------------- Products -----------------
+  async getProducts() {
     try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
+      const { token, store_id, storeProfileId } = getAuthContext();
 
-      const qs =
-        page || limit
-          ? `?${new URLSearchParams({
-              ...(page ? { page: String(page) } : {}),
-              ...(limit ? { limit: String(limit) } : {}),
-            }).toString()}`
-          : "";
-
-      const { data } = await axiosClient.get(
-        `/store-product/find-all/${store_id}/${storeProfile_id}${qs}`,
+      const { data } = await axios.get(
+        `${API_BASE}/store-product/find-all/${store_id}/${storeProfileId}`,
         { headers: authHeaders(token) }
       );
 
-      let products = [];
-      if (Array.isArray(data)) products = data;
-      else if (Array.isArray(data?.data)) products = data.data;
-      else if (Array.isArray(data?.products)) products = data.products;
-      else if (Array.isArray(data?.data?.products))
-        products = data.data.products;
+      const products = normalizeArray(data, ["products", "data", "items"]);
 
-      // sirf name, unit, sales_price, tax lete hain
-      const mappedProducts = products.map((p) => ({
-        id: p._id,
-        name: p.name,
-        unit: p.unit,
-        sales_price: p.sales_price,
-        tax: p.tax,
-        type: p.product_type, // inventory / service
-      }));
-
-      return { success: data?.success ?? true, products: mappedProducts };
+      console.log("✅ [InvoiceService] Products:", products);
+      return { success: true, products };
     } catch (err) {
-      console.error("❌ Fetch products for invoice error:", err);
+      console.error("❌ Product fetch error:", err.message);
       return { success: false, products: [] };
     }
   },
 
-  async createInvoice(payload) {
+
+ // ----------------- Invoice Create -----------------
+async createInvoice(payload) {
+  try {
+    const { token, store_id, storeProfileId } = getAuthContext();
+
+    // Base structure
+    const invoiceData = {
+      ...payload,
+      store_id,
+      storeProfileId,
+
+      customerId: payload.customerId || null,
+      products: payload.products || [],
+
+      // ✅ Additional charges fallback
+      additionalCharges: payload.additionalCharges || {
+        deliveryFee: 0,
+        packingCharges: 0,
+        discount: 0,
+        other: 0,
+      },
+    };
+
+    // ✅ Only include milestones if paymentMode is "credit"
+    if (payload.paymentMode === "credit" && Array.isArray(payload.milestones)) {
+      invoiceData.milestones = payload.milestones;
+    }
+
+    const { data } = await axiosClient.post(
+      `/store-invoice/create`,
+      invoiceData,
+      { headers: authHeaders(token) }
+    );
+
+    console.log("✅ [InvoiceService] Created invoice:", data);
+    return { success: true, invoice: data?.data || data };
+  } catch (err) {
+    console.error("❌ Create invoice API error:", err.response?.data || err);
+    return {
+      success: false,
+      message: err.response?.data?.message || "Failed to create invoice",
+    };
+  }
+}
+,
+
+  // ----------------- Cash / Credit (Debt) Logic -----------------
+  async createPayment({ invoiceId, amount, mode = "cash", customerId }) {
     try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
+      const { token, store_id, storeProfileId } = getAuthContext();
+
+      const payload = {
+        invoiceId,
+        amount,
+        mode, // "cash" | "credit" | "upi" | "card"
+        customerId,
+        store_id,
+        storeProfileId,
+      };
 
       const { data } = await axiosClient.post(
-        `/invoices/create`,
-        { ...payload, store_id, storeProfile_id },
+        `/payments/create`,
+        payload,
         { headers: authHeaders(token) }
       );
 
-      return { success: data?.success ?? true, invoice: data?.data || data };
+      console.log("✅ [InvoiceService] Payment success:", data);
+
+      return { success: true, payment: data?.data || data };
     } catch (err) {
-      console.error("❌ Create invoice API error:", err);
+      console.error("❌ Payment error:", err.response?.data || err);
+      return {
+        success: false,
+        message: err.response?.data?.message || "Payment failed",
+      };
+    }
+  },
+
+  // ----------------- Get Pending Dues (Debt Tracking) -----------------
+  async getCustomerDue(customerId) {
+    try {
+      const { token, store_id, storeProfileId } = getAuthContext();
+
+      const { data } = await axiosClient.get(
+        `/payments/due/${store_id}/${storeProfileId}/${customerId}`,
+        { headers: authHeaders(token) }
+      );
+
+      console.log("✅ [InvoiceService] Customer Due:", data);
+      return { success: true, due: data?.due || 0 };
+    } catch (err) {
+      console.error("❌ Get customer due error:", err.response?.data || err);
+      return { success: false, due: 0 };
+    }
+  },
+
+  // ----------------- Get Invoice by ID -----------------
+async getInvoiceById(invoiceId) {
+  try {
+    const { token, store_id, storeProfileId } = getAuthContext();
+
+    const { data } = await axiosClient.get(
+      `/store-invoice/find-one/${store_id}/${storeProfileId}/${invoiceId}`,
+      { headers: authHeaders(token) }
+    );
+
+    console.log("✅ [InvoiceService] Invoice details:", data);
+    return { success: true, invoice: data?.data || data };
+  } catch (err) {
+    console.error("❌ Get invoice error:", err.response?.data || err);
+    return { success: false, invoice: null };
+  }
+} ,
+
+  async updateInvoice(invoiceId, payload) {
+    try {
+      const { token, store_id, storeProfileId } = getAuthContext();
+
+      // merge mandatory fields
+      const updateData = { ...payload, store_id, storeProfileId };
+
+      const { data } = await axiosClient.put(
+        `/store-invoice/update/${invoiceId}`,
+        updateData,
+        { headers: authHeaders(token) }
+      );
+
+      console.log("✅ [InvoiceService] Invoice updated:", data);
+      return { success: true, invoice: data?.data || data };
+    } catch (err) {
+      console.error("❌ Update invoice error:", err.response?.data || err);
+      return {
+        success: false,
+        message: err.response?.data?.message || "Failed to update invoice",
+      };
+    }
+  },
+
+  // ✅ 2. Delete invoice
+  async deleteInvoice(invoiceId) {
+    try {
+      const { token } = getAuthContext();
+
+      const { data } = await axiosClient.post(
+        `/store-invoice/delete/${invoiceId}`,
+        {},
+        { headers: authHeaders(token) }
+      );
+
+      console.log("✅ [InvoiceService] Invoice deleted:", data);
+      return { success: true, deleted: true };
+    } catch (err) {
+      console.error("❌ Delete invoice error:", err.response?.data || err);
+      return { success: false, deleted: false };
+    }
+  },
+
+  // ✅ 3. Get all invoices (for a store)
+// ----------------- Get all invoices (for a store) -----------------
+async getAllInvoices() {
+  try {
+    const { token, store_id, storeProfileId } = getAuthContext();
+
+    const { data } = await axiosClient.get(
+      `/store-invoice/find-all/${store_id}/${storeProfileId}`,
+      { headers: authHeaders(token) }
+    );
+
+    const invoices = normalizeArray(data, ["data", "invoices", "items"]);
+
+    // ✅ Calculate today and total collection
+    let todayCollection = 0;
+    let totalCollection = 0;
+
+    const today = new Date().toISOString().split("T")[0]; // e.g. 2025-09-05
+
+    invoices.forEach((inv) => {
+      const createdDate = new Date(inv.createdAt).toISOString().split("T")[0];
+
+      // total collection = sum of invoice.total
+      totalCollection += inv.total || 0;
+
+      // today’s collection = only invoices created today
+      if (createdDate === today) {
+        todayCollection += inv.total || 0;
+      }
+    });
+
+    console.log("✅ [InvoiceService] All invoices:", invoices);
+    console.log("📌 Today Collection:", todayCollection);
+    console.log("📌 Total Collection:", totalCollection);
+
+    return { success: true, invoices, todayCollection, totalCollection };
+  } catch (err) {
+    console.error("❌ Get all invoices error:", err.response?.data || err);
+    return { success: false, invoices: [], todayCollection: 0, totalCollection: 0 };
+  }
+}
+,
+
+  // ✅ 4. Get invoice by ID (already created but aligned here)
+  // async getInvoiceById(invoiceId) {
+  //   try {
+  //     const { token, store_id, storeProfileId } = getAuthContext();
+
+  //     const { data } = await axiosClient.get(
+  //       `/store-invoice/findBy-id/${invoiceId}`,
+  //       { headers: authHeaders(token) }
+  //     );
+
+  //     console.log("✅ [InvoiceService] Invoice details:", data);
+  //     return { success: true, invoice: data?.data || data };
+  //   } catch (err) {
+  //     console.error("❌ Get invoice error:", err.response?.data || err);
+  //     return { success: false, invoice: null };
+  //   }
+  // },
+
+  // ✅ 5. Low Stock Alert update
+  async updateLowStock({ productId, leftProductQty, markAsRead = false }) {
+    try {
+      const { token, store_id, storeProfileId } = getAuthContext();
+
+      const payload = {
+        store_id,
+        storeProfileId,
+        productId,
+        updateData: { markAsRead, leftProductQty },
+      };
+
+      const { data } = await axiosClient.post(
+        `/store-invoice/update-low-stock-alert`,
+        payload,
+        { headers: authHeaders(token) }
+      );
+
+      console.log("✅ [InvoiceService] Low stock updated:", data);
+      return { success: true, lowStock: data?.data || data };
+    } catch (err) {
+      console.error("❌ Low stock update error:", err.response?.data || err);
+      return { success: false, lowStock: null };
+    }
+  },
+
+  // ✅ 6. Filter invoices by type (due, overdue, thisWeek, etc.)
+  async filterInvoices(filterType = "overdue") {
+    try {
+      const { token } = getAuthContext();
+
+      const { data } = await axiosClient.get(
+        `/store-invoice/filter?filterType=${filterType}`,
+        { headers: authHeaders(token) }
+      );
+
+      const invoices = normalizeArray(data, ["data", "invoices"]);
+      console.log("✅ [InvoiceService] Filtered invoices:", invoices);
+
+      return { success: true, invoices };
+    } catch (err) {
+      console.error("❌ Filter invoices error:", err.response?.data || err);
+      return { success: false, invoices: [] };
+    }
+  },
+
+  // ✅ 7. Update milestone payments (mark paid/unpaid, counted)
+  async updateMilestones(invoiceId, milestones = []) {
+    try {
+      const { token } = getAuthContext();
+
+      const payload = { milestones };
+
+      const { data } = await axiosClient.put(
+        `/store-customer-invoice/paid-milestone/${invoiceId}`,
+        payload,
+        { headers: authHeaders(token) }
+      );
+
+      console.log("✅ [InvoiceService] Milestones updated:", data);
+      return { success: true, milestones: data?.milestones || [] };
+    } catch (err) {
+      console.error("❌ Update milestones error:", err.response?.data || err);
+      return { success: false, milestones: [] };
+    }
+  },
+
+  // ✅ 8. Export invoice data (PDF/Excel) based on filter
+  async exportFilteredPDF(filterType = "thisWeek") {
+    try {
+      const { token } = getAuthContext();
+
+      const res = await axios.get(
+        `${API_BASE}/store-invoice/export-filter-data?filterType=${filterType}`,
+        {
+          headers: authHeaders(token),
+          responseType: "blob", // important for file download
+        }
+      );
+
+      // create download link
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `invoice-${filterType}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      console.log("✅ [InvoiceService] PDF exported");
+      return { success: true };
+    } catch (err) {
+      console.error("❌ Export PDF error:", err.response?.data || err);
       return { success: false };
     }
   },
 };
+
+

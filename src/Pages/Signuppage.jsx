@@ -22,21 +22,52 @@ const SignupPage = () => {
   /**
    * Step 1: Request OTP
    */
-  const handleGetOtp = async () => {
-    if (phone.length !== 10) {
-      return toast.error("Enter a valid 10-digit number");
+  // const handleGetOtp = async () => {
+  //   if (phone.length !== 10) {
+  //     return toast.error("Enter a valid 10-digit number");
+  //   }
+  //   try {
+  //     console.log("[Signup] Sending OTP to:", phone);
+  //     const res = await AuthService.register(phone); // 🔹 call API
+  //     toast.success(res.message || "OTP sent!");
+  //     console.log("[Signup] OTP response:", res);
+  //     setStep("otp");
+  //   } catch (err) {
+  //     console.error("[Signup] OTP error:", err);
+  //     toast.error(err.message || "Failed to send OTP");
+  //   }
+  // };
+
+
+const handleGetOtp = async () => {
+  if (phone.length !== 10) {
+    return toast.error("Enter a valid 10-digit number");
+  }
+  try {
+    console.log("[Signup] Sending OTP to:", phone);
+    const res = await AuthService.register(phone);
+
+    console.log("[Signup] OTP response:", res);
+
+    // Success message
+    toast.success(res.message || "OTP sent!");
+
+
+    if (res?.mobile_otp) {
+      toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 5000 });
+    } else {
+      console.warn("⚠️ No OTP found in response:", res);
     }
-    try {
-      console.log("[Signup] Sending OTP to:", phone);
-      const res = await AuthService.register(phone); // 🔹 call API
-      toast.success(res.message || "OTP sent!");
-      console.log("[Signup] OTP response:", res);
-      setStep("otp");
-    } catch (err) {
-      console.error("[Signup] OTP error:", err);
-      toast.error(err.message || "Failed to send OTP");
-    }
-  };
+
+    setStep("otp");
+  } catch (err) {
+    console.error("[Signup] OTP error:", err);
+    toast.error(err.message || "Failed to send OTP");
+  }
+};
+
+
+
 
   /**
    * Step 2: Verify OTP
@@ -70,20 +101,30 @@ const SignupPage = () => {
   /**
    * OTP input handling
    */
-  const handleOtpChange = (e, index) => {
-    const value = e.target.value.replace(/\D/, ""); // allow only digits
-    if (!value) return;
-    const newOtp = otp.split("");
-    newOtp[index] = value;
-    setOtp(newOtp.join(""));
-    if (index < 5) document.getElementById(`otp-${index + 1}`)?.focus();
-  };
+const handleOtpChange = (e, index) => {
+  const value = e.target.value.replace(/\D/, ""); // only digits
+  if (!value) return;
 
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && (!otp[index] || otp[index] === "")) {
-      if (index > 0) document.getElementById(`otp-${index - 1}`)?.focus();
-    }
-  };
+  const newOtp = otp.split("");
+  newOtp[index] = value;
+  const updatedOtp = newOtp.join("");
+  setOtp(updatedOtp);
+
+  // Auto focus to next input
+  if (index < 5 && value) {
+    document.getElementById(`otp-${index + 1}`)?.focus();
+  }
+};
+
+const handleKeyDown = (e, index) => {
+  if (e.key === "Backspace") {
+    const newOtp = otp.split("");
+    newOtp[index] = "";
+    setOtp(newOtp.join(""));
+    if (index > 0) document.getElementById(`otp-${index - 1}`)?.focus();
+  }
+};
+
 
   return (
     <div className="login-wrapper" style={{ minHeight: "100vh" }}>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { ImagePlus } from "lucide-react";
 import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 import { ProductService } from "../../api/productservice"; // ✅ new service i
@@ -402,7 +402,7 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
 
 export default function D3Product() {
 
-const initialFormData = {
+ const initialFormData = {
     name: "",
     product_image: null,
     quantity: "",
@@ -417,12 +417,50 @@ const initialFormData = {
     price_type: "",
   };
 
+  const { id } = useParams(); // Get product ID from URL for edit mode
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("product");
   const [formData, setFormData] = useState(initialFormData);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isEditMode, setIsEditMode] = useState(!!id); // Check if in edit mode
 
-  
+  // Fetch product data for edit mode
+  useEffect(() => {
+    if (id) {
+      const fetchProduct = async () => {
+        try {
+          const { product, success, error } = await ProductService.fetchProductById(id);
+          if (success && product) {
+            // Map API data to formData, ensuring all fields are strings or appropriate types
+            setFormData({
+              name: product.name || "",
+              product_image: null, // Image is not fetched as a file; handle separately if needed
+              quantity: String(product.quantity || ""),
+              unit: product.unit || "",
+              min_quantity: String(product.min_quantity || ""),
+              sales_price: String(product.sales_price || ""),
+              purchase_price: String(product.purchase_price || ""),
+              category: product.category || "",
+              gstInclusive: product.gstInclusive === "true" || product.gstInclusive === true,
+              hsn_number: product.hsn_number || "",
+              tax: String(product.tax || ""),
+              price_type: product.price_type || "",
+            });
+            setActiveTab(product.product_type || "product");
+          } else {
+            toast.error(error || "Failed to fetch product", { position: "top-right", autoClose: 4000 });
+            navigate("/products"); // Redirect if product not found
+          }
+        } catch (err) {
+          console.error("Error fetching product:", err);
+          toast.error("Failed to fetch product", { position: "top-right", autoClose: 4000 });
+          navigate("/products");
+        }
+      };
+      fetchProduct();
+    }
+  }, [id, navigate]);
 
   const friendlyFieldName = (field) => {
     const map = {
@@ -433,7 +471,6 @@ const initialFormData = {
       sales_price: "Sale Price",
       purchase_price: "Purchase Price",
       category: "Category",
-      // optional advanced mappings
       hsn_number: "HSN/SCN Code",
       tax: "Tax",
       price_type: "Price Type",
@@ -444,15 +481,13 @@ const initialFormData = {
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
-    // file handling: pre-check size and set error toast
     if (files && files.length > 0) {
       const file = files[0];
       if (file.size > MAX_FILE_SIZE_BYTES) {
         const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
         toast.error(`Image too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 4000 });
-        // set an error flag for the file input name (product_image)
         setErrors((prev) => ({ ...prev, product_image: `Max ${mb}MB` }));
-        return; // do not set the file
+        return;
       }
       setFormData((prev) => ({ ...prev, [name]: file }));
       setErrors((prev) => ({ ...prev, [name]: false }));
@@ -464,7 +499,6 @@ const initialFormData = {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    // clear single-field error when changed
     setErrors((prev) => ({ ...prev, [name]: false }));
   };
 
@@ -488,7 +522,6 @@ const initialFormData = {
     setErrors(newErrors);
 
     if (missingFields.length > 0) {
-      // show friendly list of missing fields
       toast.error(`Please fill required fields: ${missingFields.join(", ")}`, {
         position: "top-right",
         autoClose: 4000,
@@ -506,85 +539,77 @@ const initialFormData = {
     }
 
     try {
-      // prepare payload (do not include file itself here)
       const payload = { ...formData };
       const file = formData.product_image || null;
       delete payload.product_image;
 
-      // --- Apply safe defaults before API send ---
       if (!payload.hsn_number) payload.hsn_number = "DEFAULT_HSN";
       if (!payload.tax) payload.tax = "0";
       if (!payload.price_type) payload.price_type = "fixed";
 
       if (activeTab === "service") {
-        // make sure backend gets required numeric keys even if user skipped
         if (!payload.purchase_price || payload.purchase_price === "") payload.purchase_price = "0";
         if (!payload.category || payload.category === "") payload.category = "General";
-        // For service min_quantity might be empty - ensure numeric
         if (!payload.min_quantity || payload.min_quantity === "") payload.min_quantity = "0";
       } else {
-        // product: ensure numbers are strings (FormData expects strings)
         payload.min_quantity = payload.min_quantity || "0";
       }
 
-      // convert boolean to string for gstInclusive
-      if (payload.gstInclusive === true) payload.gstInclusive = "true";
-      else if (payload.gstInclusive === false) payload.gstInclusive = "false";
+      payload.gstInclusive = String(payload.gstInclusive);
 
       const productType = activeTab === "product" ? "inventory" : "service";
 
-      // call centralized ProductService
-      const res = await ProductService.createProduct(payload, file, productType);
+      let res;
+      if (isEditMode) {
+        // Update product
+        res = await ProductService.updateProduct(id, payload, file, productType);
+      } else {
+        // Create product
+        res = await ProductService.createProduct(payload, file, productType);
+      }
 
-      toast.success(
-        `${activeTab === "product" ? "Product" : "Service"} saved successfully!`,
-        { position: "top-right", autoClose: 3000 }
-      );
-
-      console.log("✅ API Response:", res);
-
-      // reset
-      setFormData(initialFormData);
-      setErrors({});
-      setShowAdvanced(false);
+      if (res.success) {
+        toast.success(
+          `${activeTab === "product" ? "Product" : "Service"} ${isEditMode ? "updated" : "saved"} successfully!`,
+          { position: "top-right", autoClose: 3000 }
+        );
+        setFormData(initialFormData);
+        setErrors({});
+        setShowAdvanced(false);
+        if (isEditMode) navigate("/products"); // Redirect to product list after update
+      } else {
+        throw new Error(res.error || "Operation failed");
+      }
     } catch (err) {
-      // Handle file-too-large message thrown by either front or backend
-      console.error("❌ Error saving product:", err);
+      console.error(`❌ Error ${isEditMode ? "updating" : "saving"} product:`, err);
 
-      // if our frontend check threw a string error:
       if (err?.message && err.message.includes("too large")) {
         toast.error(err.message, { position: "top-right", autoClose: 5000 });
         return;
       }
 
-      // axios / backend error handling
       const backendMessage = err?.response?.data?.message || err?.response?.data?.error;
-      const backendCode = err?.response?.data?.code;
       const status = err?.response?.status;
 
-      // Multer error on backend sometimes arrives as 500 with message containing "File too large"
       if (backendMessage && backendMessage.toLowerCase().includes("file too large")) {
         const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
         toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
         return;
       }
 
-      // More generic: if backend returns validation type like "All required fields must be provided"
       if (backendMessage) {
         toast.error(backendMessage, { position: "top-right", autoClose: 5000 });
         return;
       }
 
       if (status === 413) {
-        // Payload Too Large
         const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
         toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
         return;
       }
 
-      // fallback
       toast.error(
-        `Failed to save ${activeTab === "product" ? "product" : "service"}. Please try again.`,
+        `Failed to ${isEditMode ? "update" : "save"} ${activeTab === "product" ? "product" : "service"}. Please try again.`,
         { position: "top-right", autoClose: 5000 }
       );
     }
@@ -599,21 +624,26 @@ const initialFormData = {
 
       <div className="flex space-x-24 px-10 py-4">
         {["product", "service"].map((tab) => (
-          <button
+     
+           <button
             key={tab}
             onClick={() => {
-              setActiveTab(tab);
-              setFormData(initialFormData); // Reset form when switching tabs
-              setErrors({});
+              if (!isEditMode) {
+                setActiveTab(tab);
+                setFormData(initialFormData);
+                setErrors({});
+              }
             }}
             className={`pb-2 text-lg font-medium border-b-2 ${
               activeTab === tab
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-500"
-            }`}
+            } ${isEditMode ? "cursor-not-allowed opacity-50" : ""}`}
+            disabled={isEditMode}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
+
         ))}
       </div>
 

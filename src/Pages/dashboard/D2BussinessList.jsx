@@ -10,8 +10,8 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const D2BusinessList = () => {
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeBusinessId, setActiveBusinessId] = useState(
-    localStorage.getItem("activeBusinessId") || null
+ const [storeProfileId, setstoreProfileId] = useState(
+    localStorage.getItem("storeProfileId") || ""
   );
 
   const store_id = Cookies.get("store_id");
@@ -19,6 +19,7 @@ const D2BusinessList = () => {
   const navigate = useNavigate();
 
   // ✅ Fetch all businesses
+ // ✅ Fetch all businesses
   const fetchBusinesses = async () => {
     if (!store_id || !token) {
       alert("⚠️ Store ID or Token missing. Please login again.");
@@ -40,6 +41,15 @@ const D2BusinessList = () => {
         (Array.isArray(res.data) ? res.data : []);
 
       setBusinesses(data);
+
+
+      if (data.length > 0 && storeProfileId) {
+        const exists = data.some((b) => String(b._id) === String(storeProfileId));
+        if (!exists) {
+          localStorage.removeItem("storeProfileId");
+          setstoreProfileId("");
+        }
+      }
     } catch (err) {
       console.error("❌ Error fetching businesses:", err);
       setBusinesses([]);
@@ -79,14 +89,28 @@ const D2BusinessList = () => {
   const handleAdd = () => {
     navigate("/dashboard/information");
   };
+  
 
   // ✅ Set Active Business
-  const handleSetActive = (id) => {
-    setActiveBusinessId(id);
-    localStorage.setItem("activeBusinessId", id);
-    console.log("✅ Active Business ID:", id);
-    alert("✔️ Active business set successfully!");
-  };
+  // const handleSetActive = (id) => {
+  //   setstoreProfileId(id);
+  //   localStorage.setItem("storeProfileId", id);
+  //   console.log("✅ Active Business ID:", id);
+  //   alert("✔️ Active business set successfully!");
+  // };
+
+  // ✅ Set Active Business
+const handleSetActive = (id) => {
+  // localStorage me dono set karna
+  localStorage.setItem("storeProfileId", id);         // agar kahi use ho raha hai to
+  localStorage.setItem("store_profile_id", id);         // ye main key hai jo guard & APIs use karenge
+
+  setstoreProfileId(id);
+
+  console.log("✅ Active Business ID:", id);
+  alert("✔️ Active business set successfully!");
+};
+
 
   return (
     <>
@@ -126,62 +150,65 @@ const D2BusinessList = () => {
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {businesses.map((item) => (
-                  <tr
-                    key={item._id}
-                    className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-                      activeBusinessId === item._id ? "bg-green-50" : ""
-                    }`}
-                  >
-                    <td className="p-4 font-medium">
-                      {item.businessName || "-"}{" "}
-                      {activeBusinessId === item._id && (
-                        <span className="ml-2 text-green-600 font-semibold">
-                          (Active)
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4">{item.gstNumber || "-"}</td>
-                    <td className="p-4">{item.address || "-"}</td>
-                    <td className="p-4">{item.mobile || "-"}</td>
-                    <td className="p-4">{item.email || "-"}</td>
-                    <td className="p-4">{item.industry || "-"}</td>
-                    <td className="p-4">
-                      {item.created_at
-                        ? new Date(item.created_at).toLocaleDateString()
-                        : "-"}
-                    </td>
-                    <td className="p-4 flex gap-3">
-                      <button
-                        onClick={() => handleSetActive(item._id)}
-                        className={`flex items-center gap-1 ${
-                          activeBusinessId === item._id
-                            ? "text-green-600"
-                            : "text-gray-600 hover:text-green-600"
-                        }`}
-                      >
-                        <FaCheckCircle />{" "}
-                        {activeBusinessId === item._id
-                          ? "Active"
-                          : "Set Active"}
-                      </button>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                      >
-                        <FaEdit /> Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item._id)}
-                        className="flex items-center gap-1 text-red-600 hover:text-red-800"
-                      >
-                        <FaTrash /> Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+<tbody>
+  {businesses.map((item) => {
+    // ✅ यहाँ define करो
+    const isActive = String(storeProfileId) === String(item._id);
+
+    return (
+      <tr
+        key={item._id}
+        className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+          isActive ? "bg-green-50" : ""
+        }`}
+      >
+        <td className="p-4 font-medium">
+          {item.businessName || "-"}{" "}
+          {isActive && (
+            <span className="ml-2 text-green-600 font-semibold">
+              (Active)
+            </span>
+          )}
+        </td>
+        <td className="p-4">{item.gstNumber || "-"}</td>
+        <td className="p-4">{item.address || "-"}</td>
+        <td className="p-4">{item.mobile || "-"}</td>
+        <td className="p-4">{item.email || "-"}</td>
+        <td className="p-4">{item.industry || "-"}</td>
+        <td className="p-4">
+          {item.created_at
+            ? new Date(item.created_at).toLocaleDateString()
+            : "-"}
+        </td>
+        <td className="p-4 flex gap-3">
+          <button
+            onClick={() => handleSetActive(item._id)}
+            className={`flex items-center gap-1 ${
+              isActive
+                ? "text-green-600"
+                : "text-gray-600 hover:text-green-600"
+            }`}
+          >
+            <FaCheckCircle /> {isActive ? "Active" : "Set Active"}
+          </button>
+          <button
+            onClick={() => handleEdit(item)}
+            className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+          >
+            <FaEdit /> Edit
+          </button>
+          <button
+            onClick={() => handleDelete(item._id)}
+            className="flex items-center gap-1 text-red-600 hover:text-red-800"
+          >
+            <FaTrash /> Delete
+          </button>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+
             </table>
           )}
         </div>

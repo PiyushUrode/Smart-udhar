@@ -9,34 +9,67 @@ function DashboardGuards({ children }) {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    try {
-      // Standardize to use Cookies for store_id (as in business list)
-      const storeId = Cookies.get("store_id");
-      // Use consistent key: "store_profile_id" for the active business profile ID
-      const profileId = localStorage.getItem("store_profile_id");
+  // useEffect(() => {
+  //   try {
+  //     // Standardize to use Cookies for store_id (as in business list)
+  //     const storeId = Cookies.get("store_id");
+  //     // Use consistent key: "store_profile_id" for the active business profile ID
+  //     // const profileId = localStorage.getItem("store_profile_id");
 
-      if (!storeId || !profileId) {
-        setError("⚠️ No active business profile found. Please select one.");
-        setChecking(false);
+  //     const profileId = localStorage.getItem("storeProfileId");
 
-        setTimeout(() => {
-          navigate("/dashboard/bussinessList"); // ✅ fixed route
-        }, 1000);
-        return;
-      }
+  //     if (!storeId || !profileId) {
+  //       setError("⚠️ No active business profile found. Please select one.");
+  //       setChecking(false);
 
-      setChecking(false);
-    } catch (err) {
-      // Suppress console errors as per request - handle silently
-      setError("Unexpected error. Please login again.");
+  //       setTimeout(() => {
+  //         navigate("/dashboard/bussinessList"); // ✅ fixed route
+  //       }, 1000);
+  //       return;
+  //     }
+
+  //     setChecking(false);
+  //   } catch (err) {
+  //     // Suppress console errors as per request - handle silently
+  //     setError("Unexpected error. Please login again.");
+  //     setChecking(false);
+
+  //     setTimeout(() => {
+  //       navigate("/login");
+  //     }, 1000);
+  //   }
+  // }, [navigate]);
+
+
+useEffect(() => {
+  try {
+    const storeId = Cookies.get("store_id");
+    const profileId = localStorage.getItem("store_profile_id");
+
+    if (!storeId || !profileId) {
+      setError("⚠️ No active business profile found. Please select one.");
       setChecking(false);
 
       setTimeout(() => {
-        navigate("/login");
+        navigate("/dashboard/bussinessList");
       }, 1000);
+      return;
     }
-  }, [navigate]);
+
+    setChecking(false);
+  } catch (err) {
+    setError("Unexpected error. Please login again.");
+    setChecking(false);
+
+    setTimeout(() => {
+      navigate("/login");
+    }, 1000);
+  }
+}, [navigate]);
+
+
+
+
 
   if (checking) {
     return (

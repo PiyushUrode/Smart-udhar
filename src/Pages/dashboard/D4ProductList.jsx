@@ -167,7 +167,7 @@ const D4ProductList = () => {
             </tr>
           ) : (
             displayedItems.map((item) => {
-              const isLow = (item.sold_quantity || 0) < 10;
+              const isLow = (item.quantity || 0) < 10;
               return (
                 <tr
                   key={item._id || item.name}
@@ -197,7 +197,7 @@ const D4ProductList = () => {
                       isLow ? "text-red-600" : "text-green-600"
                     }`}
                   >
-                    {item.sold_quantity || 0}
+                    {item.quantity || 0}
                   </td>
                   <td className="p-3">
                     <span
@@ -212,13 +212,12 @@ const D4ProductList = () => {
                   </td>
                   <td className="p-3">
                     <div className="flex justify-start items-center gap-4">
-                      <button
-                        title="Edit"
-                        className="text-blue-600 text-xl hover:scale-110 transition-transform"
-                        onClick={() => navigate(`/products/edit/${item._id}`)}
-                      >
-                        <FaEdit />
-                      </button> 
+ <button
+  onClick={() => handleEdit(item)}
+  className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+>
+  <FaEdit /> Edit
+</button>
                       <button
                         title="Delete"
                         className="text-red-500 text-xl hover:scale-110 transition-transform"
@@ -249,6 +248,10 @@ const D4ProductList = () => {
       </table>
     );
   };
+const handleEdit = (product) => {
+  console.log("✏️ Edit Product ID:", product._id);
+  navigate(`/dashboard/product/${product._id}`);
+};
 
   // Delete product
   const handleDelete = async (id) => {

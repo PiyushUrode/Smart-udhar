@@ -2,80 +2,72 @@
 import axiosClient from "./axiosClient";
 import { AuthService } from "./authservice";
 
-/**
- * ProductService
- * - centralizes product/service APIs (create, fetch, update)
- * - handles auth & store context
- * - supports optional product image upload
- */
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB safe default
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 // ---------- Helpers ----------
 function getStoreProfileId() {
   return (
-    (typeof AuthService.getStoreProfileId === "function" &&
-      AuthService.getStoreProfileId()) ||
+    AuthService.getStoreProfileId?.() ||
     localStorage.getItem("store_profile_id")
   );
 }
 
 function getAuthContext() {
-  const token = AuthService.getToken?.() || null;
-  const store_id = AuthService.getStoreId?.() || null;
-  const storeProfile_id = getStoreProfileId() || null;
+  const token = AuthService.getToken?.();
+  const store_id = AuthService.getStoreId?.();
+  const storeProfileId = getStoreProfileId();
 
-  if (!token) throw new Error("Missing auth token");
-  if (!store_id) throw new Error("Missing store_id");
-  if (!storeProfile_id) throw new Error("Missing storeProfile_id");
+  if (!token) throw new Error("❌ Missing auth token");
+  if (!store_id) throw new Error("❌ Missing store_id");
+  if (!storeProfileId) throw new Error("❌ Missing storeProfileId");
 
-  return { token, store_id, storeProfile_id };
+  return { token, store_id, storeProfileId };
 }
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` };
 }
 
+function buildFormData(payload, file, extra = {}) {
+  const fd = new FormData();
+
+  // add extra fields
+  Object.entries(extra).forEach(([k, v]) => fd.append(k, v));
+
+  // add payload
+  Object.entries(payload || {}).forEach(([k, v]) => {
+    if (v === undefined || v === null) return;
+    fd.append(k, typeof v === "boolean" ? String(v) : v);
+  });
+
+  // add file
+  if (file) {
+    if (file.size && file.size > MAX_FILE_SIZE_BYTES) {
+      const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
+      throw new Error(`❌ Image too large. Max ${mb} MB allowed`);
+    }
+    fd.append("product_image", file);
+  }
+
+  return fd;
+}
+
 // ---------- ProductService ----------
 export const ProductService = {
   /**
-   * Create new product/service
-   * @param {Object} payload - product fields (excluding product_image)
-   * @param {File|null} file - optional image file
-   * @param {String} productType - "inventory" | "service"
+   * Create product/service
    */
   async createProduct(payload, file, productType = "inventory") {
     try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
+      const { token, store_id, storeProfileId } = getAuthContext();
 
-      // file size check guard
-      if (file && file.size && file.size > MAX_FILE_SIZE_BYTES) {
-        const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
-        throw new Error(`Selected image is too large. Max ${mb} MB allowed.`);
-      }
-
-      const fd = new FormData();
-
-      // mandatory relations
-      fd.append("store_id", store_id.toString().trim());
-      fd.append("storeProfile_id", storeProfile_id.toString().trim());
-
-      // required metadata
-      fd.append("product_type", productType); // inventory | service
-      fd.append("sold_quantity", "0");
-
-      // append payload fields (skip null/undefined)
-      Object.entries(payload || {}).forEach(([k, v]) => {
-        if (v === undefined || v === null) return;
-        const value = typeof v === "boolean" ? (v ? "true" : "false") : v;
-        fd.append(k, value);
+      const fd = buildFormData(payload, file, {
+        store_id: store_id.toString(),
+        storeProfileId: storeProfileId.toString(),
+        product_type: productType,
+        sold_quantity: "0",
+        ...(file ? {} : { use_default_image: "true" }),
       });
-
-      // append image or fallback flag
-      if (file) {
-        fd.append("product_image", file);
-      } else {
-        fd.append("use_default_image", "true");
-      }
 
       const { data } = await axiosClient.post("/store-product/create", fd, {
         headers: authHeaders(token),
@@ -83,42 +75,100 @@ export const ProductService = {
 
       return { success: data?.success ?? true, product: data?.data || data };
     } catch (err) {
-      console.error("❌ ProductService.createProduct error:", err);
+      console.error("❌ createProduct error:", err);
       return { success: false, product: null, error: err.message };
     }
   },
 
   /**
-   * Fetch all products/services (paginated)
+   * Fetch all products/services
    */
   async fetchProducts({ page, limit } = {}) {
     try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
+      const { token, store_id, storeProfileId } = getAuthContext();
 
-      const qs =
-        page || limit
-          ? `?${new URLSearchParams({
-              ...(page ? { page: String(page) } : {}),
-              ...(limit ? { limit: String(limit) } : {}),
-            }).toString()}`
-          : "";
+      const qs = page || limit
+        ? `?${new URLSearchParams({ ...(page && { page }), ...(limit && { limit }) })}`
+        : "";
 
       const { data } = await axiosClient.get(
-        `/store-product/find-all/${store_id}/${storeProfile_id}${qs}`,
+        `/store-product/find-all/${store_id}/${storeProfileId}${qs}`,
         { headers: authHeaders(token) }
       );
 
-      let products = [];
-      if (Array.isArray(data)) products = data;
-      else if (Array.isArray(data?.data)) products = data.data;
-      else if (Array.isArray(data?.products)) products = data.products;
-      else if (Array.isArray(data?.data?.products))
-        products = data.data.products;
+      const products =
+        data?.data?.products ||
+        data?.products ||
+        data?.data ||
+        (Array.isArray(data) ? data : []);
 
       return { success: data?.success ?? true, products };
     } catch (err) {
-      console.error("❌ Fetch products error:", err);
+      console.error("❌ fetchProducts error:", err);
       return { success: false, products: [] };
     }
   },
+
+  /**
+   * Fetch product by ID
+   */
+  async fetchProductById(id) {
+    try {
+      const { token } = getAuthContext();
+
+      const { data } = await axiosClient.get(
+        `/store-product/findBy-id/${id}`,
+        { headers: authHeaders(token) }
+      );
+
+      const product = data?.data || data?.product || data;
+      return { success: true, product };
+    } catch (err) {
+      console.error("❌ fetchProductById error:", err);
+      return { success: false, product: null, error: err.message };
+    }
+  },
+
+
+async getProduct(id) {
+  const { token } = getAuthContext();
+  const { data } = await axiosClient.get(
+    `/store-product/findBy-id/${id}`,
+    { headers: authHeaders(token) }
+  );
+  return data;
+}
+,
+
+ // src/api/productService.js
+// ... (Existing code unchanged until updateProduct)
+
+/**
+ * Update product
+ */
+async updateProduct(id, payload, file = null, productType = "inventory") {
+  try {
+    const { token, store_id, storeProfileId } = getAuthContext();
+
+    const fd = buildFormData(payload, file, {
+      store_id: store_id.toString(),
+      storeProfileId: storeProfileId.toString(),
+      product_type: productType,
+      // Only include use_default_image if no file is provided and no existing image is retained
+      ...(file ? {} : { use_default_image: payload.product_image ? "false" : "true" }),
+    });
+
+    const { data } = await axiosClient.put(
+      `/store-product/update/${id}`,
+      fd,
+      { headers: authHeaders(token) }
+    );
+
+    return { success: data?.success ?? true, product: data?.data || data };
+  } catch (err) {
+    console.error("❌ updateProduct error:", err);
+    throw err; // Throw the error to be handled by the caller
+  }
+}
+
 };

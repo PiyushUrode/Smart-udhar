@@ -14,7 +14,7 @@ export const StaffService = {
 
     const fd = new FormData();
     fd.append("store_id", storeId);
-    fd.append("storeProfile_id", storeProfileId);
+    fd.append("storeProfileId", storeProfileId);
     Object.entries(payload).forEach(([k, v]) => fd.append(k, v));
     if (staffImage) fd.append("image", staffImage);
 
