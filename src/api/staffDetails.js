@@ -6,7 +6,7 @@ export const StaffService = {
   async createStaff(payload, staffImage) {
     const token = AuthService.getToken();
     const storeId = AuthService.getStoreId();
-    const storeProfileId = localStorage.getItem("store_profile_id");
+    const storeProfileId = localStorage.getItem("storeProfileId");
 
     if (!token || !storeId || !storeProfileId) {
       throw new Error("Missing authentication or store details");
@@ -27,7 +27,7 @@ export const StaffService = {
 async getAllStaff() {
   const token = AuthService.getToken();
   const storeId = AuthService.getStoreId();
-  const storeProfileId = localStorage.getItem("store_profile_id");
+  const storeProfileId = localStorage.getItem("storeProfileId");
 
   if (!token || !storeId || !storeProfileId) {
     throw new Error("Missing authentication or store details");
@@ -54,7 +54,7 @@ async getAllStaff() {
   async findStaffByName(name) {
     const token = AuthService.getToken();
     const storeId = AuthService.getStoreId();
-    const storeProfileId = localStorage.getItem("store_profile_id");
+    const storeProfileId = localStorage.getItem("storeProfileId");
 
     const { data } = await axiosClient.get(
       `/store-staff/findBy-name/${storeId}/${storeProfileId}?name=${encodeURIComponent(

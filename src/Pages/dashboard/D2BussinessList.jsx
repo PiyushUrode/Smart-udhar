@@ -103,7 +103,7 @@ const D2BusinessList = () => {
 const handleSetActive = (id) => {
   // localStorage me dono set karna
   localStorage.setItem("storeProfileId", id);         // agar kahi use ho raha hai to
-  localStorage.setItem("store_profile_id", id);         // ye main key hai jo guard & APIs use karenge
+  localStorage.setItem("storeProfileId", id);         // ye main key hai jo guard & APIs use karenge
 
   setstoreProfileId(id);
 

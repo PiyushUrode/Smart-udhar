@@ -5,18 +5,18 @@ import { API_BASE } from "../config/constant.js";
 import axios from "axios";
 
 // ----------------- Helpers -----------------
-function getStoreProfileId() {
+function getstoreProfileId() {
   return (
-    (typeof AuthService.getStoreProfileId === "function" &&
-      AuthService.getStoreProfileId()) ||
-    localStorage.getItem("store_profile_id")
+    (typeof AuthService.getstoreProfileId === "function" &&
+      AuthService.getstoreProfileId()) ||
+    localStorage.getItem("storeProfileId")
   );
 }
 
 export function getAuthContext() {
   const token = AuthService.getToken?.() || Cookies.get("authToken") || null;
   const store_id = AuthService.getStoreId?.() || Cookies.get("store_id") || null;
-  const storeProfileId = getStoreProfileId() || null;
+  const storeProfileId = getstoreProfileId() || null;
 
   if (!token) throw new Error("Missing auth token");
   if (!store_id) throw new Error("Missing store_id");

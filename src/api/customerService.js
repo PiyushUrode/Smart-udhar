@@ -2,15 +2,15 @@
 import axiosClient from "./axiosClient";
 import { AuthService } from "./authservice.js";
 
-const getStoreProfileId = () =>
-  (typeof AuthService.getStoreProfileId === "function" &&
-    AuthService.getStoreProfileId()) ||
-  localStorage.getItem("store_profile_id");
+const getstoreProfileId = () =>
+  (typeof AuthService.getstoreProfileId === "function" &&
+    AuthService.getstoreProfileId()) ||
+  localStorage.getItem("storeProfileId");
 
 function getAuthContext() {
   const token = AuthService.getToken?.() || null;
   const store_id = AuthService.getStoreId?.() || null;
-  const storeProfileId = getStoreProfileId() || null;
+  const storeProfileId = getstoreProfileId() || null;
 
   if (!token) throw new Error("Missing auth token");
   if (!store_id) throw new Error("Missing store_id");

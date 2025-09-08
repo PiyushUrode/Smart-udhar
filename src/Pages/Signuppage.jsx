@@ -72,31 +72,29 @@ const handleGetOtp = async () => {
   /**
    * Step 2: Verify OTP
    */
-  const handleVerifyOtp = async () => {
-    if (otp.length !== 6) return toast.error("Enter 6-digit OTP");
-    try {
-      console.log("[Signup] Verifying OTP:", otp);
-      // 🔹 Call API → verify user
-      const res = await AuthService.verify(phone, otp);
+const handleVerifyOtp = async () => {
+  if (otp.length !== 6) return toast.error("Enter 6-digit OTP");
+  try {
+    console.log("[Signup] Verifying OTP:", otp);
 
-      // 🔹 Save token + store info in context
-      await login(phone, otp); 
+    // ✅ Signup verification API
+    const res = await AuthService.verify(phone, otp);
 
-      toast.success(res.message || "OTP verified successfully!");
-      console.log("[Signup] Verify response:", res);
+    toast.success(res.message || "OTP verified successfully!");
+    console.log("[Signup] Verify response:", res);
 
-      // 🔹 If user has businesses → go to business list
-      // else → redirect to create-business page
-      if (res?.stores?.length > 0) {
-        navigate("/dashboard/businessList");
-      } else {
-        navigate("/dashboard/createBusiness");
-      }
-    } catch (err) {
-      console.error("[Signup] Verify error:", err);
-      toast.error(err.message || "Invalid OTP");
+    // ✅ Redirect after success
+    if (res?.stores?.length > 0) {
+      navigate("/dashboard/businessList");
+    } else {
+      navigate("/dashboard/createBusiness");
     }
-  };
+  } catch (err) {
+    console.error("[Signup] Verify error:", err);
+    toast.error(err.message || "Invalid OTP");
+  }
+};
+
 
   /**
    * OTP input handling

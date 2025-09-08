@@ -2,16 +2,16 @@
 import { AuthService } from "./authService";
 import { api } from "../api/api.js";
 
-function getStoreProfileId() {
+function getstoreProfileId() {
   return (
-    AuthService.getStoreProfileId?.() ||
-    localStorage.getItem("store_profile_id")
+    AuthService.getstoreProfileId?.() ||
+    localStorage.getItem("storeProfileId")
   );
 }
 function getAuthContext() {
   const token = AuthService.getToken?.();
   const store_id = AuthService.getStoreId?.();
-  const storeProfileId = getStoreProfileId();
+  const storeProfileId = getstoreProfileId();
 
   if (!token) throw new Error("❌ Missing auth token");
   if (!store_id) throw new Error("❌ Missing store_id");

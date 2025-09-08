@@ -19,15 +19,15 @@ export const Auth = {
     }),
   clearStoreId: () => Cookies.remove(STORAGE_KEYS.storeIdCookie),
 
-  getStoreProfileId: () => localStorage.getItem(STORAGE_KEYS.storeProfileIdLS),
-  setStoreProfileId: (id) =>
+  getstoreProfileId: () => localStorage.getItem(STORAGE_KEYS.storeProfileIdLS),
+  setstoreProfileId: (id) =>
     localStorage.setItem(STORAGE_KEYS.storeProfileIdLS, id),
-  clearStoreProfileId: () =>
+  clearstoreProfileId: () =>
     localStorage.removeItem(STORAGE_KEYS.storeProfileIdLS),
 
   clearAll: () => {
     Auth.clearToken();
     Auth.clearStoreId();
-    Auth.clearStoreProfileId();
+    Auth.clearstoreProfileId();
   },
 };

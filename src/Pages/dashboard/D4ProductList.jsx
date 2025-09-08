@@ -14,6 +14,10 @@ import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import product1 from "../../assets/dummyimage/product1.png";
+// D4ProductList.jsx (upar me import add karna)
+// import { Dialog } from "@headlessui/react"; // simple popup ke liye
+import { ProductService } from "../../api/productservice";
+
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -35,17 +39,17 @@ const D4ProductList = () => {
     setError(null);
     try {
       const store_id = Cookies.get("store_id") || "68ad40eddafa4b0b7080b486"; // Match creation response
-      const store_profile_id = localStorage.getItem("store_profile_id") || "68ad4720dafa4b0b7080b4d1";
+      const storeProfileId = localStorage.getItem("storeProfileId") || "68ad4720dafa4b0b7080b4d1";
       const token = Cookies.get("authToken");
 
-      console.log("🔍 Fetching with:", { store_id, store_profile_id, token });
+      console.log("🔍 Fetching with:", { store_id, storeProfileId, token });
 
-      if (!store_id || !store_profile_id || !token) {
+      if (!store_id || !storeProfileId || !token) {
         throw new Error("Missing store information or auth. Please login again.");
       }
 
       const response = await axios.get(
-        `${API_BASE}/store-product/find-all/${store_id}/${store_profile_id}`,
+        `${API_BASE}/store-product/find-all/${store_id}/${storeProfileId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -91,6 +95,41 @@ const D4ProductList = () => {
       setLoading(false);
     }
   };
+
+  // D4ProductList component ke andar
+const [showStockPopup, setShowStockPopup] = useState(false);
+const [selectedProduct, setSelectedProduct] = useState(null);
+const [newStock, setNewStock] = useState("");
+
+// popup open karna
+const handleStockClick = (product) => {
+  setSelectedProduct(product);
+  setNewStock(""); // reset
+  setShowStockPopup(true);
+};
+
+// stock update
+const handleUpdateStock = async () => {
+  try {
+    if (!selectedProduct) return;
+
+    const updatedQty =
+      (parseInt(selectedProduct.quantity || 0, 10)) +
+      (parseInt(newStock || 0, 10));
+
+    const payload = { quantity: updatedQty };
+
+    await ProductService.updateProduct(selectedProduct._id, payload);
+
+    toast.success("Stock updated successfully");
+    setShowStockPopup(false);
+    fetchItems(); // refresh list
+  } catch (err) {
+    toast.error("Failed to update stock");
+    console.error("❌ Stock Update Error:", err);
+  }
+};
+
 
   // Fetch items on mount and when tab or page changes
   useEffect(() => {
@@ -225,19 +264,24 @@ const D4ProductList = () => {
                       >
                         <FaTrash />
                       </button>
-                      <button
-                        title="Stock"
-                        className="text-black text-xl hover:scale-110 transition-transform"
-                      >
-                        <FaBoxOpen />
-                      </button>
+<button
+  title="Stock"
+  className="text-black text-xl hover:scale-110 transition-transform"
+  onClick={() => handleStockClick(item)} // ✅ popup open
+>
+  <FaBoxOpen />
+</button>
+
                     </div>
                   </td>
                   {isProductTab && (
                     <td className="p-3 align-middle text-center">
-                      <div className="text-white px-3 py-2 bg-blue-500 font-robotoR text-sm rounded-lg">
-                        Stock
-                      </div>
+                    <button
+    onClick={() => handleStockClick(item)}
+    className="text-white px-3 py-2 bg-blue-500 font-robotoR text-sm rounded-lg hover:bg-blue-600"
+  >
+    Add Stock
+  </button>
                     </td>
                   )}
                 </tr>
@@ -278,6 +322,10 @@ const handleEdit = (product) => {
     }
   };
 
+
+
+
+
   return (
     <div className="mx-auto mt-5 p-4">
       <ToastContainer />
@@ -285,7 +333,7 @@ const handleEdit = (product) => {
         <h1 className="text-xl font-semibold text-[#111827]">Items</h1>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm flex items-center gap-2"
-          onClick={() => navigate("/products/add")}
+          onClick={() => navigate("/dashboard/product")}
         >
           <FaPlus />
           Add New Item
@@ -367,6 +415,60 @@ const handleEdit = (product) => {
           </button>
         </div>
       </div>
+      {showStockPopup && selectedProduct && (
+<div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+  <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md relative transition-all">
+    {/* Title */}
+    <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
+      Add New Stock <span className="text-blue-600">– {selectedProduct.name}</span>
+    </h2>
+
+    {/* Previous Stock */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-600 mb-1">
+        Previous Stock
+      </label>
+      <input
+        type="number"
+        value={selectedProduct.quantity || 0}
+        readOnly
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+    {/* New Stock */}
+    <div className="mb-6">
+      <label className="block text-sm font-medium text-gray-600 mb-1">
+        New Stock
+      </label>
+      <input
+        type="number"
+        value={newStock}
+        onChange={(e) => setNewStock(e.target.value)}
+        placeholder="Enter quantity to add"
+        className="w-full px-3 py-2 border bg-white text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+    </div>
+
+    {/* Actions */}
+    <div className="flex justify-end gap-3">
+      <button
+        onClick={() => setShowStockPopup(false)}
+        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleUpdateStock}
+        className="px-5 py-2 rounded-lg bg-blue-600 text-white font-medium shadow-md hover:bg-blue-700 hover:shadow-lg transition"
+      >
+        Update Stock
+      </button>
+    </div>
+  </div>
+</div>
+
+)}
     </div>
   );
 };

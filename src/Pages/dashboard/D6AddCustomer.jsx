@@ -67,82 +67,82 @@ const D6AddCustomer = () => {
   };
 
   // submit handler (create or update)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      alert("⚠️ Please fill all required fields!");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const payload = { ...formData };
-
-      let res;
-      if (formData._id) {
-        // 🔹 UPDATE FLOW
-        res = await CustomerService.updateCustomer(payload);
-        alert("✅ Customer updated successfully!");
-
-        // overwrite formData with updated one from backend
-        if (res?.customer) {
-          setFormData({
-            _id: res.customer._id,
-            name: res.customer.name || "",
-            mobile: res.customer.mobile || "",
-            email: res.customer.email || "",
-            address: res.customer.address || "",
-            pin: res.customer.pin || "",
-            city: res.customer.city || "",
-            state: res.customer.state || "",
-            aadharCardNumber: res.customer.aadharCardNumber || "",
-            panNumber: res.customer.panNumber || "",
-            companyName: res.customer.companyName || "",
-            gstNumber: res.customer.gstNumber || "",
-          });
-        }
-      } else {
-        // 🔹 CREATE FLOW
-        res = await CustomerService.createCustomer(payload);
-        alert(
-          `✅ Customer added successfully\nUnique ID: ${
-            res?.customerId || ""
-          }`
-        );
-
-        // reset form only after creating new customer
-        setFormData({
-          _id: "",
-          name: "",
-          mobile: "",
-          email: "",
-          address: "",
-          pin: "",
-          city: "",
-          state: "",
-          aadharCardNumber: "",
-          panNumber: "",
-          companyName: "",
-          gstNumber: "",
-        });
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      const validationErrors = validate();
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        alert("⚠️ Please fill all required fields!");
+        return;
       }
 
-      console.log("Response:", res);
+      setLoading(true);
+      try {
+        const payload = { ...formData };
 
-      // after save → go back to customer list
-      navigate("/dashboard/customers");
-    } catch (error) {
-      console.error("❌ Error saving customer:", error);
-      alert(
-        error?.message ||
-          "Something went wrong while saving the customer. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+        let res;
+        if (formData._id) {
+          // 🔹 UPDATE FLOW
+          res = await CustomerService.updateCustomer(payload);
+          alert("✅ Customer updated successfully!");
+
+          // overwrite formData with updated one from backend
+          if (res?.customer) {
+            setFormData({
+              _id: res.customer._id,
+              name: res.customer.name || "",
+              mobile: res.customer.mobile || "",
+              email: res.customer.email || "",
+              address: res.customer.address || "",
+              pin: res.customer.pin || "",
+              city: res.customer.city || "",
+              state: res.customer.state || "",
+              aadharCardNumber: res.customer.aadharCardNumber || "",
+              panNumber: res.customer.panNumber || "",
+              companyName: res.customer.companyName || "",
+              gstNumber: res.customer.gstNumber || "",
+            });
+          }
+        } else {
+          // 🔹 CREATE FLOW
+          res = await CustomerService.createCustomer(payload);
+          alert(
+            `✅ Customer added successfully\nUnique ID: ${
+              res?.customerId || ""
+            }`
+          );
+
+          // reset form only after creating new customer
+          setFormData({
+            _id: "",
+            name: "",
+            mobile: "",
+            email: "",
+            address: "",
+            pin: "",
+            city: "",
+            state: "",
+            aadharCardNumber: "",
+            panNumber: "",
+            companyName: "",
+            gstNumber: "",
+          });
+        }
+
+        console.log("Response:", res);
+
+        // after save → go back to customer list
+        navigate("/dashboard/customers");
+      } catch (error) {
+        console.error("❌ Error saving customer:", error);
+        alert(
+          error?.message ||
+            "Something went wrong while saving the customer. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const handleClear = () => {
     if (formData._id && editingCustomer) {
