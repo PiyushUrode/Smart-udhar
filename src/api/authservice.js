@@ -1,5 +1,5 @@
 // src/api/authService.js
-import axiosClient from "./axiosClient";
+import axiosClient from "./axiosclient.js";
 import Cookies from "js-cookie";
 import { STORAGE_KEYS } from "../config/constant.js";
 
@@ -10,7 +10,7 @@ export const AuthService = {
       mobile,
       roles: "Admin",
     });
-    console.log("[AuthService] register response:", data);
+    console.log("[AuthService] register responsnse:", data);
 
     if (data?.store?.id) {
       Cookies.set(STORAGE_KEYS.storeIdCookie, data.store.id, { expires: 7 });
