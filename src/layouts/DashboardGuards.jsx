@@ -13,10 +13,10 @@ function DashboardGuards({ children }) {
   //   try {
   //     // Standardize to use Cookies for store_id (as in business list)
   //     const storeId = Cookies.get("store_id");
-  //     // Use consistent key: "storeProfileId" for the active business profile ID
-  //     // const profileId = localStorage.getItem("storeProfileId");
+  //     // Use consistent key: "storeProfile_id" for the active business profile ID
+  //     // const profileId = localStorage.getItem("storeProfile_id");
 
-  //     const profileId = localStorage.getItem("storeProfileId");
+  //     const profileId = localStorage.getItem("storeProfile_id");
 
   //     if (!storeId || !profileId) {
   //       setError("⚠️ No active business profile found. Please select one.");
@@ -44,7 +44,7 @@ function DashboardGuards({ children }) {
 useEffect(() => {
   try {
     const storeId = Cookies.get("store_id");
-    const profileId = localStorage.getItem("storeProfileId");
+    const profileId = localStorage.getItem("storeProfile_id");
 
     if (!storeId || !profileId) {
       setError("⚠️ No active business profile found. Please select one.");

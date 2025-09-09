@@ -2,31 +2,31 @@ import { AuthService } from "./authService";
 import { api } from "../api/api.js";
 
 // helper
-function getstoreProfileId() {
+function getstoreProfile_id() {
   return (
-    AuthService.getstoreProfileId?.() ||
-    localStorage.getItem("storeProfileId")
+    AuthService.getstoreProfile_id?.() ||
+    localStorage.getItem("storeProfile_id")
   );
 }
 function getAuthContext() {
   const token = AuthService.getToken?.();
   const store_id = AuthService.getStoreId?.();
-  const storeProfileId = getstoreProfileId();
+  const storeProfile_id = getstoreProfile_id();
 
   if (!token) throw new Error("❌ Missing auth token");
   if (!store_id) throw new Error("❌ Missing store_id");
-  if (!storeProfileId) throw new Error("❌ Missing storeProfileId");
+  if (!storeProfile_id) throw new Error("❌ Missing storeProfile_id");
 
-  return { token, store_id, storeProfileId };
+  return { token, store_id, storeProfile_id };
 }
 
 // 🟢 Create Expense
 const createExpense = async (expenseData) => {
   try {
-    const { token, store_id, storeProfileId } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
     const response = await api.post(
       "/store-expense/create",
-      { ...expenseData, store_id, storeProfileId },
+      { ...expenseData, store_id, storeProfile_id },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
@@ -55,9 +55,9 @@ const updateExpense = async (id, expenseData) => {
 // 🔵 Get All Expenses
 const getAllExpenses = async () => {
   try {
-    const { token, store_id, storeProfileId } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
     const response = await api.get(
-      `/store-expense/find-all/${store_id}/${storeProfileId}`,
+      `/store-expense/find-all/${store_id}/${storeProfile_id}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
@@ -70,10 +70,10 @@ const getAllExpenses = async () => {
 // 🟠 Filter Expenses
 const filterExpenses = async (filters = {}) => {
   try {
-    const { token, store_id, storeProfileId } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
     const response = await api.post(
       `/store-expense/filter`,
-      { store_id, storeProfileId, ...filters },
+      { store_id, storeProfile_id, ...filters },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;

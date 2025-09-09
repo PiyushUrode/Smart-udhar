@@ -16,7 +16,7 @@ const SignupPage = () => {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
 
-  // From Auth Context → login() will set token + storeProfileId
+  // From Auth Context → login() will set token + storeProfile_id
   const { login } = useAuth();
 
   /**

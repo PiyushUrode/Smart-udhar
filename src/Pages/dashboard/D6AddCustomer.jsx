@@ -132,7 +132,7 @@ const D6AddCustomer = () => {
         console.log("Response:", res);
 
         // after save → go back to customer list
-        navigate("/dashboard/customers");
+        // navigate("dashboard/add-customer");
       } catch (error) {
         console.error("❌ Error saving customer:", error);
         alert(

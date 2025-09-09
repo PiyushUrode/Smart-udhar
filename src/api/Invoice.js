@@ -1,28 +1,28 @@
-import axiosClient from "./axiosClient";
+ import axiosClient from "./axiosClient";
 import { AuthService } from "./authservice.js";
 import Cookies from "js-cookie";
 import { API_BASE } from "../config/constant.js";
 import axios from "axios";
 
 // ----------------- Helpers -----------------
-function getstoreProfileId() {
+function getstoreProfile_id() {
   return (
-    (typeof AuthService.getstoreProfileId === "function" &&
-      AuthService.getstoreProfileId()) ||
-    localStorage.getItem("storeProfileId")
+    (typeof AuthService.getstoreProfile_id === "function" &&
+      AuthService.getstoreProfile_id()) ||
+    localStorage.getItem("storeProfile_id")
   );
 }
 
 export function getAuthContext() {
   const token = AuthService.getToken?.() || Cookies.get("authToken") || null;
   const store_id = AuthService.getStoreId?.() || Cookies.get("store_id") || null;
-  const storeProfileId = getstoreProfileId() || null;
+  const storeProfile_id = getstoreProfile_id() || null;
 
   if (!token) throw new Error("Missing auth token");
   if (!store_id) throw new Error("Missing store_id");
-  if (!storeProfileId) throw new Error("Missing storeProfileId");
+  if (!storeProfile_id) throw new Error("Missing storeProfile_id");
 
-  return { token, store_id, storeProfileId };
+  return { token, store_id, storeProfile_id };
 }
 
 function authHeaders(token) {
@@ -43,7 +43,7 @@ export const Invoice = {
   // ----------------- Customers -----------------
   async fetchCustomersForInvoice({ page, limit } = {}) {
     try {
-      const { token, store_id, storeProfileId } = getAuthContext();
+      const { token, store_id, storeProfile_id } = getAuthContext();
 
       const qs =
         page || limit
@@ -54,7 +54,7 @@ export const Invoice = {
           : "";
 
       const { data } = await axiosClient.get(
-        `/store-customer/find-all/${store_id}/${storeProfileId}${qs}`,
+        `/store-customer/find-all/${store_id}/${storeProfile_id}${qs}`,
         { headers: authHeaders(token) }
       );
 
@@ -74,36 +74,36 @@ export const Invoice = {
   },
 
   // ----------------- Products -----------------
-  async getProducts() {
-    try {
-      const { token, store_id, storeProfileId } = getAuthContext();
+ async getProducts() {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
 
-      const { data } = await axios.get(
-        `${API_BASE}/store-product/find-all/${store_id}/${storeProfileId}`,
-        { headers: authHeaders(token) }
-      );
+    const { data } = await axios.get(
+      `${API_BASE}/store-product/find-all/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token) }
+    );
 
-      const products = normalizeArray(data, ["products", "data", "items"]);
+    const products = normalizeArray(data, ["products", "data", "items"]);
 
-      console.log("✅ [InvoiceService] Products:", products);
-      return { success: true, products };
-    } catch (err) {
-      console.error("❌ Product fetch error:", err.message);
-      return { success: false, products: [] };
-    }
-  },
+    console.log("✅ [InvoiceService] Products:", products);
+    return { success: true, products };
+  } catch (err) {
+    console.error("❌ Product fetch error:", err.message);
+    return { success: false, products: [] };
+  }
+},
 
 
  // ----------------- Invoice Create -----------------
 async createInvoice(payload) {
   try {
-    const { token, store_id, storeProfileId } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
 
     // Base structure
     const invoiceData = {
       ...payload,
       store_id,
-      storeProfileId,
+      storeProfile_id,
 
       customerId: payload.customerId || null,
       products: payload.products || [],
@@ -143,7 +143,7 @@ async createInvoice(payload) {
   // ----------------- Cash / Credit (Debt) Logic -----------------
   async createPayment({ invoiceId, amount, mode = "cash", customerId }) {
     try {
-      const { token, store_id, storeProfileId } = getAuthContext();
+      const { token, store_id, storeProfile_id } = getAuthContext();
 
       const payload = {
         invoiceId,
@@ -151,7 +151,7 @@ async createInvoice(payload) {
         mode, // "cash" | "credit" | "upi" | "card"
         customerId,
         store_id,
-        storeProfileId,
+        storeProfile_id,
       };
 
       const { data } = await axiosClient.post(
@@ -175,10 +175,10 @@ async createInvoice(payload) {
   // ----------------- Get Pending Dues (Debt Tracking) -----------------
   async getCustomerDue(customerId) {
     try {
-      const { token, store_id, storeProfileId } = getAuthContext();
+      const { token, store_id, storeProfile_id } = getAuthContext();
 
       const { data } = await axiosClient.get(
-        `/payments/due/${store_id}/${storeProfileId}/${customerId}`,
+        `/payments/due/${store_id}/${storeProfile_id}/${customerId}`,
         { headers: authHeaders(token) }
       );
 
@@ -193,10 +193,10 @@ async createInvoice(payload) {
   // ----------------- Get Invoice by ID -----------------
 async getInvoiceById(invoiceId) {
   try {
-    const { token, store_id, storeProfileId } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
 
     const { data } = await axiosClient.get(
-      `/store-invoice/find-one/${store_id}/${storeProfileId}/${invoiceId}`,
+      `/store-invoice/find-one/${store_id}/${storeProfile_id}/${invoiceId}`,
       { headers: authHeaders(token) }
     );
 
@@ -210,10 +210,10 @@ async getInvoiceById(invoiceId) {
 
   async updateInvoice(invoiceId, payload) {
     try {
-      const { token, store_id, storeProfileId } = getAuthContext();
+      const { token, store_id, storeProfile_id } = getAuthContext();
 
       // merge mandatory fields
-      const updateData = { ...payload, store_id, storeProfileId };
+      const updateData = { ...payload, store_id, storeProfile_id };
 
       const { data } = await axiosClient.put(
         `/store-invoice/update/${invoiceId}`,
@@ -255,10 +255,10 @@ async getInvoiceById(invoiceId) {
 // ----------------- Get all invoices (for a store) -----------------
 async getAllInvoices() {
   try {
-    const { token, store_id, storeProfileId } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
 
     const { data } = await axiosClient.get(
-      `/store-invoice/find-all/${store_id}/${storeProfileId}`,
+      `/store-invoice/find-all/${store_id}/${storeProfile_id}`,
       { headers: authHeaders(token) }
     );
 
@@ -297,7 +297,7 @@ async getAllInvoices() {
   // ✅ 4. Get invoice by ID (already created but aligned here)
   // async getInvoiceById(invoiceId) {
   //   try {
-  //     const { token, store_id, storeProfileId } = getAuthContext();
+  //     const { token, store_id, storeProfile_id } = getAuthContext();
 
   //     const { data } = await axiosClient.get(
   //       `/store-invoice/findBy-id/${invoiceId}`,
@@ -315,11 +315,11 @@ async getAllInvoices() {
   // ✅ 5. Low Stock Alert update
   async updateLowStock({ productId, leftProductQty, markAsRead = false }) {
     try {
-      const { token, store_id, storeProfileId } = getAuthContext();
+      const { token, store_id, storeProfile_id } = getAuthContext();
 
       const payload = {
         store_id,
-        storeProfileId,
+        storeProfile_id,
         productId,
         updateData: { markAsRead, leftProductQty },
       };

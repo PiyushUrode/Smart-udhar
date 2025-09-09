@@ -59,6 +59,7 @@ function App() {
       <DashboardGuards>
         <Routes>
           <Route path="product" element={<D3Product />} />
+          <Route path="product/:id" element={<D3Product />} />
           <Route path="product-list" element={<D4ProductList />} />
           <Route path="stock-list" element={<D4StockList />} />
           <Route path="staff-role" element={<D5StaffRole />} />

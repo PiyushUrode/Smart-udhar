@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaCommentSms } from "react-icons/fa6";
+import Select from "react-select";
 import { FaWhatsapp } from "react-icons/fa";
 import { FaPrint } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
@@ -47,164 +48,168 @@ const [additionalCharges, setAdditionalCharges] = useState({
 // Notes
 const [note, setNote] = useState("");
 
-// ----------------- FETCH CUSTOMERS -----------------
-useEffect(() => {
-  const fetchCustomers = async () => {
-    try {
-      setLoading(true);
-      const { success, customers } = await Invoice.fetchCustomersForInvoice();
-      if (success && Array.isArray(customers)) {
-        setCustomers(customers);
-      } else {
+// ----------------- PARTIAL CASH FOR MIXED PAYMENT -----------------
+  const [partialCashAmount, setPartialCashAmount] = useState(0);
+
+  // ----------------- INVOICE SUMMARY STATE -----------------
+  const [invoiceSummary, setInvoiceSummary] = useState({
+    subtotal: 0,
+    totalTax: 0,
+    totalReceived: 0,
+    dueBalance: 0,
+    paidNotPaid: 0,
+    deliveryFee: 0,
+    discount: 0,
+    total: 0,
+  });
+
+  // ----------------- FETCH CUSTOMERS -----------------
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        const { success, customers } = await Invoice.fetchCustomersForInvoice();
+        if (success && Array.isArray(customers)) {
+          setCustomers(customers);
+        } else {
+          setCustomers([]);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching customers:", err);
         setCustomers([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("❌ Error fetching customers:", err);
-      setCustomers([]);
-    } finally {
-      setLoading(false);
+    };
+    fetchCustomers();
+  }, []);
+
+  const filteredCustomers = searchTerm
+    ? customers.filter((cust) => {
+        const name = cust?.name?.toLowerCase() || "";
+        const mobile = cust?.mobile?.toLowerCase() || "";
+        return (
+          name.includes(searchTerm.toLowerCase()) ||
+          mobile.includes(searchTerm.toLowerCase())
+        );
+      })
+    : [];
+
+  const handleSelectCustomer = (cust) => {
+    setSelectedCustomer(cust);
+    setSearchTerm("");
+    setSearchTriggered(false);
+    if (onCustomerSelect) onCustomerSelect(cust);
+  };
+
+  // ----------------- FETCH PRODUCTS start -----------------
+  // Products
+  const [products, setProducts] = useState([]);
+  const [rows, setRows] = useState([
+    { id: Date.now(), productId: "", qty: 1, unit: "", price: 0, tax: 0 },
+  ]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await Invoice.getProducts();
+        const productList = res?.products || res?.data?.products || res?.data || [];
+        const validProducts = productList.filter(p => p && (p._id || p.id));
+        setProducts(validProducts);
+      } catch (err) {
+        console.error("❌ Failed to fetch products", err);
+        setProducts([]);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const handleSelectProduct = (rowId, product) => {
+    console.log("🔍 Selected Product Full:", product);
+
+    setRows((prev) =>
+      prev.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              productId: product._id || product.id,
+              price: product.sales_price || 0,
+              unit: product.unit || "pcs",
+              tax: product.tax || 0,
+            }
+          : row
+      )
+    );
+  };
+
+  const handleAddRow = () => {
+    setRows([
+      ...rows,
+      {
+        id: Date.now() + Math.random(),
+        productId: "",
+        qty: 1,
+        unit: "",
+        price: 0,
+        tax: 0,
+      },
+    ]);
+  };
+
+  const handleRemoveRow = (id) => {
+    setRows(rows.filter((row) => row.id !== id));
+  };
+
+  const handleChange = (id, field, value) => {
+    setRows((prev) =>
+      prev.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              [field]: field === "qty" || field === "price" ? Number(value) || 0 : value,
+            }
+          : row
+      )
+    );
+  };
+
+
+
+  // --------------fetch product end ------------------
+  // ----------------- PAYMENT LOGIC -----------------
+  const handlePaymentMode = (mode) => {
+    setPaymentMode(mode);
+    if (mode === "cash") {
+      setShowStep3(true);
+      setShowStep4(false);
+      setPartialCashAmount(invoiceSummary.total); // Full amount as cash
+    } else if (mode === "debt") {
+      setShowStep4(true);
+      setShowStep3(false);
+      setPartialCashAmount(0); // Reset for partial cash input
     }
   };
-  fetchCustomers();
-}, []);
 
-const filteredCustomers = searchTerm
-  ? customers.filter((cust) => {
-      const name = cust?.name?.toLowerCase() || "";
-      const mobile = cust?.mobile?.toLowerCase() || "";
-      return (
-        name.includes(searchTerm.toLowerCase()) ||
-        mobile.includes(searchTerm.toLowerCase())
-      );
-    })
-  : [];
-
-const handleSelectCustomer = (cust) => {
-  setSelectedCustomer(cust);
-  setSearchTerm("");
-  setSearchTriggered(false);
-  if (onCustomerSelect) onCustomerSelect(cust);
-};
-
-// ----------------- FETCH PRODUCTS -----------------
-
-// Products
-const [products, setProducts] = useState([]);
-const [rows, setRows] = useState([
-  { id: Date.now(), productId: "", qty: 1, unit: "", price: "", tax: "" },
-]);
-
-useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const res = await Invoice.getProducts();
-      const productList =
-        res?.products || res?.data?.products || res?.data || [];
-      setProducts(productList);
-    } catch (err) {
-      console.error("❌ Failed to fetch products", err);
-      setProducts([]);
-    }
+  const handleAddMilestone = () => {
+    setMilestones([
+      ...milestones,
+      { id: Date.now(), name: "", amount: "", dueDate: "", status: "" },
+    ]);
   };
-  fetchProducts();
-}, []);
 
-// ----------------- PRODUCT LOGIC -----------------
-const handleSelectProduct = (rowId, product) => {
-  setRows((prev) =>
-    prev.map((row) =>
-      row.id === rowId
-        ? {
-            ...row,
-            productId: product._id || product.id,
-            price: product.price || 0,
-            unit: product.unit || "pcs",
-            search: product.name || product.product_name || "Unnamed",
-            showDropdown: false,
-          }
-        : row
-    )
-  );
-};
+  const handleMilestoneChange = (id, field, value) => {
+    setMilestones((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
+    );
+  };
 
-const toggleDropdown = (id, value) => {
-  setRows((prev) =>
-    prev.map((row) =>
-      row.id === id ? { ...row, search: value, showDropdown: true } : row
-    )
-  );
-};
-
-const handleAddRow = () => {
-  setRows([
-    ...rows,
-    {
-      id: Date.now() + Math.random(),
-      productId: "",
-      qty: 1,
-      unit: "",
-      price: 0,
-      tax: 18,
-    },
-  ]);
-};
-
-const handleRemoveRow = (id) => {
-  setRows(rows.filter((row) => row.id !== id));
-};
-
-const handleChange = (id, field, value) => {
-  setRows((prev) =>
-    prev.map((row) =>
-      row.id === id
-        ? {
-            ...row,
-            [field]:
-              field === "qty" || field === "price" ? Number(value) : value,
-          }
-        : row
-    )
-  );
-};
-
-const calculateTotal = (row) => {
-  const subtotal = row.qty * row.price;
-  const taxAmount = (subtotal * row.tax) / 100;
-  return subtotal + taxAmount;
-};
-
-// ----------------- PAYMENT LOGIC -----------------
-const handlePaymentMode = (mode) => {
-  setPaymentMode(mode);
-  if (mode === "cash") {
-    setShowStep3(true);
-    setShowStep4(false);
-  } else if (mode === "debt") {
-    setShowStep4(true);
-    setShowStep3(false);
-  }
-};
-
-const handleAddMilestone = () => {
-  setMilestones([
-    ...milestones,
-    { id: Date.now(), name: "", amount: "", dueDate: "", status: "" },
-  ]);
-};
-
-const handleMilestoneChange = (id, field, value) => {
-  setMilestones((prev) =>
-    prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
-  );
-};
-
-// ----------------- ADDITIONAL CHARGES -----------------
-const handleAdditionalChange = (field, value) => {
-  setAdditionalCharges((prev) => ({
-    ...prev,
-    [field]: Number(value) || 0,
-  }));
-};
+  // ----------------- ADDITIONAL CHARGES -----------------
+  const handleAdditionalChange = (field, value) => {
+    setAdditionalCharges((prev) => ({
+      ...prev,
+      [field]: Number(value) || 0,
+    }));
+  };
 
 const handleSubmit = async () => {
   if (!selectedCustomer?._id) {
@@ -215,78 +220,107 @@ const handleSubmit = async () => {
     alert("Please select a payment mode!");
     return;
   }
+  if (rows.some(r => !r.productId || r.qty <= 0)) {
+    alert("Please add at least one valid product!");
+    return;
+  }
 
-  const subtotal = rows.reduce((sum, p) => sum + p.qty * p.price, 0);
-  const totalTax = rows.reduce((sum, p) => sum + ((p.qty * p.price * (p.tax || 0)) / 100), 0);
-  const total = subtotal + totalTax
-    + (Number(additionalCharges.deliveryFee) || 0)
-    + (Number(additionalCharges.packingCharges) || 0)
-    - (Number(additionalCharges.discount) || 0)
-    + (Number(additionalCharges.other) || 0);
+  // ✅ Destructure from summary
+  const { subtotal, totalTax, total, totalReceived, dueBalance } = invoiceSummary;
 
-const payload = {
-  customerId: selectedCustomer._id,
-  name: selectedCustomer.name,
-  mobile: selectedCustomer.mobile ,
-  address: selectedCustomer.address ,
+  const payload = {
+    customerId: selectedCustomer._id,
+    name: selectedCustomer.name,
+    mobile: selectedCustomer.mobile,
+    address: selectedCustomer.address,
+    balance: selectedCustomer.balance,
+    creditScore: selectedCustomer.creditScore,
+    paymentMode,
+    paymentMethod,
+    transactionId,
+    deliveryFee: Number(additionalCharges.deliveryFee) || 0,
+    packingCharges: Number(additionalCharges.packingCharges) || 0,
+    discount: Number(additionalCharges.discount) || 0,
+    other: Number(additionalCharges.other) || 0,
+    note,
+    subtotal,
+    tax: totalTax,
+    total,
+    totalReceived,
+    dueBalance,
+    paymentStatus:
+      totalReceived === total ? "Paid" : totalReceived > 0 ? "Partial" : "Unpaid",
+    products: rows.map((p) => {
+      const prod = products.find(
+        (x) => x._id === p.productId || x.id === p.productId
+      );
+      return {
+        productId: p.productId,
+        name: prod?.name || prod?.product_name || "Unnamed",
+        qty: Number(p.qty),
+        unit: p.unit,
+        price: Number(p.price),
+        tax: Number(p.tax),
+        total: calculateTotal(p),
+      };
+    }),
+    ...(paymentMode === "debt"
+      ? {
+          milestones: milestones.map((m) => ({
+            milestoneName: m.name,
+            amount: Number(m.amount) || 0,
+            paymentMode: m.paymentMode || paymentMode,
+            dueDate: m.dueDate ? new Date(m.dueDate).toISOString() : null,
+            status: m.status || "Pending",
+          })),
+        }
+      : {}),
+  };
 
-  balance: selectedCustomer.balance ,
-  creditScore: selectedCustomer.creditScore ,
+  if (
+    paymentMode === "debt" &&
+    Math.abs(
+      milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0) - dueBalance
+    ) > 0.01
+  ) {
+    alert(`Milestones total must equal Due Balance (${dueBalance.toFixed(2)})!`);
+    return;
+  }
 
-  paymentMode,
-  paymentMethod,
-  transactionId,
-
-  // charges
-  deliveryFee: Number(additionalCharges.deliveryFee) || 0,
-  packingCharges: Number(additionalCharges.packingCharges) || 0,
-  discount: Number(additionalCharges.discount) || 0,
-  other: Number(additionalCharges.other) || 0,
-
-  note,
-
-  subtotal,
-  tax: totalTax,
-  total,
-  totalReceived: 0,
-  dueBalance: total,
-  paymentStatus: "Unpaid",
-
-  // products array
-  products: rows.map((p) => ({
-    productId: p.productId,
-    name: p.search,
-    qty: Number(p.qty),
-    unit: p.unit,
-    price: Number(p.price),
-    tax: Number(p.tax),
-    total: calculateTotal(p),
-  })),
-
-  // ✅ milestones only if debt
-  ...(paymentMode === "debt"
-    ? {
-        milestones: milestones.map((m) => ({
-          milestoneName: m.name,
-          amount: Number(m.amount) || 0,
-          paymentMode: m.paymentMode || paymentMode,
-          dueDate: m.dueDate ? new Date(m.dueDate).toISOString() : null,
-          status: m.status || "Pending",
-        })),
-      }
-    : {}),
-};
-
-
-
-
-
-  console.log("🚀 Final Invoice Payload:", JSON.stringify(payload, null, 2));
+  console.log("🚀 Final Invoice Payload:", payload);
 
   try {
     const res = await Invoice.createInvoice(payload);
     if (res.success) {
       alert("✅ Invoice saved successfully!");
+
+      // 🔄 Reset all form fields
+      setSelectedCustomer(null);
+      setPaymentMode("");
+      setPaymentMethod("");
+      setTransactionId("");
+      setAdditionalCharges({
+        deliveryFee: 0,
+        packingCharges: 0,
+        discount: 0,
+        other: 0,
+      });
+      setNote("");
+      setPartialCashAmount("");
+      setMilestones([]);
+
+      // Reset rows to single blank row
+      setRows([
+        {
+          id: Date.now(),
+          productId: "",
+          qty: 1,
+          unit: "pcs",
+          price: 0,
+          tax: 0,
+        },
+      ]);
+
     } else {
       alert("❌ Failed: " + res.message);
     }
@@ -294,9 +328,108 @@ const payload = {
     console.error("❌ Error:", err);
     alert("Error while saving invoice");
   }
+
+  if (res.success) {
+  alert("✅ Invoice saved successfully!");
+  // reset form (already there)
+
+  // 🔄 refresh invoice list
+  const refreshed = await Invoice.getAllInvoices();
+  if (refreshed.success) {
+    setInvoices(refreshed.invoices);
+    setTodayCollection(refreshed.todayCollection);
+    setTotalCollection(refreshed.totalCollection);
+  }
+}
+
 };
 
-const previousInvoices = [ { name: "Anamika Traders", lastPaid: "16/06/2025", due: "10/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "16/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "10/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "16/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "10/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "16/06/2025" }, ];
+
+
+
+
+  // ----------------- Row-level Calculation Function -----------------
+// This function calculates the total for a single row (used for displaying per-row totals in the table)
+const calculateTotal = (row) => {
+  const subtotal = (row.qty || 0) * (row.price || 0);
+  const taxAmount = (subtotal * (row.tax || 0)) / 100;
+  return subtotal + taxAmount;  // Returns row total including tax
+};
+
+// ----------------- Main Invoice Summary Calculation -----------------
+// This function calculates the overall invoice summary
+const calculateInvoiceSummary = () => {
+  // Calculate subtotal WITHOUT tax (base amount from products only)
+  const subtotal = rows.reduce((sum, row) => sum + (row.qty * row.price), 0);
+
+  // Calculate total tax from all rows
+  const totalTax = rows.reduce((sum, row) => {
+    const rowSubtotal = row.qty * row.price;
+    return sum + (rowSubtotal * (row.tax || 0)) / 100;
+  }, 0);
+
+  // Additional charges
+  const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
+  const packingCharges = Number(additionalCharges.packingCharges) || 0;
+  const discount = Number(additionalCharges.discount) || 0;
+  const other = Number(additionalCharges.other) || 0;
+
+  // Calculate grand total: subtotal + tax + delivery + packing - discount + other
+  const total = subtotal + totalTax + deliveryFee + packingCharges - discount + other;
+
+  // Calculate received amount and due balance
+  const totalReceived = Number(partialCashAmount) || 0;
+  const dueBalance = total - totalReceived;
+
+  // Update invoice summary state with all values
+  setInvoiceSummary({
+    subtotal,        // Base product amount (without tax)
+    totalTax,        // Total tax amount
+    total,           // Grand total (subtotal + tax + charges - discount)
+    totalReceived,   // Amount already paid
+    dueBalance,      // Remaining amount to pay
+    deliveryFee,
+    packingCharges,
+    discount,
+    other,
+  });
+};
+
+  // ----------------- NEW: useEffect for Real-Time Update -----------------
+  useEffect(() => {
+    calculateInvoiceSummary();
+  }, [rows, additionalCharges, partialCashAmount]);
+
+
+
+
+
+
+  // previous invoices
+  const [invoices, setInvoices] = useState([]);
+const [todayCollection, setTodayCollection] = useState(0);
+const [totalCollection, setTotalCollection] = useState(0);
+
+useEffect(() => {
+  const fetchInvoices = async () => {
+    try {
+      const res = await Invoice.getAllInvoices();
+      if (res.success) {
+        setInvoices(res.invoices);
+        setTodayCollection(res.todayCollection);
+        setTotalCollection(res.totalCollection);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching invoices:", err);
+    }
+  };
+
+  fetchInvoices();
+}, []);
+
+
+
+
 
 
   return (
@@ -421,30 +554,90 @@ const previousInvoices = [ { name: "Anamika Traders", lastPaid: "16/06/2025", du
       {rows.map((row) => (
         <div
           key={row.id}
-          className="grid grid-cols-7 gap-2 sm:gap-4 items-center py-3 h-full text-sm px-2"
+          className="grid grid-cols-7 gap-2 sm:gap-4 items-center py-3 h-auto text-sm px-2"
         >
           {/* Product dropdown */}
-         <div className="col-span-2">
-  <select
-    value={row.productId}
-    onChange={(e) => {
-      const selectedProduct = products.find(
-        (p) => p._id === e.target.value || p.id === e.target.value
+
+
+<div className="col-span-2">
+ <Select
+  className="text-sm"
+  placeholder="Select Product..."
+  isClearable
+  options={
+    Array.isArray(products)
+      ? products
+          .filter((p) => p && (p._id || p.id)) // ✅ null / undefined / empty hata do
+          .map((p) => ({
+            value: p._id || p.id,
+            label: p.name || p.product_name || "Unnamed",
+          }))
+      : []
+  }
+  value={
+    row.productId
+      ? (() => {
+          const selected = products?.find(
+            (p) => p && (p._id === row.productId || p.id === row.productId)
+          );
+          return selected
+            ? {
+                value: row.productId,
+                label: selected.name || selected.product_name || "Unnamed",
+              }
+            : null;
+        })()
+      : null
+  }
+  onChange={(selectedOption) => {
+    if (selectedOption) {
+      const selectedProduct = products?.find(
+        (p) => p && (p._id === selectedOption.value || p.id === selectedOption.value)
       );
       if (selectedProduct) {
         handleSelectProduct(row.id, selectedProduct);
       }
-    }}
-    className="border px-1 py-2 rounded w-full bg-white text-sm"
-  >
-    <option value=""> Select Product --</option>
-    {products.map((p) => (
-      <option key={p._id || p.id} value={p._id || p.id}>
-        {p.name || p.product_name || "Unnamed"}
-      </option>
-    ))}
-  </select>
+    } else {
+      handleSelectProduct(row.id, null); // clear
+    }
+  }}
+  menuPortalTarget={document.body}
+  styles={{
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    control: (base) => ({
+      ...base,
+      minHeight: "42px", // ✅ thoda height bada diya
+      borderColor: "#d1d5db", // Tailwind gray-300
+      boxShadow: "none",
+      "&:hover": { borderColor: "#2563eb" }, // Tailwind blue-600 hover
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: "#000", // ✅ selected value black
+    }),
+    input: (base) => ({
+      ...base,
+      color: "#000", // ✅ typing text black
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "#6b7280", // Tailwind gray-500
+    }),
+    option: (base, state) => ({
+      ...base,
+      color: "#000", // ✅ dropdown text black
+      backgroundColor: state.isSelected
+        ? "#2563eb"
+        : state.isFocused
+        ? "#e5e7eb"
+        : "#fff",
+    }),
+  }}
+/>
+
+
 </div>
+
 
           {/* Qty */}
           <input
@@ -506,161 +699,156 @@ const previousInvoices = [ { name: "Anamika Traders", lastPaid: "16/06/2025", du
 
 
 
-
-
-
-
-              {/* Step 3: Payment Mode */}
-    <div className="bg-white rounded-lg shadow-customCard p-4">
-        <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
-          <div className=" bg-[#2563EB] p-2.5 rounded-full">
-            <FaRegCreditCard color="white" size={14} />
-          </div>
-          Step 3: Payment Mode
-        </h2>
-        <div className="flex flex-col sm:flex-row space-x-3">
-          <button
-            onClick={() => handlePaymentMode("cash")}
-            className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol ml-3 my-1 px-4 py-1 rounded font-robotoM text-md"
-          >
-            <GiCash size={18} /> Cash
-          </button>
-          <button
-            onClick={() => handlePaymentMode("debt")}
-            className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol my-1 px-4 py-1 rounded font-robotoM text-md"
-          >
-            <FaCalculator size={18} /> Debt
-          </button>
-        </div>
-      </div>
-
-      {/* Step 4: Payment Method (if Cash) */}
-      {showStep3 && (
-        <div className="bg-white rounded-lg shadow-customCard p-4">
-          <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-            <div className="bg-[#2563EB] p-2.5 rounded-full">
-              <FaCalculator color="white" size={14} />
+{/* Step 3: Payment Mode */}
+          <div className="bg-white rounded-lg shadow-customCard p-4">
+            <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
+              <div className="bg-[#2563EB] p-2.5 rounded-full">
+                <FaRegCreditCard color="white" size={14} />
+              </div>
+              Step 3: Payment Mode
+            </h2>
+            <div className="flex flex-col sm:flex-row space-x-3">
+              <button
+                onClick={() => handlePaymentMode("cash")}
+                className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol ml-3 my-1 px-4 py-1 rounded font-robotoM text-md"
+              >
+                <GiCash size={18} /> Cash
+              </button>
+              <button
+                onClick={() => handlePaymentMode("debt")}
+                className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol my-1 px-4 py-1 rounded font-robotoM text-md"
+              >
+                <FaCalculator size={18} /> Debt
+              </button>
             </div>
-            Step 4: Payment Method
-          </h2>
-
-          <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-            <div>Payment Method</div>
-            <div>Transaction ID / UTR </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3">
-            <input
-              className="border px-2 py-1 rounded bg-white"
-              placeholder="Cash/UPI/Cheque/DD"
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            />
-            <input
-              className="border px-2 py-1 rounded bg-white"
-              placeholder="Enter Transaction reference"
-              value={transactionId}
-              onChange={(e) => setTransactionId(e.target.value)}
-            />
-          </div>
-        </div>
-      )}
+          {/* Step 4: Payment Method (if Cash) */}
+          {showStep3 && (
+            <div className="bg-white rounded-lg shadow-customCard p-4">
+              <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
+                <div className="bg-[#2563EB] p-2.5 rounded-full">
+                  <FaCalculator color="white" size={14} />
+                </div>
+                Step 4: Payment Method
+              </h2>
 
-      {/* Step 4: Milestones (if Debt) */}
-      {showStep4 && (
-        <div className="bg-white rounded-lg shadow-customCard p-4 sm:p-6">
-          <h2 className="flex items-center gap-2 text-base sm:text-lg font-robotoSb mb-3">
-            <div className="bg-[#2563EB] p-2.5 rounded-full">
-              <FaCalculator color="white" size={14} />
-            </div>
-            Step 4: Promise Date
-          </h2>
+              <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
+                <div>Payment Method</div>
+                <div>Transaction ID / UTR</div>
+              </div>
 
-          <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-            <div>Milestone Name</div>
-            <div>Amount (₹)</div>
-            <div>Due Date</div>
-            <div>Status</div>
-          </div>
-
-{milestones.map((ms, index) => (
-  <div
-    key={ms.id}
-    className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded"
-  >
-    {/* Milestone Name */}
-    <input
-      className="border px-2 py-1 rounded bg-white"
-      placeholder="Milestone Name"
-      value={ms.name}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].name = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-
-    {/* Amount */}
-    <input
-      className="border px-2 py-1 rounded bg-white"
-      placeholder="0.00"
-      type="number"
-      value={ms.amount}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].amount = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-
-    {/* Due Date */}
-    <input
-      className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white"
-      type="date"
-      value={ms.dueDate}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].dueDate = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-
-    {/* Status */}
-    <input
-      className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-      placeholder="Status"
-      value={ms.status}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].status = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-  </div>
-))}
-
-          <button
-            onClick={handleAddMilestone}
-            className="text-bluecol font-robotoR text-sm sm:text-md mt-2"
-          >
-            + Add Milestone
-          </button>
-        </div>
-      )}
-
-      {/* Submit button (common for both) */}
-      <div className="mt-4">
-        <button
-          onClick={handleSubmit}
-          className="bg-bluecol text-white px-6 py-2 rounded font-robotoM"
-        >
-          Submit Payment
-        </button>
-      </div>
+              <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3">
+                <input
+                  className="border px-2 py-1 rounded bg-white"
+                  placeholder="Cash/UPI/Cheque/DD"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                <input
+                  className="border px-2 py-1 rounded bg-white"
+                  placeholder="Enter Transaction reference"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                />
+              </div>
 
 
             </div>
-          </div>
+          )}
+
+          {/* Step 4: Milestones (if Debt) with Partial Cash */}
+          {showStep4 && (
+            <div className="bg-white rounded-lg shadow-customCard p-4 sm:p-6">
+              <h2 className="flex items-center gap-2 text-base sm:text-lg font-robotoSb mb-3">
+                <div className="bg-[#2563EB] p-2.5 rounded-full">
+                  <FaCalculator color="white" size={14} />
+                </div>
+                Step 4: Promise Date
+              </h2>
+
+              <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
+                <div>Milestone Name</div>
+                <div>Amount (₹)</div>
+                <div>Due Date</div>
+                <div>Status</div>
+              </div>
+
+              {milestones.map((ms, index) => (
+                <div
+                  key={ms.id}
+                  className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded"
+                >
+                  <input
+                    className="border px-2 py-1 rounded bg-white"
+                    placeholder="Milestone Name"
+                    value={ms.name}
+                    onChange={(e) => {
+                      const newMilestones = [...milestones];
+                      newMilestones[index].name = e.target.value;
+                      setMilestones(newMilestones);
+                    }}
+                  />
+                  <input
+                    className="border px-2 py-1 rounded bg-white"
+                    placeholder="0.00"
+                    type="number"
+                    value={ms.amount}
+                    onChange={(e) => {
+                      const newMilestones = [...milestones];
+                      newMilestones[index].amount = e.target.value;
+                      setMilestones(newMilestones);
+                    }}
+                  />
+                  <input
+                    className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white"
+                    type="date"
+                    value={ms.dueDate}
+                    onChange={(e) => {
+                      const newMilestones = [...milestones];
+                      newMilestones[index].dueDate = e.target.value;
+                      setMilestones(newMilestones);
+                    }}
+                  />
+                  <input
+                    className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Status"
+                    value={ms.status}
+                    onChange={(e) => {
+                      const newMilestones = [...milestones];
+                      newMilestones[index].status = e.target.value;
+                      setMilestones(newMilestones);
+                    }}
+                  />
+                </div>
+              ))}
+
+              <button
+                onClick={handleAddMilestone}
+                className="text-bluecol font-robotoR text-sm sm:text-md mt-2"
+              >
+                + Add Milestone
+              </button>
+
+              {/* Partial Cash Input for Debt/Mixed */}
+              <div className="mt-4 border-t pt-4">
+                <label className="block text-sm mb-1 font-robotoM">Partial Cash Paid (Mixed Payment)</label>
+                <input
+                  type="number"
+                  value={partialCashAmount}
+                  onChange={(e) => setPartialCashAmount(e.target.value)}
+                  className="border px-2 py-1 rounded bg-white w-full"
+                  placeholder="Enter cash amount (optional, rest in debt)"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Remaining Due: ₹{invoiceSummary.dueBalance.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          )}
+
+
+
 
           {/* Step 5: Additional Charges */}
        {/* Step 5: Additional Charges */}
@@ -756,46 +944,47 @@ box-shadow: 0px 2px 4px 0px #0000001A;
           </button>
         </div>
       </div>
+      </div>
+      </div>
 
       {/* Sidebar */}
       <div className="bg-white shadow-customCard rounded-lg p-4">
         <h2 className="text-lg font-robotoSb mb-4">Invoice Summary</h2>
-        <ul className="text-sm font-robotoR text-black space-y-3">
+<ul className="text-sm font-robotoR text-black space-y-3">
           <li className="flex justify-between">
             <span>Subtotal:</span>
-            <span>₹0.00</span>
+            <span>₹{invoiceSummary.subtotal.toFixed(2)}</span>  {/* Dynamic */}
           </li>
           <li className="flex justify-between hidden">
             <span>Tax :</span>
-            <span>₹0.00</span>
+            <span>₹{invoiceSummary.totalTax.toFixed(2)}</span>  {/* Unhidden if needed */}
           </li>
           <li className="flex justify-between">
             <span>Total Received:</span>
-            <span>₹0.00</span>
+            <span>₹{invoiceSummary.totalReceived.toFixed(2)}</span>
           </li>
           <li className="flex justify-between">
             <span>Due Balance:</span>
-            <span>₹0.00</span>
+            <span>₹{invoiceSummary.dueBalance.toFixed(2)}</span>
           </li>
-          <li className="flex justify-between">
+          {/* <li className="flex justify-between">
             <span>Paid / Not Paid:</span>
-            <span>₹0.00</span>
-          </li>
+            <span>₹{invoiceSummary.paidNotPaid.toFixed(2)}</span>
+          </li> */}
           <li className="flex justify-between">
             <span>Delivery Fee:</span>
-            <span>₹0.00</span>
+            <span>₹{invoiceSummary.deliveryFee.toFixed(2)}</span>
           </li>
           <li className="flex justify-between text-red-500">
             <span>Discount:</span>
-            <span>-₹0.00</span>
+            <span>-₹{invoiceSummary.discount.toFixed(2)}</span>
           </li>
           <li className="flex justify-between font-robotoB text-lg border-t pt-1 mt-1">
             <span>Total:</span>
-            <span>₹0.00</span>
+            <span>₹{invoiceSummary.total.toFixed(2)}</span>
           </li>
         </ul>
-
-        <div className="mt-6 space-y-2">
+        {/* <div className="mt-6 space-y-2">
           <h3 className="text-md font-robotoM">Quick Actions</h3>
           <button className="flex items-center gap-2 text-black font-robotoR text-md">
             <FaPrint color="#4B5563" />
@@ -811,32 +1000,53 @@ box-shadow: 0px 2px 4px 0px #0000001A;
             <FaCommentSms color="#2563EB" />
             Send via SMS
           </button>
-        </div>
+        </div> */}
 
 
-        <div className="mt-6">
-          <h3 className="text-[22px] font-robotoSb mb-2">Previous Invoices</h3>
-          {previousInvoices.map((inv, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center shadow-customCard border-2 rounded-lg border-[#E5E7EB] text-sm p-2 mb-2"
-            >
-              <div>
-                <p className="font-robotoSb text-[16px]">{inv.name}</p>
-                <p className="text-gray-500 font-robotoR text-sm">
-                  Last Paid: {inv.lastPaid}
-                </p>
-                <p className="text-red-500 font-robotoM text-xs">
-                  Due: {inv.due}
-                </p>
-              </div>
-              <button className="bg-[#E6FEE2] text-[#16A34A] px-2 py-1 rounded-full font-robotoM text-xs">
-                View Invoice
-              </button>
-            </div>
-          ))}
+{/* Previous Invoices Section */}
+<div className="mt-6">
+  <h3 className="text-[22px] font-robotoSb mb-2">Previous Invoices</h3>
+
+  {invoices.length === 0 ? (
+    <p className="text-gray-500 text-sm">No invoices found.</p>
+  ) : (
+    invoices.map((inv, index) => (
+      <div
+        key={index}
+        className="flex justify-between items-center shadow-customCard border-2 rounded-lg border-[#E5E7EB] text-sm p-2 mb-2"
+      >
+        <div>
+          {/* Customer Name */}
+          <p className="font-robotoSb text-[16px]">{inv.name}</p>
+
+          {/* Last Paid / Created Date */}
+          <p className="text-gray-500 font-robotoR text-sm">
+            Last Paid:{" "}
+            {inv.updatedAt
+              ? new Date(inv.updatedAt).toLocaleDateString()
+              : new Date(inv.createdAt).toLocaleDateString()}
+          </p>
+
+          {/* Due Amount */}
+          <p className="text-red-500 font-robotoM text-xs">
+            Due: ₹{inv.dueBalance?.toFixed(2) || 0}
+          </p>
         </div>
+
+        {/* View Invoice Button */}
+        <button
+          onClick={() => console.log("View Invoice:", inv._id)}
+          className="bg-[#E6FEE2] text-[#16A34A] px-2 py-1 rounded-full font-robotoM text-xs"
+        >
+          View Invoice
+        </button>
+      </div>
+    ))
+  )}
+</div>
+
       </div>
     </div>
+
   );
 }

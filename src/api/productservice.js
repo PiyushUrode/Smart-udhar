@@ -5,23 +5,23 @@ import { AuthService } from "./authservice";
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 // ---------- Helpers ----------
-function getstoreProfileId() {
+function getstoreProfile_id() {
   return (
-    AuthService.getstoreProfileId?.() ||
-    localStorage.getItem("storeProfileId")
+    AuthService.getstoreProfile_id?.() ||
+    localStorage.getItem("storeProfile_id")
   );
 }
 
 function getAuthContext() {
   const token = AuthService.getToken?.();
   const store_id = AuthService.getStoreId?.();
-  const storeProfileId = getstoreProfileId();
+  const storeProfile_id = getstoreProfile_id();
 
   if (!token) throw new Error("❌ Missing auth token");
   if (!store_id) throw new Error("❌ Missing store_id");
-  if (!storeProfileId) throw new Error("❌ Missing storeProfileId");
+  if (!storeProfile_id) throw new Error("❌ Missing storeProfile_id");
 
-  return { token, store_id, storeProfileId };
+  return { token, store_id, storeProfile_id };
 }
 
 function authHeaders(token) {
@@ -59,11 +59,11 @@ export const ProductService = {
    */
   async createProduct(payload, file, productType = "inventory") {
     try {
-      const { token, store_id, storeProfileId } = getAuthContext();
+      const { token, store_id, storeProfile_id } = getAuthContext();
 
       const fd = buildFormData(payload, file, {
         store_id: store_id.toString(),
-        storeProfileId: storeProfileId.toString(),
+        storeProfile_id: storeProfile_id.toString(),
         product_type: productType,
         sold_quantity: "0",
         ...(file ? {} : { use_default_image: "true" }),
@@ -85,14 +85,14 @@ export const ProductService = {
    */
   async fetchProducts({ page, limit } = {}) {
     try {
-      const { token, store_id, storeProfileId } = getAuthContext();
+      const { token, store_id, storeProfile_id } = getAuthContext();
 
       const qs = page || limit
         ? `?${new URLSearchParams({ ...(page && { page }), ...(limit && { limit }) })}`
         : "";
 
       const { data } = await axiosClient.get(
-        `/store-product/find-all/${store_id}/${storeProfileId}${qs}`,
+        `/store-product/find-all/${store_id}/${storeProfile_id}${qs}`,
         { headers: authHeaders(token) }
       );
 
@@ -148,27 +148,183 @@ async getProduct(id) {
  */
 async updateProduct(id, payload, file = null, productType = "inventory") {
   try {
-    const { token, store_id, storeProfileId } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
 
     const fd = buildFormData(payload, file, {
       store_id: store_id.toString(),
-      storeProfileId: storeProfileId.toString(),
+      storeProfile_id: storeProfile_id.toString(),
       product_type: productType,
       // Only include use_default_image if no file is provided and no existing image is retained
-      ...(file ? {} : { use_default_image: payload.product_image ? "false" : "true" }),
+      // ...(file ? {} : { use_default_image: payload.product_image ? "false" : "true" }),
     });
 
     const { data } = await axiosClient.put(
       `/store-product/update/${id}`,
       fd,
-      { headers: authHeaders(token) }
+     { headers: authHeaders(token) }
     );
-
+ 
     return { success: data?.success ?? true, product: data?.data || data };
   } catch (err) {
     console.error("❌ updateProduct error:", err);
     throw err; // Throw the error to be handled by the caller
   }
-}
+},
 
+/**
+ * Delete product
+ */
+async deleteProduct(id) {
+  try {
+    const { token } = getAuthContext();
+    const { data } = await axiosClient.post(
+      `/store-product/delete/${id}`,
+      {},
+      { headers: authHeaders(token) }
+    );
+    return { success: data?.success ?? true, product: data?.product };
+  } catch (err) {
+    console.error("❌ deleteProduct error:", err);
+    return { success: false, error: err.message };
+  }
+},
+
+/**
+ * Export products as PDF
+ */
+async exportProductsPDF() {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const response = await axiosClient.get(
+      `/store-product/export-pdf/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token), responseType: "blob" }
+    );
+
+    // Trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `products_${Date.now()}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    return { success: true };
+  } catch (err) {
+    console.error("❌ exportProductsPDF error:", err);
+    return { success: false, error: err.message };
+  }
+},
+
+ async uploadExcel(file) {
+    try {
+      const { token, store_id, storeProfile_id } = getAuthContext();
+      const fd = new FormData();
+      fd.append("excelFile", file);
+      fd.append("store_id", store_id.toString());
+      fd.append("storeProfile_id", storeProfile_id.toString());
+
+      const { data } = await axiosClient.post(
+        "/store-product/upload-excel",
+        fd,
+        {
+          headers: {
+            ...authHeaders(token),
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return {
+        success: data?.success ?? true,
+        message: data?.message,
+        count: data?.count || 0,
+      };
+    } catch (err) {
+      console.error("❌ uploadExcel error:", err);
+      return { success: false, error: err.message };
+    }
+  },
+
+
+  /**
+  async exportProductsExcel() {
+    try {
+      const { token, store_id, storeProfile_id } = getAuthContext();
+      const response = await axiosClient.get(
+        `/store-product/export-excel/${store_id}/${storeProfile_id}`,
+        {
+          headers: authHeaders(token),
+          responseType: "blob",
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `products_${Date.now()}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      return { success: true };
+    } catch (err) {
+      console.error("❌ exportProductsExcel error:", err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Search products
+   */
+  async searchProducts(query) {
+    try {
+      const { token, store_id, storeProfile_id } = getAuthContext();
+      const { data } = await axiosClient.get(
+        `/store-product/search?q=${encodeURIComponent(query)}&store_id=${store_id}&storeProfile_id=${storeProfile_id}`,
+        { headers: authHeaders(token) }
+      );
+
+      return {
+        success: data?.success ?? true,
+        products: data?.products || [],
+      };
+    } catch (err) {
+      console.error("❌ searchProducts error:", err);
+      return { success: false, products: [], error: err.message };
+    }
+  },
+
+  /**
+   * Export products to PDF
+   */
+  async exportProductsPDF() {
+    try {
+      const { token, store_id, storeProfile_id } = getAuthContext();
+      const response = await axiosClient.get(
+        `/store-product/export-pdf/${store_id}/${storeProfile_id}`,
+        {
+          headers: authHeaders(token),
+          responseType: "blob",
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `products_${Date.now()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      return { success: true };
+    } catch (err) {
+      console.error("❌ exportProductsPDF error:", err);
+      return { success: false, error: err.message };
+    }
+  },
 };
+
+
+
+// delete and more

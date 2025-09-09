@@ -6,15 +6,15 @@ export const StaffService = {
   async createStaff(payload, staffImage) {
     const token = AuthService.getToken();
     const storeId = AuthService.getStoreId();
-    const storeProfileId = localStorage.getItem("storeProfileId");
+    const storeProfile_id = localStorage.getItem("storeProfile_id");
 
-    if (!token || !storeId || !storeProfileId) {
+    if (!token || !storeId || !storeProfile_id) {
       throw new Error("Missing authentication or store details");
     }
 
     const fd = new FormData();
     fd.append("store_id", storeId);
-    fd.append("storeProfileId", storeProfileId);
+    fd.append("storeProfile_id", storeProfile_id);
     Object.entries(payload).forEach(([k, v]) => fd.append(k, v));
     if (staffImage) fd.append("image", staffImage);
 
@@ -27,14 +27,14 @@ export const StaffService = {
 async getAllStaff() {
   const token = AuthService.getToken();
   const storeId = AuthService.getStoreId();
-  const storeProfileId = localStorage.getItem("storeProfileId");
+  const storeProfile_id = localStorage.getItem("storeProfile_id");
 
-  if (!token || !storeId || !storeProfileId) {
+  if (!token || !storeId || !storeProfile_id) {
     throw new Error("Missing authentication or store details");
   }
 
   const { data } = await axiosClient.get(
-    `/store-staff/find-all/${storeId}/${storeProfileId}`,
+    `/store-staff/find-all/${storeId}/${storeProfile_id}`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
@@ -54,10 +54,10 @@ async getAllStaff() {
   async findStaffByName(name) {
     const token = AuthService.getToken();
     const storeId = AuthService.getStoreId();
-    const storeProfileId = localStorage.getItem("storeProfileId");
+    const storeProfile_id = localStorage.getItem("storeProfile_id");
 
     const { data } = await axiosClient.get(
-      `/store-staff/findBy-name/${storeId}/${storeProfileId}?name=${encodeURIComponent(
+      `/store-staff/findBy-name/${storeId}/${storeProfile_id}?name=${encodeURIComponent(
         name
       )}`,
       { headers: { Authorization: `Bearer ${token}` } }

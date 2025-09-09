@@ -58,7 +58,7 @@ const D9CreditScore = () => {
               minValue={0}
               maxValue={100}
               segments={3}
-              segmentColors={["#66DD66", "#FFE95B", "#F44336"]}
+              segmentColors={["red", "#FFE95B", "green"]}
               customSegmentStops={[0, 50, 75, 100]}
               needleColor="#6B7280"
               currentValueText=""

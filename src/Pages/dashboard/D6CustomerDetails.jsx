@@ -13,47 +13,58 @@ const CustomerDetailsForm = () => {
   const navigate = useNavigate();
 
   const fetchCustomers = async () => {
-    try {
-      setLoading(true);
-      const res = await CustomerService.getAllCustomers();
-      if (res?.customers) {
-        const formatted = res.customers.map((cust) => ({
- id: cust.customId,
-          name: cust.name,
-          mobile: cust.mobile,
-          email: cust.email,
-          city: cust.city,
-          state: cust.state,
-          score: generateScore(),
-        }));
-        setCustomers(formatted);
-      }
-    } catch (err) {
-      console.error("❌ Error fetching customers:", err);
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    const res = await CustomerService.getAllCustomers();
+    if (res?.customers) {
+      const formatted = res.customers.map((cust) => ({
+        mongoId: cust._id,  // For API ops
+        displayId: cust.customId,  // For display
+        name: cust.name,
+        mobile: cust.mobile,
+        email: cust.email,
+        address: cust.address || '',  // ✅ Add missing fields
+        pin: cust.pin || '',
+        city: cust.city,
+        state: cust.state,
+        aadharCardNumber: cust.aadharCardNumber || '',
+        panNumber: cust.panNumber || '',
+        companyName: cust.companyName || '',
+        gstNumber: cust.gstNumber || '',
+        score: generateScore(),
+      }));
+      setCustomers(formatted);
     }
-  };
-
+  } catch (err) {
+    console.error("❌ Error fetching customers:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchCustomers();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this customer?"))
-      return;
+  const handleDelete = async (mongoId, displayId) => {
+    if (!window.confirm("Are you sure you want to delete this customer?")) return;
     try {
-      await CustomerService.deleteCustomer(id);
-      setCustomers((prev) => prev.filter((cust) => cust.id !== id));
+      const deleteRes = await CustomerService.deleteCustomer(mongoId);  // ✅ Pass _id
+      if (deleteRes.success) {
+        setCustomers((prev) => prev.filter((cust) => cust.displayId !== displayId));  // Filter by displayId
+        console.log("✅ Deleted:", deleteRes.customer?.customId || displayId);  // Matches Postman
+      }
     } catch (err) {
       console.error("❌ Error deleting:", err);
+      // Add toast: "Failed to delete customer. Invalid ID or server error."
     }
   };
 
-  const handleEdit = (customer) => {
-    navigate("/dashboard/add-customer", { state: { customer } });
-  };
+const handleEdit = (customer) => {
+  navigate("/dashboard/add-customer", { 
+    state: { customer }  // Full object with all fields + _id
+  });
+};
 
   const getScoreColor = (score) => {
     if (score < 40) return "text-red-600";
@@ -86,7 +97,7 @@ const CustomerDetailsForm = () => {
           <table className="min-w-full text-sm border-separate border-spacing-0 border-[#E5E7EB] border-y border-x-2 rounded-lg shadow-customSoft">
             <thead>
               <tr className="bg-[#F9FAFB] text-left text-lightblack">
-                <th className="p-3 font-semibold py-5">Unique ID</th>
+                <th className="p-3 font-semibold py-5">Unique ID (Custom)</th>  {/* Changed label for clarity */}
                 <th className="p-3 font-semibold py-5">Name</th>
                 <th className="p-3 font-semibold py-5">Mobile</th>
                 <th className="p-3 font-semibold py-5">Email</th>
@@ -99,11 +110,11 @@ const CustomerDetailsForm = () => {
             <tbody>
               {customers.map((cust) => (
                 <tr
-                  key={cust.id}
+                  key={cust.displayId}  // Use displayId as key (stable)
                   className="bg-white text-left shadow-customSoft"
                 >
                   <td className="p-3 text-black font-robotoM border-y">
-                    {cust.id}
+                    {cust.displayId}  {/* Show customId */}
                   </td>
                   <td className="p-3 text-[#111827] font-robotoR border-y">
                     {cust.name}
@@ -132,7 +143,7 @@ const CustomerDetailsForm = () => {
                     </button>
                     <button
                       className="text-[#DC2626] hover:text-red-700"
-                      onClick={() => handleDelete(cust.id)}
+                      onClick={() => handleDelete(cust.mongoId, cust.displayId)}  // ✅ Pass _id and displayId
                     >
                       <FiTrash2 className="w-5 h-5" />
                     </button>

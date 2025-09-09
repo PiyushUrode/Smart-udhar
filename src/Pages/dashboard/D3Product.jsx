@@ -431,6 +431,8 @@ export default function D3Product() {
       const fetchProduct = async () => {
         try {
           const { product, success, error } = await ProductService.fetchProductById(id);
+           setActiveTab("product"); // Default to product tab
+          
           if (success && product) {
             // Map API data to formData, ensuring all fields are strings or appropriate types
             setFormData({
@@ -447,15 +449,15 @@ export default function D3Product() {
               tax: String(product.tax || ""),
               price_type: product.price_type || "",
             });
-            setActiveTab(product.product_type || "product");
+            setActiveTab(product.product_type === "service" ? "service" : "product");
           } else {
             toast.error(error || "Failed to fetch product", { position: "top-right", autoClose: 4000 });
-            navigate("/products"); // Redirect if product not found
+            navigate("/dashboard/product"); // Redirect if product not found
           }
         } catch (err) {
           console.error("Error fetching product:", err);
           toast.error("Failed to fetch product", { position: "top-right", autoClose: 4000 });
-          navigate("/products");
+          navigate("/dashboard/product");
         }
       };
       fetchProduct();
@@ -576,7 +578,7 @@ export default function D3Product() {
         setFormData(initialFormData);
         setErrors({});
         setShowAdvanced(false);
-        if (isEditMode) navigate("/products"); // Redirect to product list after update
+        if (isEditMode) navigate("/dashboard/product-list"); // Redirect to product list after update
       } else {
         throw new Error(res.error || "Operation failed");
       }
@@ -657,7 +659,7 @@ export default function D3Product() {
           errors={errors}
         />
       )}
-      {activeTab === "service" && (
+      {activeTab !== "product" && (
         <ServiceForm
           formData={formData}
           handleChange={handleChange}

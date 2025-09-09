@@ -2,22 +2,22 @@
 import { AuthService } from "./authService";
 import { api } from "../api/api.js";
 
-function getstoreProfileId() {
+function getstoreProfile_id() {
   return (
-    AuthService.getstoreProfileId?.() ||
-    localStorage.getItem("storeProfileId")
+    AuthService.getstoreProfile_id?.() ||
+    localStorage.getItem("storeProfile_id")
   );
 }
 function getAuthContext() {
   const token = AuthService.getToken?.();
   const store_id = AuthService.getStoreId?.();
-  const storeProfileId = getstoreProfileId();
+  const storeProfile_id = getstoreProfile_id();
 
   if (!token) throw new Error("❌ Missing auth token");
   if (!store_id) throw new Error("❌ Missing store_id");
-  if (!storeProfileId) throw new Error("❌ Missing storeProfileId");
+  if (!storeProfile_id) throw new Error("❌ Missing storeProfile_id");
 
-  return { token, store_id, storeProfileId };
+  return { token, store_id, storeProfile_id };
 }
 
 // 📂 Generic Export (PDF/Excel)

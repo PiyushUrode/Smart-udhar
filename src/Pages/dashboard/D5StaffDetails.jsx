@@ -67,7 +67,9 @@ const D5StaffDetails = () => {
         <form className="mt-6 p-2 space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {["firstName","lastName","mobileNumber","email","address","pin","city","state","role"].map((field) => (
-              <div key={field}>
+              <div key={field} 
+              
+              >
                 <label className="block text-sm font-medium text-[#374151] mb-1 capitalize">
                   {field}
                 </label>

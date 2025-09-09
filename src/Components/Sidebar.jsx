@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";  // ← useEffect ऐड करें
+import axios from "axios";  // ← API के लिए
+import Cookies from "js-cookie";  // ← Token के लिए
 import {
   FaTachometerAlt, FaBuilding, FaInfoCircle, FaBoxOpen, FaConciergeBell,
   FaUserFriends, FaPlusCircle, FaFileInvoice, FaMoneyBillWave, FaStar,
@@ -7,6 +9,7 @@ import {
   FaSync, FaHeadphones, FaUsers, FaChartLine
 } from "react-icons/fa";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const sections = [
   {
     title: "Main Menu",
@@ -70,19 +73,71 @@ const sections = [
 ];
 
 const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
-  const [selectedPanel, setSelectedPanel] = useState("Business Panel 1");
+ const [businesses, setBusinesses] = useState([]);  
+  const [activeBusinessName, setActiveBusinessName] = useState("Select Business");  
+  const [loading, setLoading] = useState(true);  
 
-  const businessPanels = [
-    "Business Panel 1",
-    "Business Panel 2",
-    "Business Panel 3",
-    "Business Panel 4",
-    "Business Panel 5",
-  ];
+  const store_id = Cookies.get("store_id");  
+  const token = Cookies.get("authToken");
 
-  const handlePanelChange = (e) => {
-    setSelectedPanel(e.target.value);
-    // Optionally trigger logic for switching context
+  // Fetch businesses function (BusinessList से inspired)
+  const fetchBusinesses = async () => {
+    if (!store_id || !token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await axios.get(
+        `${API_BASE}/store-business-profile/find-all/${store_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log("📌 Sidebar API Response:", res.data);
+
+      let data = res.data?.businesses || res.data?.data || (Array.isArray(res.data) ? res.data : []);
+      setBusinesses(data);
+
+      // Active ID से name set करें
+      const storeProfile_id = localStorage.getItem("storeProfile_id");
+      if (storeProfile_id && data.length > 0) {
+        const activeBusiness = data.find(b => String(b._id) === String(storeProfile_id));
+        if (activeBusiness) {
+          setActiveBusinessName(` ${activeBusiness.businessName || "Unnamed Business"}`);
+        } else {
+          setActiveBusinessName("No Active Business");
+          localStorage.removeItem("storeProfile_id");  // Invalid ID clear करें
+        }
+      }
+    } catch (err) {
+      console.error("❌ Sidebar: Error fetching businesses:", err);
+      setActiveBusinessName("Error Loading");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // useEffect: Load businesses on mount और store_id change पर
+  useEffect(() => {
+    fetchBusinesses();
+  }, [store_id, token]);  // Dependencies
+
+  // Header render
+  const renderHeader = () => {
+    if (loading) {
+      return <div className="text-white text-sm">Loading...</div>;
+    }
+
+    if (isOpen && !isMobile) {  // Only show name when open and not mobile
+      return (
+        <div className="text-white font-bold text-sm mb-1 flex gap-2 items-center">
+          <FaBuilding />
+          <span>{activeBusinessName}</span>  {/* ← यहाँ active name show होगा */}
+        </div>
+      );
+    } else {
+      return <FaBuilding className="text-white text-xl mx-auto" />;
+    }
   };
 
   return (
@@ -92,30 +147,10 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       }`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+<div className="flex items-center justify-between mb-4">
         {!isMobile && (
           <div className="flex flex-col w-full">
-            {isOpen ? (
-              <>
-                <div className="text-white font-bold text-sm mb-1 flex gap-2 items-center">
-                  <FaBuilding />
-                <select
-                  value={selectedPanel}
-                  onChange={handlePanelChange}
-                  className="text-sm bg-[#3B82F6]  rounded px-2 py-1"
-                >
-                  {businessPanels.map((panel, idx) => (
-                    <option key={idx} value={panel}>
-                      {panel}
-                    </option>
-                  ))}
-                </select>
-                </div>
-
-              </>
-            ) : (
-              <FaBuilding className="text-white text-xl mx-auto" />
-            )}
+            {renderHeader()}  {/* ← Updated header */}
           </div>
         )}
         <button

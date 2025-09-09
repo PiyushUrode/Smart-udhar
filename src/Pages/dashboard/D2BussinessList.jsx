@@ -10,8 +10,8 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const D2BusinessList = () => {
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
- const [storeProfileId, setstoreProfileId] = useState(
-    localStorage.getItem("storeProfileId") || ""
+ const [storeProfile_id, setstoreProfile_id] = useState(
+    localStorage.getItem("storeProfile_id") || ""
   );
 
   const store_id = Cookies.get("store_id");
@@ -43,11 +43,11 @@ const D2BusinessList = () => {
       setBusinesses(data);
 
 
-      if (data.length > 0 && storeProfileId) {
-        const exists = data.some((b) => String(b._id) === String(storeProfileId));
+      if (data.length > 0 && storeProfile_id) {
+        const exists = data.some((b) => String(b._id) === String(storeProfile_id));
         if (!exists) {
-          localStorage.removeItem("storeProfileId");
-          setstoreProfileId("");
+          localStorage.removeItem("storeProfile_id");
+          setstoreProfile_id("");
         }
       }
     } catch (err) {
@@ -93,8 +93,8 @@ const D2BusinessList = () => {
 
   // ✅ Set Active Business
   // const handleSetActive = (id) => {
-  //   setstoreProfileId(id);
-  //   localStorage.setItem("storeProfileId", id);
+  //   setstoreProfile_id(id);
+  //   localStorage.setItem("storeProfile_id", id);
   //   console.log("✅ Active Business ID:", id);
   //   alert("✔️ Active business set successfully!");
   // };
@@ -102,10 +102,10 @@ const D2BusinessList = () => {
   // ✅ Set Active Business
 const handleSetActive = (id) => {
   // localStorage me dono set karna
-  localStorage.setItem("storeProfileId", id);         // agar kahi use ho raha hai to
-  localStorage.setItem("storeProfileId", id);         // ye main key hai jo guard & APIs use karenge
+  localStorage.setItem("storeProfile_id", id);         // agar kahi use ho raha hai to
+  localStorage.setItem("storeProfile_id", id);         // ye main key hai jo guard & APIs use karenge
 
-  setstoreProfileId(id);
+  setstoreProfile_id(id);
 
   console.log("✅ Active Business ID:", id);
   alert("✔️ Active business set successfully!");
@@ -153,7 +153,7 @@ const handleSetActive = (id) => {
 <tbody>
   {businesses.map((item) => {
     // ✅ यहाँ define करो
-    const isActive = String(storeProfileId) === String(item._id);
+    const isActive = String(storeProfile_id) === String(item._id);
 
     return (
       <tr

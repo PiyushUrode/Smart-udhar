@@ -34,23 +34,23 @@ export const CreditScoreService = {
     });
   },
 
-  findAll: async (storeId, storeProfileId) => {
+  findAll: async (storeId, storeProfile_id) => {
     return axios.get(
-      `${API_BASE}/credit-score/find-all/${storeId}/${storeProfileId}`,
+      `${API_BASE}/credit-score/find-all/${storeId}/${storeProfile_id}`,
       { headers: getAuthHeaders() }
     );
   },
 
-  findByName: async (storeId, storeProfileId, name) => {
+  findByName: async (storeId, storeProfile_id, name) => {
     return axios.get(
-      `${API_BASE}/credit-score/findBy-name/${storeId}/${storeProfileId}?name=${name}`,
+      `${API_BASE}/credit-score/findBy-name/${storeId}/${storeProfile_id}?name=${name}`,
       { headers: getAuthHeaders() }
     );
   },
 
-  findDetails: async (storeId, storeProfileId) => {
+  findDetails: async (storeId, storeProfile_id) => {
     return axios.get(
-      `${API_BASE}/credit-score/find-details/${storeId}/${storeProfileId}`,
+      `${API_BASE}/credit-score/find-details/${storeId}/${storeProfile_id}`,
       { headers: getAuthHeaders() }
     );
   },
