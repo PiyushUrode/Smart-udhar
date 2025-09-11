@@ -231,7 +231,7 @@ const handleSubmit = async () => {
   const payload = {
     customerId: selectedCustomer._id,
     name: selectedCustomer.name,
-    mobile: selectedCustomer.mobile,
+    phone: selectedCustomer.mobile,
     address: selectedCustomer.address,
     balance: selectedCustomer.balance,
     creditScore: selectedCustomer.creditScore,

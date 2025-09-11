@@ -9,12 +9,12 @@ const D5StaffDetails = () => {
     firstName: "",
     lastName: "",
     mobileNumber: "",
-    email: "",
+    emailId: "",
     address: "",
-    pin: "",
+    pinNumber: "",
     city: "",
     state: "",
-    role: ""
+    roles: ""
   });
   const [staffImage, setStaffImage] = useState(null);
 
@@ -38,12 +38,12 @@ const D5StaffDetails = () => {
         firstName: "",
         lastName: "",
         mobileNumber: "",
-        email: "",
+        emailId: "",
         address: "",
-        pin: "",
+        pinNumber: "",
         city: "",
         state: "",
-        role: ""
+        roles: ""
       });
       setStaffImage(null);
     } catch (err) {
@@ -66,7 +66,7 @@ const D5StaffDetails = () => {
       {isOpen && (
         <form className="mt-6 p-2 space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {["firstName","lastName","mobileNumber","email","address","pin","city","state","role"].map((field) => (
+            {["firstName","lastName","mobileNumber","emailId","address","pinNumber","city","state","roles"].map((field) => (
               <div key={field} 
               
               >

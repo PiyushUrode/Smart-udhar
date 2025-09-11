@@ -138,7 +138,7 @@ const D4ProductList = () => {
   const renderTable = () => {
     const isProductTab = activeTab === "product";
     return (
-      <table className="w-full bg-white rounded-lg shadow-sm text-sm">
+      <table className="w-full bg-white rounded-lg shadow-sm text-sm text-nowrap ">
         <thead className="text-left text-gray-600 font-medium">
           <tr>
             <th className="p-3">Image</th>
@@ -152,7 +152,7 @@ const D4ProductList = () => {
             {isProductTab && <th className="p-3">New Stock</th>}
           </tr>
         </thead>
-        <tbody>
+        <tbody >
           {loading ? (
             <tr><td colSpan="9" className="text-center p-3">Loading...</td></tr>
           ) : error ? (
@@ -189,8 +189,8 @@ const D4ProductList = () => {
                         {isLow ? "Low Stock" : "In Stock"}
                       </span>
                     </td>
-                    <td className="p-3 flex gap-3">
-                      <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800"><FaEdit /> Edit</button>
+                    <td className="p-3 h-full flex  gap-3 justify-start  items-center ">
+                      <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 flex flex-row"><FaEdit /> Edit</button>
                       <button onClick={() => handleDelete(item._id)} className="text-red-600 hover:text-red-800"><FaTrash /></button>
                       <button onClick={() => setShowStockPopup(true) || setSelectedProduct(item)} className="text-black"><FaBoxOpen /></button>
                     </td>
@@ -228,7 +228,7 @@ const D4ProductList = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b mb-4 flex gap-6 text-sm px-6 py-3">
+      <div className="border-b mb-4 flex gap-6 text-sm px-6 py-3 ">
         {["product", "service"].map((tab) => (
           <button
             key={tab}
@@ -241,7 +241,7 @@ const D4ProductList = () => {
       </div>
 
       {/* Search */}
-      <div className="flex gap-5 flex-wrap px-6 py-3 items-center mb-4">
+      <div className="flex gap-5 flex-wrap text-nowrap px-6 py-3 items-center mb-4">
         <div className="w-full md:w-60 relative">
           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"><CiSearch size={18} /></span>
           <input

@@ -87,7 +87,7 @@ const handleVerifyOtp = async () => {
     if (res?.stores?.length > 0) {
       navigate("/dashboard/businessList");
     } else {
-      navigate("/dashboard/createBusiness");
+      navigate("/dashboard/bussinessList");
     }
   } catch (err) {
     console.error("[Signup] Verify error:", err);

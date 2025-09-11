@@ -20,23 +20,23 @@ const sections = [
   {
     title: "Business Profile",
     items: [
-      { label: "Information", icon: <FaBuilding />, path: "/dashboard/information" },
-      { label: "Bussiness-details", icon: <FaBuilding />, path: "/dashboard/bussinessList" },
+      { label: "Add Business", icon: <FaBuilding />, path: "/dashboard/information" },
+      { label: "Bussiness List", icon: <FaBuilding />, path: "/dashboard/bussinessList" },
     ],
   },
   {
     title: "Items",
     items: [
-      { label: "Products", icon: <FaBoxOpen />, path: "/dashboard/product" },
+      { label: " Add Products", icon: <FaBoxOpen />, path: "/dashboard/product" },
       { label: "Product List", icon: <FaConciergeBell />, path: "/dashboard/product-list" },
-      { label: "Stock-list", icon: <FaConciergeBell />, path: "/dashboard/stock-list" },
+      // { label: "Stock-list", icon: <FaConciergeBell />, path: "/dashboard/stock-list" },
     ],
   },
   {
     title: "People",
     items: [
+      { label: "Add Staff", icon: <FaUserFriends />, path: "/dashboard/staff-details" },
       { label: "Staff Roles", icon: <FaUserFriends />, path: "/dashboard/staff-role" },
-      { label: "Staff Details", icon: <FaUserFriends />, path: "/dashboard/staff-details" },
       { label: "Add Customer", icon: <FaPlusCircle />, path: "/dashboard/add-customer" },
       { label: "Customer Details", icon: <FaUsers />, path: "/dashboard/customer-details" },
     ],
@@ -152,13 +152,15 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
           <div className="flex flex-col w-full">
             {renderHeader()}  {/* ← Updated header */}
           </div>
+          
         )}
         <button
-          className="text-white focus:outline-none ml-2"
+          className="text-white focus:outline-none ml-2 hidden sm:block"
           onClick={toggleSidebar}
         >
           ☰
         </button>
+                <div className="text-white font-interB sm:hidden"> <h1>{activeBusinessName}</h1></div>
       </div>
 
       {/* Menu */}

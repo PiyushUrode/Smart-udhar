@@ -137,7 +137,7 @@ useEffect(() => {
     const query = search.toLowerCase();
     return (
       entry?.customerName?.toLowerCase().includes(query) ||
-      entry?.mobile?.toLowerCase().includes(query) ||
+      entry?.phone?.toLowerCase().includes(query) ||
       entry?._id?.toLowerCase().includes(query)
     );
   });
@@ -162,7 +162,7 @@ useEffect(() => {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by User ID, Name, or mobile"
+                placeholder="Search by User ID, Name, or phone"
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
               <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
@@ -174,7 +174,7 @@ useEffect(() => {
               <thead className="bg-gray-200 text-[#6B7280] text-xs font-robotoM">
                 <tr>
                   <th className="p-3">Customer Name</th>
-                  <th className="p-3">mobile Number</th>
+                  <th className="p-3">Mobile Number</th>
                   <th className="p-3">Pending Amount</th>
                   <th className="p-3">Due Date</th>
                   <th className="p-3">Next Milestone</th>
@@ -199,9 +199,9 @@ useEffect(() => {
             {entry.name || "-"}
           </td>
 
-          {/* mobile Number */}
+          {/* phone Number */}
           <td className="p-3 whitespace-nowrap">
-            {entry.mobile || "-"}
+            {entry.phone || "-"}
           </td>
 
           {/* Pending Amount */}

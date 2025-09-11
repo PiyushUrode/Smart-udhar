@@ -131,14 +131,14 @@ const handleSetActive = (id) => {
 
       {/* Table */}
       <div className="mx-auto py-2 px-2 md:mt-5">
-        <div className="overflow-x-auto p-2 lg:p-5 bg-white rounded shadow">
+        <div className="overflow-x-auto p-2 lg:p-5 bg-white rounded shadow ">
           {loading ? (
             <p>Loading businesses...</p>
           ) : businesses.length === 0 ? (
             <p className="text-gray-600">No businesses found</p>
           ) : (
             <table className="w-full text-sm border border-gray-200">
-              <thead className="bg-[#E8E8E8] text-left text-[#111827] font-robotoM text-base border-b border-gray-300">
+              <thead className="bg-[#E8E8E8] text-left text-[#111827] font-robotoM text-base border-b border-gray-300 text-nowrap">
                 <tr>
                   <th className="p-4">Business Name</th>
                   <th className="p-4">GST Number</th>
@@ -158,7 +158,7 @@ const handleSetActive = (id) => {
     return (
       <tr
         key={item._id}
-        className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+        className={`border-b border-gray-200 hover:bg-gray-50 text-nowrap transition-colors ${
           isActive ? "bg-green-50" : ""
         }`}
       >
