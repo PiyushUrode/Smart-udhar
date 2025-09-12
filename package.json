@@ -12,9 +12,11 @@
   "dependencies": {
     "@headlessui/react": "^2.2.7",
     "axios": "^1.11.0",
+    "html2canvas": "^1.4.1",
     "i18next": "^25.3.2",
     "i18next-browser-languagedetector": "^8.2.0",
     "js-cookie": "^3.0.5",
+    "jspdf": "^3.0.2",
     "lucide": "^0.525.0",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",

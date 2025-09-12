@@ -7,6 +7,7 @@ import viteImagemin from 'vite-plugin-imagemin';
 export default defineConfig({
   plugins: [
     react(),
+    
 
     // 📊 Bundle visualizer (optional - use only in production preview)
     visualizer({
@@ -43,10 +44,12 @@ export default defineConfig({
     }),
   ],
 
-  server: {
-    host: true, // Enables access from local network (e.g., mobile)
-    port: 5173, // You can change this if needed
-  },
+server: {
+  host: '0.0.0.0', // allows external access
+  port: 5173,
+  strictPort: true,
+}
+,
 
   build: {
     outDir: 'dist', // default

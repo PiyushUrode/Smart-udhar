@@ -16,6 +16,8 @@ const D8PaymentCollection = () => {
   // ---------- helpers ----------
   const fmtINR = (n) => `₹${Number(n ?? 0).toLocaleString("en-IN")}`;
   const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN") : "-");
+ console.log("🔎 Invoice Data Received:", invoice);
+
 
   const milestones = invoice?.milestones || [];
   const nextMilestone =
@@ -33,7 +35,7 @@ const D8PaymentCollection = () => {
   return (
     <section className="w-full min-h-screen bg-[#f9f9ff] mt-5 px-4 md:px-10 py-6">
       {/* Search & Actions */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="flex flex-col hidden md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div className="relative w-full md:w-auto flex-1">
           <input
             type="text"
@@ -69,7 +71,7 @@ const D8PaymentCollection = () => {
               <div>
                 <h3 className="text-lg font-semibold">{invoice?.name || "-"}</h3>
                 <p className="text-sm text-[#4B5563]">Customer ID: {invoice?.customerId || "-"}</p>
-                <p className="text-sm text-[#4B5563]">Mobile: {invoice?.mobile || "-"}</p>
+                <p className="text-sm text-[#4B5563]">Mobile: {invoice?.phone || "-"}</p>
               </div>
             </div>
 
@@ -91,8 +93,8 @@ const D8PaymentCollection = () => {
 
           <div className="w-full md:w-1/2 mt-4 md:mt-0 ">
             <h4 className=" font-robotoM text-black mb-2">Payment Milestones</h4>
-            <ul className="space-y-2">
-              {milestones.map((m, idx) => {
+          <ul className="space-y-2">
+               {milestones.map((m, idx) => {
                 const status = (m.status || "").toLowerCase();
                 const isPending = status === "pending";
                 const isPaid = status === "paid";
@@ -100,31 +102,41 @@ const D8PaymentCollection = () => {
                   ? "bg-[#F0FDF4] border border-green-400"
                   : "bg-[#FEFCE8] border border-yellow-400";
 
-                return (
-                  <li key={m._id || idx} className={`${box} rounded p-5 flex justify-between items-center`}>
-                    <div className="flex flex-col">
-                      <span>{m.milestoneName || `Milestone ${idx + 1}`}</span>
-                      <span className={isPaid ? "text-[#16A34A] font-medium" : "text-yellow-800 font-medium"}>
-                        Due: {fmtDate(m.dueDate)} • Amount: {fmtINR(m.amount)}
-                      </span>
-                    </div>
+    return (
+      <li
+        key={m._id || idx}
+        className={`${box} rounded p-5 flex justify-between items-center`}
+      >
+        <div className="flex flex-col">
+          <span>{m.milestoneName || `Milestone ${idx + 1}`}</span>
+          <span
+            className={
+              isPaid
+                ? "text-[#16A34A] font-medium"
+                : "text-yellow-800 font-medium"
+            }
+          >
+            Due: {fmtDate(m.dueDate)} • Amount: {fmtINR(m.amount)}
+          </span>
+        </div>
 
-                    {isPending ? (
-                      <button
-                        onClick={handleMarkAsPaid}
-                        className="ml-3 px-3 py-1 text-sm bg-[#FFFAC9] text-[#b86608] hover:bg-[#FFFAC9] rounded flex items-center gap-1"
-                      >
-                        <FaCheck /> View Milestone
-                      </button>
-                    ) : (
-                      <div className="px-3 py-3 rounded-xl h-fit bg-[#DCFCE7]">
-                        <span className=" font-medium  text-[#166534] "> Paid</span>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+        {isPending ? (
+          <button
+            onClick={handleMarkAsPaid}
+            className="ml-3 px-3 py-1 text-sm bg-[#FFFAC9] text-[#b86608] hover:bg-[#FFFAC9] rounded flex items-center gap-1"
+          >
+            <FaCheck /> View Milestone
+          </button>
+        ) : (
+          <div className="px-3 py-3 rounded-xl h-fit bg-[#DCFCE7]">
+            <span className="font-medium text-[#166534]">Paid</span>
+          </div>
+        )}
+      </li>
+    );
+  })}
+</ul>
+
           </div>
         </div>
       </div>
@@ -254,3 +266,4 @@ const D8PaymentCollection = () => {
 };
 
 export default D8PaymentCollection;
+

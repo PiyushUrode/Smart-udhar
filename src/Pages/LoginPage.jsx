@@ -41,7 +41,7 @@ const handleGetOtp = async () => {
 
     // 👇 Backend से जो otp आया उसे popup करो
     if (res?.mobile_otp) {
-      toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 5000 });
+      toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 20000 });
     } else {
       console.warn("⚠️ No OTP found in response:", res);
     }

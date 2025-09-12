@@ -40,7 +40,7 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
             <ImagePlus color="#2563EB" />
             <span className="text-[#2563EB]">Add Product Image</span>
           </span>
-          <input type="file" name="product_image" className="hidden" onChange={handleChange} />
+          <input type="file" name="product_image"  accept="image/*" className="hidden" onChange={handleChange} />
           {formData.product_image && <span className="text-xs text-gray-400 ml-2">{formData.product_image.name}</span>}
         </label>
       </div>
@@ -257,6 +257,7 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
               type="file"
               name="product_image"
               className="hidden"
+              accept="image/*"
               onChange={handleChange}
             />
             {formData.product_image && <span className="text-xs text-gray-400 ml-2">{formData.product_image.name}</span>}

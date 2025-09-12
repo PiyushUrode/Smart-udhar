@@ -11,8 +11,9 @@ import {
 } from "react-icons/fa";
 import { FaUserShield } from "react-icons/fa6";
 import { FiSearch } from "react-icons/fi";
-
+import { toast } from "react-toastify";
 import product1 from "../../assets/dummyimage/product1.png";
+import { useNavigate } from "react-router-dom";
 
 // ----------------- STAT CONFIG -----------------
 const STAT_TYPE_MAP = {
@@ -82,44 +83,43 @@ const roles = [
     ],
   },
 ];
-// ----------------- MAIN COMPONENT -----------------
 const D5StaffRole = () => {
+  const navigate = useNavigate();
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState("Monthly");
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [recentActivity, setRecentActivity] = useState([]);
 
-  // 📌 API: Fetch Staff Members
+
+const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const res = await StaffService.getAllStaff();
+      const formatted = res?.staff?.map((staff) => ({
+        id: staff._id,
+        name: `${staff.firstName || ""} ${staff.lastName || ""}`.trim(),
+        email: staff.emailId,
+        role: staff.roles?.[0] || "Staff",
+        roleColor: "bg-blue-100 text-blue-600",
+        avatar: staff.image ? `/uploads/staff/${staff.image}` : product1,
+        online: staff.online || false,
+        lastAction: staff.status === "active" ? "Joined the team" : "Updated",
+        actionTime: staff.updatedAt || new Date().toISOString(),
+      }));
+      setMembers(formatted || []);
+    } catch (err) {
+      console.error("❌ Failed to fetch staff", err);
+      toast.error("Failed to load staff");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        setLoading(true);
-        const res = await StaffService.getAllStaff(); // backend call
-
-        const formatted = res?.staff?.map((staff) => ({
-          id: staff._id,
-          name: `${staff.firstName || ""} ${staff.lastName || ""}`.trim(),
-          email: staff.emailId,
-          role: staff.roles?.[0] || "Staff",
-          roleColor: "bg-blue-100 text-blue-600",
-          avatar: staff.image ? `/uploads/staff/${staff.image}` : product1,
-          online: staff.online || false,
-          lastAction: staff.status === "active" ? "Joined the team" : "Updated",
-          actionTime: staff.updatedAt || new Date().toISOString(),
-        }));
-
-        setMembers(formatted || []);
-        setRecentActivity((formatted || []).slice(0, 5));
-      } catch (err) {
-        console.error("❌ Failed to fetch staff", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStaff();
   }, []);
+
 
   // 📌 Dropdown handler
   const toggleDropdown = (index) => {
@@ -129,6 +129,22 @@ const D5StaffRole = () => {
   const handleFilterChange = (option) => {
     setSelectedFilter(option);
     setOpenDropdownIndex(null);
+  };
+  const handleEdit = (id) => {
+    navigate(`/dashboard/staff-details/${id}`);
+  };
+
+  // 📌 delete handler
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this staff member?")) return;
+    try {
+      await StaffService.deleteStaff(id);
+      toast.success("✅ Staff deleted successfully");
+      fetchStaff(); // reload
+    } catch (err) {
+      console.error("❌ Delete failed:", err);
+      toast.error(err.response?.data?.message || "Failed to delete staff");
+    }
   };
 
   return (
@@ -226,23 +242,22 @@ const D5StaffRole = () => {
                         <FaEllipsisV size={16} />
                       </button>
 
-                      {openDropdownIndex === index && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
-                          {["Edit", "Delete"].map((option) => (
-                            <div
-                              key={option}
-                              onClick={() => handleFilterChange(option)}
-                              className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${
-                                selectedFilter === option
-                                  ? "bg-gray-100 font-medium"
-                                  : ""
-                              }`}
-                            >
-                              {option}
-                            </div>
-                          ))}
+                        {openDropdownIndex === index && (
+                      <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
+                        <div
+                          onClick={() => handleEdit(member.id)}
+                          className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                        >
+                          Edit
                         </div>
-                      )}
+                        <div
+                          onClick={() => handleDelete(member.id)}
+                          className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer text-red-600"
+                        >
+                          Delete
+                        </div>
+                      </div>
+                    )}
                     </div>
                   </div>
                 </div>

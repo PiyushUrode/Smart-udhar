@@ -45,7 +45,7 @@ const sections = [
     title: "Transactions",
     items: [
       { label: "Create Invoice", icon: <FaFileInvoice />, path: "/dashboard/create-invoice" },
-      { label: "Payment Collection", icon: <FaMoneyBillWave />, path: "/dashboard/payment-collection" },
+      // { label: "Payment Collection", icon: <FaMoneyBillWave />, path: "/dashboard/payment-collection" },
       { label: "Payment Collection List", icon: <FaMoneyBillWave />, path: "/dashboard/payment-collectionList" },
       { label: "Credit Score", icon: <FaStar />, path: "/dashboard/credit-score" },
       { label: "Expenses", icon: <FaFileAlt />, path: "/dashboard/expenses" },

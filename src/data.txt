@@ -1,962 +1,315 @@
-import { useState, useEffect } from "react";
-import { FaCommentSms } from "react-icons/fa6";
-import Select from "react-select";
-import { FaWhatsapp } from "react-icons/fa";
-import { FaPrint } from "react-icons/fa6";
-import { FaTrash } from "react-icons/fa";
-import { FaRegCreditCard } from "react-icons/fa6";
-import { FaClock } from "react-icons/fa6";
-import { GiCash } from "react-icons/gi";
-import { FaCalculator } from "react-icons/fa";
-import { LuNewspaper } from "react-icons/lu";
-import { FaEdit } from "react-icons/fa";
-import { FaPlus } from "react-icons/fa";
-import { FaBox } from "react-icons/fa6";
-import { IoIosSearch } from "react-icons/io";
-import { FaSearch } from "react-icons/fa";
-import { CiCalendarDate } from "react-icons/ci";
-import { Invoice  } from "../../api/Invoice.js"
+import React, { useState, useEffect } from "react";
+import {
+  CreditCard,
+  Settings,
+  FileText,
+  HelpCircle,
+  Upload,
+} from "lucide-react";
+import { FaRegSave, FaClock, FaSms, FaQuestionCircle } from "react-icons/fa";
+import { IoLogoWhatsapp } from "react-icons/io";
+import { MdEmail } from "react-icons/md";
 
+import {
+  createGeneralSettings,
+  updateGeneralSettings,
+  findGeneralSettingsById,
+  createInvoiceTemplateSettings,
+  updateInvoiceTemplateSettings,
+  findInvoiceTemplateSettingsById,
+  createPaymentSetup,
+  updatePaymentSetup,
+  findPaymentSetupById,
+} from "../../api/GeneralSetting"; // ✅ import APIs
 
-export default function D7CreateInvoice({ onCustomerSelect  }) {
-// ----------------- STATES -----------------
-const [customers, setCustomers] = useState([]);
-const [loading, setLoading] = useState(true);
-const [searchTerm, setSearchTerm] = useState("");
-const [selectedCustomer, setSelectedCustomer] = useState(null);
-const [searchTriggered, setSearchTriggered] = useState(false);
+const inputClasses =
+  "bg-[#F6F8FA] px-3 py-2 border border-gray-300 rounded-md text-sm w-full";
 
+const SettingsPage = () => {
+  const token = localStorage.getItem("token"); // 🔑 token
+  const [isChecked, setIsChecked] = useState(false);
 
-// Payment
-const [showStep3, setShowStep3] = useState(false);
-const [showStep4, setShowStep4] = useState(false);
-const [paymentMode, setPaymentMode] = useState("");
-const [paymentMethod, setPaymentMethod] = useState("");
-const [transactionId, setTransactionId] = useState("");
-const [milestones, setMilestones] = useState([
-  { id: Date.now(), name: "Advance", amount: "", dueDate: "", status: "" },
-]);
-
-// Additional Charges
-const [additionalCharges, setAdditionalCharges] = useState({
-  deliveryFee: 0,
-  packingCharges: 0,
-  discount: 0,
-  other: 0,
-});
-
-// Notes
-const [note, setNote] = useState("");
-
-// ----------------- FETCH CUSTOMERS -----------------
-useEffect(() => {
-  const fetchCustomers = async () => {
-    try {
-      setLoading(true);
-      const { success, customers } = await Invoice.fetchCustomersForInvoice();
-      if (success && Array.isArray(customers)) {
-        setCustomers(customers);
-      } else {
-        setCustomers([]);
-      }
-    } catch (err) {
-      console.error("❌ Error fetching customers:", err);
-      setCustomers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchCustomers();
-}, []);
-
-const filteredCustomers = searchTerm
-  ? customers.filter((cust) => {
-      const name = cust?.name?.toLowerCase() || "";
-      const mobile = cust?.mobile?.toLowerCase() || "";
-      return (
-        name.includes(searchTerm.toLowerCase()) ||
-        mobile.includes(searchTerm.toLowerCase())
-      );
-    })
-  : [];
-
-const handleSelectCustomer = (cust) => {
-  setSelectedCustomer(cust);
-  setSearchTerm("");
-  setSearchTriggered(false);
-  if (onCustomerSelect) onCustomerSelect(cust);
-};
-
-// ----------------- FETCH PRODUCTS start -----------------
-// Products
-const [products, setProducts] = useState([]);
-const [rows, setRows] = useState([
-  { id: Date.now(), productId: "", qty: 1, unit: "", price: 0, tax: 0 },  // ✅ tax: 0, price: 0
-]);
-
-useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const res = await Invoice.getProducts();  // Assuming Invoice service
-      const productList = res?.products || res?.data?.products || res?.data || [];
-      // Filter out invalid products
-      const validProducts = productList.filter(p => p && (p._id || p.id));
-      setProducts(validProducts);
-    } catch (err) {
-      console.error("❌ Failed to fetch products", err);
-      setProducts([]);
-    }
-  };
-  fetchProducts();
-}, []);
-
-
-const handleSelectProduct = (rowId, product) => {
-  console.log("🔍 Selected Product Full:", product);  // Debug ke liye add karo, console me dekho
-
-  setRows((prev) =>
-    prev.map((row) =>
-      row.id === rowId
-        ? {
-            ...row,
-            productId: product._id || product.id,
-            price: product.sales_price || 0,  // ✅ Yahan change: sales_price use karo (150 aayega)
-            unit: product.unit || "pcs",  // Yeh already sahi ("pcs")
-            tax: product.tax || 0,  // Yeh bhi sahi (18 aayega)
-          }
-        : row
-    )
-  );
-};
-
-const handleAddRow = () => {
-  setRows([
-    ...rows,
-    {
-      id: Date.now() + Math.random(),
-      productId: "",
-      qty: 1,
-      unit: "",  // Will be set from backend on select
-      price: 0,  // Will be set from backend on select
-      tax: 0,  // ✅ Fixed to 0
-    },
-  ]);
-};
-
-const handleRemoveRow = (id) => {
-  setRows(rows.filter((row) => row.id !== id));
-};
-
-const handleChange = (id, field, value) => {
-  setRows((prev) =>
-    prev.map((row) =>
-      row.id === id
-        ? {
-            ...row,
-            [field]: field === "qty" || field === "price" ? Number(value) || 0 : value,
-          }
-        : row
-    )
-  );
-  // Recalculate total if qty or price changes (handled in calculateTotal)
-};
-
-const calculateTotal = (row) => {
-  const subtotal = (row.qty || 0) * (row.price || 0);  // ✅ Qty * Price (from backend)
-  const taxAmount = (subtotal * (row.tax || 0)) / 100;  // Tax=0, so 0
-  const total = subtotal + taxAmount;  // Effectively just subtotal when tax=0
-  return total || 0;  // If 0, show 0
-};
-
-
-// --------------fetch product end ------------------
-// ----------------- PAYMENT LOGIC -----------------
-const handlePaymentMode = (mode) => {
-  setPaymentMode(mode);
-  if (mode === "cash") {
-    setShowStep3(true);
-    setShowStep4(false);
-  } else if (mode === "debt") {
-    setShowStep4(true);
-    setShowStep3(false);
-  }
-};
-
-const handleAddMilestone = () => {
-  setMilestones([
-    ...milestones,
-    { id: Date.now(), name: "", amount: "", dueDate: "", status: "" },
-  ]);
-};
-
-const handleMilestoneChange = (id, field, value) => {
-  setMilestones((prev) =>
-    prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
-  );
-};
-
-// ----------------- ADDITIONAL CHARGES -----------------
-const handleAdditionalChange = (field, value) => {
-  setAdditionalCharges((prev) => ({
-    ...prev,
-    [field]: Number(value) || 0,
-  }));
-};
-
-const handleSubmit = async () => {
-  if (!selectedCustomer?._id) {
-    alert("Please select a customer!");
-    return;
-  }
-  if (!paymentMode) {
-    alert("Please select a payment mode!");
-    return;
-  }
-
-  const subtotal = rows.reduce((sum, p) => sum + p.qty * p.price, 0);
-  const totalTax = rows.reduce((sum, p) => sum + ((p.qty * p.price * (p.tax || 0)) / 100), 0);
-  const total = subtotal + totalTax
-    + (Number(additionalCharges.deliveryFee) || 0)
-    + (Number(additionalCharges.packingCharges) || 0)
-    - (Number(additionalCharges.discount) || 0)
-    + (Number(additionalCharges.other) || 0);
-
-const payload = {
-  customerId: selectedCustomer._id,
-  name: selectedCustomer.name,
-  mobile: selectedCustomer.mobile ,
-  address: selectedCustomer.address ,
-
-  balance: selectedCustomer.balance ,
-  creditScore: selectedCustomer.creditScore ,
-
-  paymentMode,
-  paymentMethod,
-  transactionId,
-
-  // charges
-  deliveryFee: Number(additionalCharges.deliveryFee) || 0,
-  packingCharges: Number(additionalCharges.packingCharges) || 0,
-  discount: Number(additionalCharges.discount) || 0,
-  other: Number(additionalCharges.other) || 0,
-
-  note,
-
-  subtotal,
-  tax: totalTax,
-  total,
-  totalReceived: 0,
-  dueBalance: total,
-  paymentStatus: "Unpaid",
-
-  // products array
-  products: rows.map((p) => ({
-    productId: p.productId,
-    name: p.search,
-    qty: Number(p.qty),
-    unit: p.unit,
-    price: Number(p.price),
-    tax: Number(p.tax),
-    total: calculateTotal(p),
-  })),
-
-  // ✅ milestones only if debt
-  ...(paymentMode === "debt"
-    ? {
-        milestones: milestones.map((m) => ({
-          milestoneName: m.name,
-          amount: Number(m.amount) || 0,
-          paymentMode: m.paymentMode || paymentMode,
-          dueDate: m.dueDate ? new Date(m.dueDate).toISOString() : null,
-          status: m.status || "Pending",
-        })),
-      }
-    : {}),
-};
-
-
-
-
-
-  console.log("🚀 Final Invoice Payload:", JSON.stringify(payload, null, 2));
-
-  try {
-    const res = await Invoice.createInvoice(payload);
-    if (res.success) {
-      alert("✅ Invoice saved successfully!");
-    } else {
-      alert("❌ Failed: " + res.message);
-    }
-  } catch (err) {
-    console.error("❌ Error:", err);
-    alert("Error while saving invoice");
-  }
-};
-
-const previousInvoices = [ { name: "Anamika Traders", lastPaid: "16/06/2025", due: "10/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "16/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "10/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "16/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "10/06/2025" }, { name: "Anamika Traders", lastPaid: "16/06/2025", due: "16/06/2025" }, ];
-
-
-
-// quatation
-// / ----------------- NEW: Invoice Summary State -----------------
-  const [invoiceSummary, setInvoiceSummary] = useState({
-    subtotal: 0,
-    totalTax: 0,
-    totalReceived: 0,  // Abhi 0, future me payment se update
-    dueBalance: 0,
-    paidNotPaid: 0,
-    deliveryFee: 0,
-    discount: 0,
-    total: 0,
+  // ✅ States
+  const [generalSettings, setGeneralSettings] = useState({
+    businessName: "",
+    timeZone: "",
+    currencyFormat: "",
+    language: "",
   });
 
-  // ----------------- NEW: Calculation Function -----------------
-  const calculateInvoiceSummary = () => {
-    // Subtotal from products
-    const subtotal = rows.reduce((sum, row) => sum + (row.qty * row.price), 0);
+  const [paymentSetup, setPaymentSetup] = useState({
+    upiId: "",
+    accountHolder: "",
+    accountNumber: "",
+    ifscCode: "",
+    bankName: "",
+  });
 
-    // Total Tax from products
-    const totalTax = rows.reduce((sum, row) => {
-      const rowSubtotal = row.qty * row.price;
-      return sum + (rowSubtotal * (row.tax || 0)) / 100;
-    }, 0);
+  const [invoiceSettings, setInvoiceSettings] = useState({
+    paperSize: "",
+    theme: "",
+    logo: null,
+    terms: "",
+  });
 
-    // Additional
-    const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
-    const packingCharges = Number(additionalCharges.packingCharges) || 0;
-    const discount = Number(additionalCharges.discount) || 0;
-    const other = Number(additionalCharges.other) || 0;
+  // ✅ Checkbox toggle
+  const toggleCheckbox = () => setIsChecked((prev) => !prev);
 
-    // Total
-    const total = subtotal + totalTax + deliveryFee + packingCharges - discount + other;
+  // ✅ Load existing settings
+  useEffect(() => {
+    (async () => {
+      try {
+        const general = await findGeneralSettingsById("123", token); // replace id
+        const invoice = await findInvoiceTemplateSettingsById("123", token);
+        const payment = await findPaymentSetupById("123", token);
 
-    // Received (abhi 0, agar cash mode me amount add karo to update)
-    const totalReceived = 0;  // Ya payment logic se set karo
+        if (general) setGeneralSettings(general);
+        if (invoice) setInvoiceSettings(invoice);
+        if (payment) setPaymentSetup(payment);
+      } catch (err) {
+        console.error("Error loading settings:", err);
+      }
+    })();
+  }, [token]);
 
-    // Due Balance
-    const dueBalance = total - totalReceived;
-
-    // Paid / Not Paid (simple: totalReceived)
-    const paidNotPaid = totalReceived;
-
-    // Update state
-    setInvoiceSummary({
-      subtotal,
-      totalTax,
-      totalReceived,
-      dueBalance,
-      paidNotPaid,
-      deliveryFee,
-      discount,
-      total,
-    });
+  // ✅ Save settings
+  const handleSave = async () => {
+    try {
+      await updateGeneralSettings("123", generalSettings, token);
+      await updateInvoiceTemplateSettings("123", invoiceSettings, token);
+      await updatePaymentSetup("123", paymentSetup, token);
+      alert("✅ Settings Saved Successfully!");
+    } catch (err) {
+      console.error("Save Error:", err);
+      alert("❌ Failed to save settings");
+    }
   };
 
-  // ----------------- NEW: useEffect for Real-Time Update -----------------
-  useEffect(() => {
-    calculateInvoiceSummary();  // Har change pe chalega
-  }, [rows, additionalCharges]);  // Dependencies: rows aur additionalCharges pe depend
-
   return (
-    <div className="max-w-7xl mx-auto p-6 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2">
-        <h1 className="text-2xl font-robotoB text-[#1F2937] mb-4">Create New Invoice</h1>
+    <div className="p-6 max-w-6xl mx-auto space-y-6 text-sm">
+      <h1 className="text-2xl font-semibold text-gray-800 mb-2">Settings</h1>
 
-        {/* Steps 1 to 6 (same as before) */}
-        <div className="space-y-6">
-          {/* Step 1: Select Customer */}
-          <div className="bg-white shadow-customCard rounded-lg p-5">
-            <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-4">
-              <div className="bg-[#2563EB] p-2.5 rounded-full">
-                <FaSearch color="white" size={14} />
-              </div>
-              Step 1: Select Customer
-            </h2>
-
-            {/* Search Input & Button */}
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Search Customer
-            </label>
-            <div className="w-full md:w-3/4 flex flex-col sm:flex-row items-center gap-4 mb-4">
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  placeholder="Search by name or mobile number"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setSearchTriggered(true);
-                  }}
-                  className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60" />
-              </div>
-              <button className="bg-green-600 font-robotoR hover:bg-green-700 text-white px-5 py-3 rounded-lg text-md whitespace-nowrap">
-                + Add New Customer
-              </button>
-            </div>
-
-            {/* Customers List (Search Results) */}
-            {loading ? (
-              <p className="text-gray-500 text-sm">Loading customers...</p>
-            ) : searchTriggered && filteredCustomers.length === 0 ? (
-              <p className="text-red-500 text-sm">No customer found.</p>
-            ) : (
-              searchTerm && (
-                <ul className="border bg-white rounded mt-2 shadow max-h-40 overflow-y-auto">
-                  {filteredCustomers.map((cust) => (
-                    <li
-                      key={cust._id}
-                      onClick={() => handleSelectCustomer(cust)}
-                      className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
-                    >
-                      {cust.name} ({cust.mobile})
-                    </li>
-                  ))}
-                </ul>
-              )
-            )}
-
-            {/* Selected Customer Details */}
-            {selectedCustomer && (
-              <div className="text-sm text-gray-700 bg-white p-3 rounded mt-3">
-                <div className="flex flex-wrap gap-x-6 gap-y-2">
-                  <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">Name:</strong>{" "}
-                    {selectedCustomer.name}
-                  </p>
-                  <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">ID:</strong>{" "}
-                    {selectedCustomer._id}
-                  </p>
-                  <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">mobile:</strong>{" "}
-                    {selectedCustomer.mobile}
-                  </p>
-                  <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">Balance:</strong>{" "}
-                    ₹{selectedCustomer.balance || 0}
-                  </p>
-                  <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">Credit Score:</strong>{" "}
-                    {selectedCustomer.creditScore || "N/A"}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-
-          {/* Step 2: Add Products/Services */}
-          <div className="max-w-7xl mx-auto  my-5 md:mt-10 bg-white  gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              {/* Step 2: Add Products */}
-              
-
-          {/* Step 2: Add Products */}
-
-<div className="bg-white rounded-lg font-robotoB shadow-customCard p-4 sm:p-6 w-full max-w-6xl space-y-4">
-  <h2 className="flex items-center gap-3 text-base sm:text-lg font-robotoSb text-gray-800">
-    <div className="bg-[#2563EB] p-2 sm:p-3 rounded-full flex items-center justify-center">
-      <FaBox color="white" size={16} />
-    </div>
-    Step 2: Add Products/Services
-  </h2>
-
-  <div className="w-full overflow-x-auto">
-    <div className="min-w-[700px] flex flex-col space-y-5 px-2">
-      {/* Header */}
-      <div className="grid grid-cols-7 gap-2 sm:gap-4 text-sm font-semibold text-gray-700 border-b py-3">
-        <div className="col-span-2 text-black">Product/Service</div>
-        <div className="text-black">Qty</div>
-        <div className="text-black">Unit</div>
-        <div className="text-black">Price</div>
-        <div className="text-black">Tax</div>
-        <div className="text-black">Total</div>
+      {/* 1. SMS Credits */}
+      <div className="bg-white border shadow-sm rounded-lg p-5 space-y-6">
+        <div className="flex items-center gap-2 text-[#374151] font-semibold text-base">
+          <FaSms className="w-5 h-5 text-blue-600" />
+          SMS Credits & Communication Settings
+        </div>
+        {/* ... keep SMS content same */}
       </div>
 
-      {/* Rows */}
-      {rows.map((row) => (
-        <div
-          key={row.id}
-          className="grid grid-cols-7 gap-2 sm:gap-4 items-center py-3 h-auto text-sm px-2"
-        >
-          {/* Product dropdown */}
-
-
-<div className="col-span-2">
- <Select
-  className="text-sm"
-  placeholder="Select Product..."
-  isClearable
-  options={
-    Array.isArray(products)
-      ? products
-          .filter((p) => p && (p._id || p.id)) // ✅ null / undefined / empty hata do
-          .map((p) => ({
-            value: p._id || p.id,
-            label: p.name || p.product_name || "Unnamed",
-          }))
-      : []
-  }
-  value={
-    row.productId
-      ? (() => {
-          const selected = products?.find(
-            (p) => p && (p._id === row.productId || p.id === row.productId)
-          );
-          return selected
-            ? {
-                value: row.productId,
-                label: selected.name || selected.product_name || "Unnamed",
+      {/* 2. Payment Setup */}
+      <div className="bg-white border shadow-sm rounded-lg p-5 space-y-5">
+        <div className="flex items-center gap-2 text-blue-600 font-semibold text-base">
+          <CreditCard className="w-5 h-5" />
+          Payment Setup
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm mb-1 block font-semibold">UPI ID</label>
+            <input
+              placeholder="UPI ID"
+              className={inputClasses}
+              value={paymentSetup.upiId}
+              onChange={(e) =>
+                setPaymentSetup({ ...paymentSetup, upiId: e.target.value })
               }
-            : null;
-        })()
-      : null
-  }
-  onChange={(selectedOption) => {
-    if (selectedOption) {
-      const selectedProduct = products?.find(
-        (p) => p && (p._id === selectedOption.value || p.id === selectedOption.value)
-      );
-      if (selectedProduct) {
-        handleSelectProduct(row.id, selectedProduct);
-      }
-    } else {
-      handleSelectProduct(row.id, null); // clear
-    }
-  }}
-  menuPortalTarget={document.body}
-  styles={{
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-    control: (base) => ({
-      ...base,
-      minHeight: "42px", // ✅ thoda height bada diya
-      borderColor: "#d1d5db", // Tailwind gray-300
-      boxShadow: "none",
-      "&:hover": { borderColor: "#2563eb" }, // Tailwind blue-600 hover
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: "#000", // ✅ selected value black
-    }),
-    input: (base) => ({
-      ...base,
-      color: "#000", // ✅ typing text black
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: "#6b7280", // Tailwind gray-500
-    }),
-    option: (base, state) => ({
-      ...base,
-      color: "#000", // ✅ dropdown text black
-      backgroundColor: state.isSelected
-        ? "#2563eb"
-        : state.isFocused
-        ? "#e5e7eb"
-        : "#fff",
-    }),
-  }}
-/>
+            />
+          </div>
+          <div>
+            <h1 className="text-sm mb-1 block font-semibold">Bank Details</h1>
+            <div className="flex flex-col gap-3">
+              <input
+                placeholder="Account Holder Name"
+                className={inputClasses}
+                value={paymentSetup.accountHolder}
+                onChange={(e) =>
+                  setPaymentSetup({
+                    ...paymentSetup,
+                    accountHolder: e.target.value,
+                  })
+                }
+              />
+              <input
+                placeholder="Account Number"
+                className={inputClasses}
+                value={paymentSetup.accountNumber}
+                onChange={(e) =>
+                  setPaymentSetup({
+                    ...paymentSetup,
+                    accountNumber: e.target.value,
+                  })
+                }
+              />
+              <input
+                placeholder="IFSC Code"
+                className={inputClasses}
+                value={paymentSetup.ifscCode}
+                onChange={(e) =>
+                  setPaymentSetup({
+                    ...paymentSetup,
+                    ifscCode: e.target.value,
+                  })
+                }
+              />
+              <input
+                placeholder="Bank Name"
+                className={inputClasses}
+                value={paymentSetup.bankName}
+                onChange={(e) =>
+                  setPaymentSetup({
+                    ...paymentSetup,
+                    bankName: e.target.value,
+                  })
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
-
-</div>
-
-
-          {/* Qty */}
-          <input
-            type="number"
-            min="1"
-            value={row.qty}
-            onChange={(e) => handleChange(row.id, "qty", e.target.value)}
-            className="border px-2 py-1 rounded bg-white"
-          />
-
-          {/* Unit */}
-          <input
-            placeholder="Unit"
-            value={row.unit}
-            onChange={(e) => handleChange(row.id, "unit", e.target.value)}
-            className="border px-2 py-1 rounded bg-white"
-          />
-
-          {/* Price */}
-          <input
-            type="number"
-            placeholder="0.00"
-            value={row.price}
-            onChange={(e) => handleChange(row.id, "price", e.target.value)}
-            className="border px-2 py-1 rounded bg-white"
-          />
-
-          {/* Tax fixed */}
-          <input
-            type="text"
-            value={`${row.tax}%`}
-            readOnly
-            className="border px-2 py-1 rounded bg-white"
-          />
-
-          {/* Total */}
-          <div className="flex items-center gap-2">
-            ₹{calculateTotal(row).toFixed(2)}
-            <button
-              onClick={() => handleRemoveRow(row.id)}
-              className="text-red-500 hover:text-red-700"
+      {/* 3. General Settings */}
+      <div className="bg-white border shadow-sm rounded-lg p-5 space-y-5">
+        <div className="flex items-center gap-2 text-blue-600 font-semibold text-base">
+          <Settings className="w-5 h-5 text-[#374151]" />
+          <h1 className="text-[#374151]">General Settings</h1>
+        </div>
+        <div className="flex flex-row justify-between gap-5 w-full">
+          <div className="flex flex-col gap-3 w-full md:w-1/2">
+            <label className="text-sm block font-semibold">
+              Business Name
+            </label>
+            <input
+              placeholder="Your Business Name"
+              className={inputClasses}
+              value={generalSettings.businessName}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  businessName: e.target.value,
+                })
+              }
+            />
+            <label className="text-sm block font-semibold">Time Zone</label>
+            <select
+              className={inputClasses}
+              value={generalSettings.timeZone}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  timeZone: e.target.value,
+                })
+              }
             >
-              <FaTrash />
+              <option value="">Select Time Zone</option>
+              <option value="IST">IST</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-3 w-full md:w-1/2">
+            <label className="text-sm block font-semibold">
+              Currency Format
+            </label>
+            <select
+              className={inputClasses}
+              value={generalSettings.currencyFormat}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  currencyFormat: e.target.value,
+                })
+              }
+            >
+              <option value="">Select Currency</option>
+              <option value="INR">INR</option>
+              <option value="USD">USD</option>
+            </select>
+            <label className="text-sm block font-semibold">Language</label>
+            <select
+              className={inputClasses}
+              value={generalSettings.language}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  language: e.target.value,
+                })
+              }
+            >
+              <option value="">Select Language</option>
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Invoice Customization */}
+      <div className="bg-white border shadow-sm rounded-lg p-5 space-y-5">
+        <div className="flex items-center gap-2 text-black font-semibold text-base">
+          <FileText className="w-5 h-5 text-purple-600" />
+          Invoice Customization
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-3">
+            <label className="text-md text-gray-600">Paper Size</label>
+            <input
+              placeholder="Paper Size"
+              className={inputClasses}
+              value={invoiceSettings.paperSize}
+              onChange={(e) =>
+                setInvoiceSettings({
+                  ...invoiceSettings,
+                  paperSize: e.target.value,
+                })
+              }
+            />
+            <label className="text-sm text-gray-600">Template Theme</label>
+            <input
+              placeholder="Template Theme"
+              className={inputClasses}
+              value={invoiceSettings.theme}
+              onChange={(e) =>
+                setInvoiceSettings({
+                  ...invoiceSettings,
+                  theme: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-3">
+            <label className="text-md text-gray-600">Business Logo</label>
+            <button className="flex items-center gap-2 border bg-white px-3 py-2 rounded shadow-sm text-sm hover:bg-gray-50">
+              <Upload className="w-4 h-4" /> Upload Logo
             </button>
+            <label className="text-md text-gray-600">Default Terms/Notes</label>
+            <input
+              placeholder="Default Terms/Notes"
+              className={inputClasses}
+              value={invoiceSettings.terms}
+              onChange={(e) =>
+                setInvoiceSettings({
+                  ...invoiceSettings,
+                  terms: e.target.value,
+                })
+              }
+            />
           </div>
-        </div>
-      ))}
-    </div>
-  </div>
-
-  {/* Add Row button */}
-  <button
-    onClick={handleAddRow}
-    className="text-bluecol font-robotoM text-sm sm:text-md mt-2"
-  >
-    + Add Row
-  </button>
-</div>
-
-
-
-
-
-
-
-              {/* Step 3: Payment Mode */}
-    <div className="bg-white rounded-lg shadow-customCard p-4">
-        <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
-          <div className=" bg-[#2563EB] p-2.5 rounded-full">
-            <FaRegCreditCard color="white" size={14} />
-          </div>
-          Step 3: Payment Mode
-        </h2>
-        <div className="flex flex-col sm:flex-row space-x-3">
-          <button
-            onClick={() => handlePaymentMode("cash")}
-            className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol ml-3 my-1 px-4 py-1 rounded font-robotoM text-md"
-          >
-            <GiCash size={18} /> Cash
-          </button>
-          <button
-            onClick={() => handlePaymentMode("debt")}
-            className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol my-1 px-4 py-1 rounded font-robotoM text-md"
-          >
-            <FaCalculator size={18} /> Debt
-          </button>
         </div>
       </div>
 
-      {/* Step 4: Payment Method (if Cash) */}
-      {showStep3 && (
-        <div className="bg-white rounded-lg shadow-customCard p-4">
-          <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-            <div className="bg-[#2563EB] p-2.5 rounded-full">
-              <FaCalculator color="white" size={14} />
-            </div>
-            Step 4: Payment Method
-          </h2>
+      {/* 5. Payment Reminder + 6. Help & Support (same as your code) */}
 
-          <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-            <div>Payment Method</div>
-            <div>Transaction ID / UTR </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3">
-            <input
-              className="border px-2 py-1 rounded bg-white"
-              placeholder="Cash/UPI/Cheque/DD"
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            />
-            <input
-              className="border px-2 py-1 rounded bg-white"
-              placeholder="Enter Transaction reference"
-              value={transactionId}
-              onChange={(e) => setTransactionId(e.target.value)}
-            />
-          </div>
-        </div>
-      )}
-
-
-
-
-      {/* Step 4: Milestones (if Debt) */}
-      {showStep4 && (
-        <div className="bg-white rounded-lg shadow-customCard p-4 sm:p-6">
-          <h2 className="flex items-center gap-2 text-base sm:text-lg font-robotoSb mb-3">
-            <div className="bg-[#2563EB] p-2.5 rounded-full">
-              <FaCalculator color="white" size={14} />
-            </div>
-            Step 4: Promise Date
-          </h2>
-
-          <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-            <div>Milestone Name</div>
-            <div>Amount (₹)</div>
-            <div>Due Date</div>
-            <div>Status</div>
-          </div>
-
-{milestones.map((ms, index) => (
-  <div
-    key={ms.id}
-    className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded"
-  >
-    {/* Milestone Name */}
-    <input
-      className="border px-2 py-1 rounded bg-white"
-      placeholder="Milestone Name"
-      value={ms.name}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].name = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-
-    {/* Amount */}
-    <input
-      className="border px-2 py-1 rounded bg-white"
-      placeholder="0.00"
-      type="number"
-      value={ms.amount}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].amount = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-
-    {/* Due Date */}
-    <input
-      className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white"
-      type="date"
-      value={ms.dueDate}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].dueDate = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-
-    {/* Status */}
-    <input
-      className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-      placeholder="Status"
-      value={ms.status}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].status = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-  </div>
-))}
-
-          <button
-            onClick={handleAddMilestone}
-            className="text-bluecol font-robotoR text-sm sm:text-md mt-2"
-          >
-            + Add Milestone
-          </button>
-        </div>
-      )}
-
-      {/* Submit button (common for both)
-      <div className="mt-4">
+      {/* Save Button */}
+      <div className="text-right pt-2">
         <button
-          onClick={handleSubmit}
-          className="bg-bluecol text-white px-6 py-2 rounded font-robotoM"
+          onClick={handleSave}
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium flex items-center gap-2"
         >
-          Submit Payment
+          <FaRegSave /> Save All Settings
         </button>
-      </div> */}
-
-
-            </div>
-          </div>
-
-          {/* Step 5: Additional Charges */}
-       {/* Step 5: Additional Charges */}
-<div className="bg-white rounded-lg shadow-customCard p-4">
-  <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-    <div className="bg-[#2563EB] p-2.5 rounded-full">
-      <FaPlus color="white" size={14} />
-    </div>
-    Step 5: Additional Charges
-  </h2>
-  <div className="grid grid-cols-2 gap-3 font-robotoR text-md">
-    <div>
-      <label className="block text-sm mb-1 font-robotoM">Delivery Fee</label>
-      <input
-        className="w-full border px-2 py-1 rounded bg-white"
-        placeholder="0.00"
-        type="number"
-        value={additionalCharges.deliveryFee}
-        onChange={(e) => handleAdditionalChange("deliveryFee", e.target.value)}
-      />
-    </div>
-    <div>
-      <label className="block text-sm mb-1 font-robotoM">Packing Charges</label>
-      <input
-        className="w-full border px-2 py-1 rounded bg-white"
-        placeholder="0.00"
-        type="number"
-        value={additionalCharges.packingCharges}
-        onChange={(e) => handleAdditionalChange("packingCharges", e.target.value)}
-      />
-    </div>
-    <div>
-      <label className="block text-sm mb-1 font-robotoM">Discount</label>
-      <input
-        className="w-full border px-2 py-1 rounded bg-white"
-        placeholder="0.00"
-        type="number"
-        value={additionalCharges.discount}
-        onChange={(e) => handleAdditionalChange("discount", e.target.value)}
-      />
-    </div>
-    <div>
-      <label className="block text-sm mb-1 font-robotoM">Other</label>
-      <input
-        className="w-full border px-2 py-1 rounded bg-white"
-        placeholder="0.00"
-        type="number"
-        value={additionalCharges.other}
-        onChange={(e) => handleAdditionalChange("other", e.target.value)}
-      />
-    </div>
-  </div>
-</div>
-
-
-
-
-          {/* Step 6: Add Note */}
-          {/* box-shadow: 0px 4px 6px 0px #0000001A;
-
-box-shadow: 0px 2px 4px 0px #0000001A;
- */}
-<div className="bg-white rounded-lg shadow-lg shadow-[#0000001A] p-4 shadow-customCard">
-  <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-    <div className="bg-[#2563EB] p-2.5 rounded-full">
-      <FaEdit color="white" size={14} />
-    </div>
-    Step 6: Add Note (Optional)
-  </h2>
-  <textarea
-    value={note}
-    onChange={(e) => setNote(e.target.value)}
-    className="border w-full px-3 py-2 rounded font-robotoR text-md bg-white"
-    rows="3"
-    placeholder="Terms & Conditions, Special instructions, Internal notes..."
-  ></textarea>
-</div>
-
-          
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-start gap-4 p-4">
-          <button className="bg-gray-600 text-white font-robotoR text-md px-4 py-2 rounded">
-            Save as Draft
-          </button>
-          <button     onClick={handleSubmit}  className="flex justify-center items-center gap-2 bg-bluecol text-white font-robotoM text-md px-4 py-2 rounded">
-            <LuNewspaper size={24} />
-            Generate Invoice
-          </button>
-          <button className="flex justify-center items-center gap-2 text-bluecol bg-white border-bluecol border-2 font-robotoM text-md px-4 py-2 rounded">
-            <LuNewspaper size={24} />
-            Generate Quotation
-          </button>
-        </div>
-      </div>
-
-      {/* Sidebar */}
-      <div className="bg-white shadow-customCard rounded-lg p-4">
-        <h2 className="text-lg font-robotoSb mb-4">Invoice Summary</h2>
-<ul className="text-sm font-robotoR text-black space-y-3">
-          <li className="flex justify-between">
-            <span>Subtotal:</span>
-            <span>₹{invoiceSummary.subtotal.toFixed(2)}</span>  {/* Dynamic */}
-          </li>
-          <li className="flex justify-between hidden">
-            <span>Tax :</span>
-            <span>₹{invoiceSummary.totalTax.toFixed(2)}</span>  {/* Unhidden if needed */}
-          </li>
-          <li className="flex justify-between">
-            <span>Total Received:</span>
-            <span>₹{invoiceSummary.totalReceived.toFixed(2)}</span>
-          </li>
-          <li className="flex justify-between">
-            <span>Due Balance:</span>
-            <span>₹{invoiceSummary.dueBalance.toFixed(2)}</span>
-          </li>
-          <li className="flex justify-between">
-            <span>Paid / Not Paid:</span>
-            <span>₹{invoiceSummary.paidNotPaid.toFixed(2)}</span>
-          </li>
-          <li className="flex justify-between">
-            <span>Delivery Fee:</span>
-            <span>₹{invoiceSummary.deliveryFee.toFixed(2)}</span>
-          </li>
-          <li className="flex justify-between text-red-500">
-            <span>Discount:</span>
-            <span>-₹{invoiceSummary.discount.toFixed(2)}</span>
-          </li>
-          <li className="flex justify-between font-robotoB text-lg border-t pt-1 mt-1">
-            <span>Total:</span>
-            <span>₹{invoiceSummary.total.toFixed(2)}</span>
-          </li>
-        </ul>
-        <div className="mt-6 space-y-2">
-          <h3 className="text-md font-robotoM">Quick Actions</h3>
-          <button className="flex items-center gap-2 text-black font-robotoR text-md">
-            <FaPrint color="#4B5563" />
-            Print Invoice
-          </button>
-          <br />
-          <button className="flex items-center gap-2 text-black font-robotoR text-md">
-            <FaWhatsapp color="#16A34A" />
-            Share via WhatsApp
-          </button>
-          <br />
-          <button className="flex items-center gap-2 text-black font-robotoR text-md">
-            <FaCommentSms color="#2563EB" />
-            Send via SMS
-          </button>
-        </div>
-
-
-        <div className="mt-6">
-          <h3 className="text-[22px] font-robotoSb mb-2">Previous Invoices</h3>
-          {previousInvoices.map((inv, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center shadow-customCard border-2 rounded-lg border-[#E5E7EB] text-sm p-2 mb-2"
-            >
-              <div>
-                <p className="font-robotoSb text-[16px]">{inv.name}</p>
-                <p className="text-gray-500 font-robotoR text-sm">
-                  Last Paid: {inv.lastPaid}
-                </p>
-                <p className="text-red-500 font-robotoM text-xs">
-                  Due: {inv.due}
-                </p>
-              </div>
-              <button className="bg-[#E6FEE2] text-[#16A34A] px-2 py-1 rounded-full font-robotoM text-xs">
-                View Invoice
-              </button>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
-}
+};
+
+export default SettingsPage;

@@ -192,6 +192,32 @@ async deleteProduct(id) {
 /**
  * Export products as PDF
  */
+async exportProductsExcel() {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+
+    // Call backend API to get Excel file as blob
+    const response = await axiosClient.get(
+      `/store-product/export-excel/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token), responseType: "blob" } // important: blob
+    );
+
+    // Trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `products_${Date.now()}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    return { success: true };
+  } catch (err) {
+    console.error("❌ exportProductsExcel error:", err);
+    return { success: false, error: err.message };
+  }
+},
+
 async exportProductsPDF() {
   try {
     const { token, store_id, storeProfile_id } = getAuthContext();
@@ -295,34 +321,23 @@ async exportProductsPDF() {
     }
   },
 
-  /**
-   * Export products to PDF
-   */
-  async exportProductsPDF() {
+    getProductHistory: async (productId) => {
     try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
+      const { token } = getAuthContext();
       const response = await axiosClient.get(
-        `/store-product/export-pdf/${store_id}/${storeProfile_id}`,
-        {
-          headers: authHeaders(token),
-          responseType: "blob",
-        }
+        `/store-product/product-history/${productId}`,
+        { headers: authHeaders(token) }
       );
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `products_${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      return { success: true };
+      return {
+        success: response.data.success,
+        history: response.data.history || [],
+      };
     } catch (err) {
-      console.error("❌ exportProductsPDF error:", err);
+      console.error("❌ getProductHistory error:", err);
       return { success: false, error: err.message };
     }
   },
+
 };
 
 

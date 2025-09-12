@@ -135,7 +135,7 @@ const handleSetActive = (id) => {
           {loading ? (
             <p>Loading businesses...</p>
           ) : businesses.length === 0 ? (
-            <p className="text-gray-600">No businesses found</p>
+            <p className="text-gray-600"> Create your first Business Profile </p>
           ) : (
             <table className="w-full text-sm border border-gray-200">
               <thead className="bg-[#E8E8E8] text-left text-[#111827] font-robotoM text-base border-b border-gray-300 text-nowrap">

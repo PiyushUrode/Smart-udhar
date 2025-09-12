@@ -16,6 +16,10 @@ import { IoIosSearch } from "react-icons/io";
 import { FaSearch } from "react-icons/fa";
 import { CiCalendarDate } from "react-icons/ci";
 import { Invoice  } from "../../api/Invoice.js"
+import { useRef } from "react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+
 
 
 export default function D7CreateInvoice({ onCustomerSelect  }) {
@@ -211,7 +215,8 @@ const [note, setNote] = useState("");
     }));
   };
 
-const handleSubmit = async () => {
+// STEP 1: Preview kholne ke liye
+const handlePreview = () => {
   if (!selectedCustomer?._id) {
     alert("Please select a customer!");
     return;
@@ -220,12 +225,11 @@ const handleSubmit = async () => {
     alert("Please select a payment mode!");
     return;
   }
-  if (rows.some(r => !r.productId || r.qty <= 0)) {
+  if (rows.some((r) => !r.productId || r.qty <= 0)) {
     alert("Please add at least one valid product!");
     return;
   }
 
-  // ✅ Destructure from summary
   const { subtotal, totalTax, total, totalReceived, dueBalance } = invoiceSummary;
 
   const payload = {
@@ -251,9 +255,7 @@ const handleSubmit = async () => {
     paymentStatus:
       totalReceived === total ? "Paid" : totalReceived > 0 ? "Partial" : "Unpaid",
     products: rows.map((p) => {
-      const prod = products.find(
-        (x) => x._id === p.productId || x.id === p.productId
-      );
+      const prod = products.find((x) => x._id === p.productId || x.id === p.productId) || {};
       return {
         productId: p.productId,
         name: prod?.name || prod?.product_name || "Unnamed",
@@ -287,14 +289,22 @@ const handleSubmit = async () => {
     return;
   }
 
-  console.log("🚀 Final Invoice Payload:", payload);
+  // Sirf preview ke liye state set karna
+  setPreviewInvoice(payload);
+  setShowPreview(true);
+};
 
+// STEP 2: API call sirf preview ke andar submit pe
+const handleSubmit = async () => {
   try {
-    const res = await Invoice.createInvoice(payload);
-    if (res.success) {
-      alert("✅ Invoice saved successfully!");
+    const res = await Invoice.createInvoice(previewInvoice);
 
-      // 🔄 Reset all form fields
+    if (res.success) {
+      alert("✅ Invoice created successfully!");
+      setShowPreview(false);
+      setPreviewInvoice(null);
+
+      // 🟢 Reset form (fresh state ke liye)
       setSelectedCustomer(null);
       setPaymentMode("");
       setPaymentMethod("");
@@ -306,10 +316,10 @@ const handleSubmit = async () => {
         other: 0,
       });
       setNote("");
-      setPartialCashAmount("");
+      setPartialCashAmount(0);
       setMilestones([]);
 
-      // Reset rows to single blank row
+      // default ek khali row new invoice ke liye
       setRows([
         {
           id: Date.now(),
@@ -321,34 +331,23 @@ const handleSubmit = async () => {
         },
       ]);
 
+      // 🟢 Invoice list refresh
+      const refreshed = await Invoice.getAllInvoices();
+      if (refreshed?.success) {
+        setInvoices(refreshed.invoices || []);
+        setTodayCollection(refreshed.todayCollection || 0);
+        setTotalCollection(refreshed.totalCollection || 0);
+      }
     } else {
-      alert("❌ Failed: " + res.message);
+      alert("❌ Failed to create invoice");
     }
   } catch (err) {
     console.error("❌ Error:", err);
-    alert("Error while saving invoice");
+    alert("Error creating invoice");
   }
-
-  if (res.success) {
-  alert("✅ Invoice saved successfully!");
-  // reset form (already there)
-
-  // 🔄 refresh invoice list
-  const refreshed = await Invoice.getAllInvoices();
-  if (refreshed.success) {
-    setInvoices(refreshed.invoices);
-    setTodayCollection(refreshed.todayCollection);
-    setTotalCollection(refreshed.totalCollection);
-  }
-}
-
 };
 
-
-
-
-
-  // ----------------- Row-level Calculation Function -----------------
+// ----------------- Row-level Calculation Function -----------------
 // This function calculates the total for a single row (used for displaying per-row totals in the table)
 const calculateTotal = (row) => {
   const subtotal = (row.qty || 0) * (row.price || 0);
@@ -400,12 +399,7 @@ const calculateInvoiceSummary = () => {
     calculateInvoiceSummary();
   }, [rows, additionalCharges, partialCashAmount]);
 
-
-
-
-
-
-  // previous invoices
+// previous invoices
   const [invoices, setInvoices] = useState([]);
 const [todayCollection, setTodayCollection] = useState(0);
 const [totalCollection, setTotalCollection] = useState(0);
@@ -428,6 +422,79 @@ useEffect(() => {
 }, []);
 
 
+const [previewInvoice, setPreviewInvoice] = useState(null); // invoice object returned from API
+const [showPreview, setShowPreview] = useState(false); // whether preview modal is visible
+const previewRef = useRef(null); // ref to preview DOM for PDF capture
+
+const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
+  if (!previewRef.current) {
+    alert("Preview not ready for PDF.");
+    return;
+  }
+
+  try {
+    // capture element to canvas
+    const canvas = await html2canvas(previewRef.current, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "pt",
+      format: "a4",
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // calculate image dimensions to fit A4 width with aspect ratio
+    const imgWidth = pageWidth - 40; // margin
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let position = 20;
+
+    // if content longer than a single page, split into pages
+    if (imgHeight <= pageHeight - 40) {
+      pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight);
+    } else {
+      // multiple pages
+      let heightLeft = imgHeight;
+      let y = 20;
+      const pageCanvas = document.createElement("canvas");
+      const pageCtx = pageCanvas.getContext("2d");
+
+      // draw and add pages in chunks
+      while (heightLeft > 0) {
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = Math.min(canvas.height, Math.floor((canvas.width * (pageHeight - 40)) / imgWidth));
+        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+        pageCtx.drawImage(
+          canvas,
+          0,
+          canvas.height - heightLeft,
+          canvas.width,
+          pageCanvas.height,
+          0,
+          0,
+          pageCanvas.width,
+          pageCanvas.height
+        );
+        const pageData = pageCanvas.toDataURL("image/png");
+        if (pdf.internal.getNumberOfPages() > 0) pdf.addPage();
+        pdf.addImage(pageData, "PNG", 20, 20, imgWidth, (pageCanvas.height * imgWidth) / pageCanvas.width);
+        heightLeft -= pageCanvas.height;
+      }
+    }
+
+    pdf.save(fileName);
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    alert("Failed to create PDF.");
+  }
+};
 
 
 
@@ -515,6 +582,10 @@ useEffect(() => {
                   <p className="font-robotoR">
                     <strong className="text-black font-robotoM">Credit Score:</strong>{" "}
                     {selectedCustomer.creditScore || "N/A"}
+                  </p>
+                   <p className="font-robotoR">
+                    <strong className="text-black font-robotoM">Address:</strong>{" "}
+                    {selectedCustomer.address || "N/A"}
                   </p>
                 </div>
               </div>
@@ -934,18 +1005,144 @@ box-shadow: 0px 2px 4px 0px #0000001A;
           <button className="bg-gray-600 text-white font-robotoR text-md px-4 py-2 rounded">
             Save as Draft
           </button>
-          <button     onClick={handleSubmit}  className="flex justify-center items-center gap-2 bg-bluecol text-white font-robotoM text-md px-4 py-2 rounded">
+          <button     onClick={handlePreview}  className="flex justify-center items-center gap-2 bg-bluecol text-white font-robotoM text-md px-4 py-2 rounded">
             <LuNewspaper size={24} />
             Generate Invoice
           </button>
-          <button className="flex justify-center items-center gap-2 text-bluecol bg-white border-bluecol border-2 font-robotoM text-md px-4 py-2 rounded">
+          {/* <button className="flex justify-center items-center gap-2 text-bluecol bg-white border-bluecol border-2 font-robotoM text-md px-4 py-2 rounded">
             <LuNewspaper size={24} />
             Generate Quotation
-          </button>
+          </button> */}
         </div>
       </div>
       </div>
       </div>
+
+      {/* ---------- Invoice Preview Modal ---------- */}
+{showPreview && previewInvoice && (
+  <div className="fixed inset-0 z-50 flex items-start justify-center p-6 bg-black/40">
+    <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
+      {/* header */}
+      <div className="flex justify-between items-center p-4 border-b">
+        <h3 className="text-lg font-robotoSb">Invoice Preview</h3>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadPreviewAsPDF(`invoice-${previewInvoice._id || Date.now()}.pdf`)}
+            className="px-3 py-1 bg-blue-600 text-white rounded"
+          >
+            Download PDF
+          </button>
+          <button
+            onClick={() => {
+              setShowPreview(false);
+              // Optional: clear previewInvoice and reset form after closing
+              setPreviewInvoice(null);
+            }}
+            className="px-3 py-1 border rounded"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+
+      {/* body: the printable invoice area */}
+      <div ref={previewRef} className="p-6 bg-white text-black">
+        {/* ---- Top: company + customer ---- */}
+        <div className="flex justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-robotoB">Your Company Name</h2>
+            <div className="text-sm">Address line 1</div>
+            <div className="text-sm">Phone / Email</div>
+          </div>
+          <div className="text-right">
+            <div><strong>Invoice ID:</strong> {previewInvoice._id || previewInvoice.id}</div>
+            <div><strong>Date:</strong> {new Date(previewInvoice.createdAt || Date.now()).toLocaleDateString()}</div>
+            <div><strong>Status:</strong> {previewInvoice.paymentStatus || invoiceSummary.paymentStatus}</div>
+          </div>
+        </div>
+
+        {/* Customer details */}
+        <div className="mb-4 border p-3 rounded">
+          <div className="text-sm"><strong>Customer:</strong> {previewInvoice.name || selectedCustomer?.name}</div>
+          <div className="text-sm"><strong>Mobile:</strong> {previewInvoice.phone || selectedCustomer?.mobile}</div>
+          <div className="text-sm"><strong>Address:</strong> {previewInvoice.address || selectedCustomer?.address}</div>
+        </div>
+
+        {/* Products table */}
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2">#</th>
+              <th className="text-left py-2">Product</th>
+              <th className="text-right py-2">Qty</th>
+              <th className="text-right py-2">Unit Price</th>
+              <th className="text-right py-2">Tax</th>
+              <th className="text-right py-2">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(previewInvoice.products || []).map((p, i) => (
+              <tr key={i} className="border-b">
+                <td className="py-2">{i + 1}</td>
+                <td className="py-2">{p.name}</td>
+                <td className="py-2 text-right">{p.qty}</td>
+                <td className="py-2 text-right">₹{Number(p.price).toFixed(2)}</td>
+                <td className="py-2 text-right">{p.tax}%</td>
+                <td className="py-2 text-right">₹{Number(p.total || (p.qty * p.price + ((p.qty * p.price * p.tax) / 100))).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* totals */}
+        <div className="mt-4 flex justify-end">
+          <div className="w-full max-w-xs">
+            <div className="flex justify-between"><span>Subtotal:</span><span>₹{Number(previewInvoice.subtotal || invoiceSummary.subtotal).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Tax:</span><span>₹{Number(previewInvoice.tax || invoiceSummary.totalTax).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Delivery:</span><span>₹{Number(previewInvoice.deliveryFee || invoiceSummary.deliveryFee).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Discount:</span><span>-₹{Number(previewInvoice.discount || invoiceSummary.discount).toFixed(2)}</span></div>
+            <div className="flex justify-between font-robotoB text-lg border-t pt-1 mt-1"><span>Total:</span><span>₹{Number(previewInvoice.total || invoiceSummary.total).toFixed(2)}</span></div>
+            <div className="flex justify-between mt-2"><span>Paid:</span><span>₹{Number(previewInvoice.totalReceived || invoiceSummary.totalReceived).toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Due:</span><span>₹{Number(previewInvoice.dueBalance || invoiceSummary.dueBalance).toFixed(2)}</span></div>
+          </div>
+        </div>
+
+        {/* notes & payment details */}
+        <div className="mt-4">
+          <div><strong>Payment Mode:</strong> {previewInvoice.paymentMode || paymentMode}</div>
+          <div><strong>Payment Method / Txn:</strong> {previewInvoice.paymentMethod || paymentMethod} {previewInvoice.transactionId ? ` / ${previewInvoice.transactionId}` : ""}</div>
+          {previewInvoice.milestones && previewInvoice.milestones.length > 0 && (
+            <div className="mt-2">
+              <strong>Milestones:</strong>
+              <ul className="list-disc ml-5">
+                {previewInvoice.milestones.map((m, idx) => (
+                  <li key={idx}>{m.milestoneName} — ₹{Number(m.amount || 0).toFixed(2)} {m.dueDate ? ` (Due: ${new Date(m.dueDate).toLocaleDateString()})` : ""} — {m.status}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {previewInvoice.note && <div className="mt-3"><strong>Note:</strong><div>{previewInvoice.note}</div></div>}
+        </div>
+        <div className="flex justify-end gap-3 mt-4">
+  <button
+    onClick={() => setShowPreview(false)}
+    className="px-4 py-2 border rounded"
+  >
+    Cancel
+  </button>
+  <button
+    onClick={handleSubmit}
+    className="px-4 py-2 bg-blue-600 text-white rounded"
+  >
+    Submit Invoice
+  </button>
+</div>
+
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Sidebar */}
       <div className="bg-white shadow-customCard rounded-lg p-4">

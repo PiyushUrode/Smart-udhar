@@ -409,5 +409,3 @@ async getAllInvoices() {
     }
   },
 };
-
-
