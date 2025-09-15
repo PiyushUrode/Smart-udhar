@@ -2,30 +2,78 @@ import { useState, useEffect } from "react";
 import { FaTrophy, FaExclamationTriangle, FaGavel } from "react-icons/fa";
 import { FaDownload, FaChartLine } from "react-icons/fa6";
 import ReactSpeedometer from "react-d3-speedometer";
-import { Invoice } from "../../api/Invoice"; // apna path check karna
+import { Invoice } from "../../api/Invoice"; // check your path
 
 const D9CreditScore = () => {
   const [customers, setCustomers] = useState([]);
+  const [customerInvoices, setCustomerInvoices] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // 🚀 Fetch data from API
-  useEffect(() => {
-    const loadCustomers = async () => {
-      setLoading(true);
-      const { success, customers } = await Invoice.fetchCustomersForInvoice({
-        page: 1,
-        limit: 50,
-      });
+  // 🚀 Fetch customers & invoices
+useEffect(() => {
+  const loadCustomers = async () => {
+    setLoading(true);
+    const { success, customers } = await Invoice.fetchCustomersForInvoice({
+      page: 1,
+      limit: 50,
+    });
 
-      if (success && customers.length > 0) {
-        setCustomers(customers);
+    if (success && customers.length > 0) {
+      setCustomers(customers);
+
+      // Fetch all invoices ONCE (optimization: avoid fetching per customer)
+      const { success: invSuccess, invoices } = await Invoice.getAllInvoices();
+      if (invSuccess) {
+        // Group invoices by customer _id
+        const invoicesObj = {};
+        customers.forEach((c) => {
+          invoicesObj[c._id] = invoices.filter(
+            (inv) => inv.customerId === c._id  // Use _id for matching
+          );
+        });
+        setCustomerInvoices(invoicesObj);
       }
-      setLoading(false);
-    };
-    loadCustomers();
-  }, []);
+    }
+    setLoading(false);
+  };
+  loadCustomers();
+}, []);
 
-  // 🔹 Calculate Summary Stats
+
+const getCustomerStats = (customerId) => {  // customerId here will be c._id (MongoDB ID)
+  const invoices = customerInvoices[customerId] || [];
+  let totalPurchase = 0;
+  let onTimePayments = 0;
+  let amountDue = 0;
+  let nextDueDate = null;
+
+  invoices.forEach((inv) => {
+    totalPurchase += inv.total || 0;
+
+    if (Array.isArray(inv.milestones)) {
+      inv.milestones.forEach((ms) => {
+        const dueDate = new Date(ms.dueDate);
+        if (ms.status === "Paid" && ms.counted) {
+          onTimePayments += 1;
+        } else if (ms.status === "Pending") {
+          amountDue += ms.amount;
+          if (!nextDueDate || dueDate < new Date(nextDueDate)) {
+            nextDueDate = dueDate;
+          }
+        }
+      });
+    }
+  });
+
+  return {
+    totalPurchase,
+    onTimePayments,
+    amountDue,
+    nextDueDate: nextDueDate ? nextDueDate.toLocaleDateString() : "-",
+  };
+};
+
+  // 🔹 Summary Stats
   const scores = customers.map((c) => c.creditScore || 0);
   const avgScore =
     scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
@@ -33,6 +81,8 @@ const D9CreditScore = () => {
   const bestPerformers = customers.filter((c) => c.creditScore >= 75);
   const lowPerformers = customers.filter((c) => c.creditScore < 50);
   const legalCases = customers.filter((c) => c.status === "Legal Action");
+
+  
 
   return (
     <div className="p-0 sm:p-6 bg-gray-50 min-h-screen">
@@ -84,25 +134,26 @@ const D9CreditScore = () => {
                 <thead className="sticky top-0 bg-white z-10">
                   <tr className="text-[#4B5563] text-[16px] font-semibold border-b">
                     <th className="py-2 pr-4 whitespace-nowrap">Name</th>
-                    <th className="py-2 pr-4 whitespace-nowrap">Amount</th>
-                    <th className="py-2 pr-4 whitespace-nowrap">Due Date</th>
+                    <th className="py-2 pr-4 whitespace-nowrap">Amount Due</th>
+                    <th className="py-2 pr-4 whitespace-nowrap">Next Due Date</th>
                     <th className="py-2 pr-4 whitespace-nowrap">Mobile No.</th>
+
                   </tr>
                 </thead>
-                <tbody>
-                  {customers.map((c, idx) => (
-                    <tr key={idx} className="border-b text-[16px] last:border-none">
-                      <td className="py-2 pr-4 text-[#1F2937]">{c.name}</td>
-                      <td className="py-2 pr-4 font-robotoR text-md">
-                        ₹{c.dueAmount || 0}
-                      </td>
-                      <td className="py-2 pr-4 text-[#4B5563]">
-                        {c.dueDate ? new Date(c.dueDate).toLocaleDateString() : "-"}
-                      </td>
-                      <td className="py-2 pr-4 text-[#4B5563]">{c.mobile || "N/A"}</td>
-                    </tr>
-                  ))}
-                </tbody>
+<tbody>
+  {customers.map((c, idx) => {
+    const stats = getCustomerStats(c._id);  // Change to c._id
+    return (
+      <tr key={idx} className="border-b text-[16px] last:border-none">
+        <td className="py-2 pr-4 text-[#1F2937]">{c.name}</td>
+        <td className="py-2 pr-4 font-robotoR text-md">₹{stats.amountDue}</td>
+        <td className="py-2 pr-4 text-[#4B5563]">{stats.nextDueDate}</td>
+        <td className="py-2 pr-4 text-[#4B5563]">{c.mobile || "N/A"}</td>
+
+      </tr>
+    );
+  })}
+</tbody>
               </table>
             </div>
           )}
@@ -114,17 +165,20 @@ const D9CreditScore = () => {
         title="Best Performers (Score: 75-100)"
         headers={["Customer", "Credit Score", "On-Time Payments", "Total Purchase", "Status"]}
       >
-        {bestPerformers.map((c, idx) => (
-          <BestPerformerRow
-            key={idx}
-            id={c.customerId}
-            name={c.name}
-            score={c.creditScore}
-            onTime={c.onTime || "N/A"}
-            purchase={c.purchase || "₹0"}
-            status="Excellent"
-          />
-        ))}
+        {bestPerformers.map((c, idx) => {
+  const stats = getCustomerStats(c._id);  // Change to c._id
+  return (
+    <BestPerformerRow
+      key={idx}
+      id={c.customId}  // Keep customId for display
+      name={c.name}
+      score={c.creditScore}
+      onTime={stats.onTimePayments}
+      purchase={`₹${stats.totalPurchase}`}
+      status="Excellent"
+    />
+  );
+})}
       </TableSection>
 
       {/* Low Performers */}
@@ -132,21 +186,26 @@ const D9CreditScore = () => {
         title="Low Performers (Score: 0-50)"
         headers={["Customer", "Credit Score", "Delay Days", "Penalties", "Action"]}
       >
-        {lowPerformers.map((c, idx) => (
-          <LowPerformerRow
-            key={idx}
-            id={c.customerId}
-            name={c.name}
-            score={c.creditScore}
-            delay={c.delayDays || "-"}
-            penalties={c.penalties || "₹0"}
-            action={c.status || "Warning"}
-          />
-        ))}
+        {lowPerformers.map((c, idx) => {
+          const stats = getCustomerStats(c.customId);
+          return (
+            <LowPerformerRow
+              key={idx}
+              id={c.customId}
+              name={c.name}
+              score={c.creditScore}
+              delay={c.delayDays || "0"}
+              penalties={`₹${stats.amountDue}`}
+              action={c.status || "Warning"}
+            />
+          );
+        })}
       </TableSection>
     </div>
   );
 };
+
+// -------------------- COMPONENTS --------------------
 
 const Header = () => (
   <div className="flex justify-between items-center my-5 p-6 md:p-0 ">
@@ -199,9 +258,7 @@ const TableSection = ({ title, headers, children }) => (
         <thead className="bg-gray-100 text-left">
           <tr>
             {headers.map((h, i) => (
-              <th key={i} className="p-3 font-robotoM text-[16px] text-[#4B5563]">
-                {h}
-              </th>
+              <th key={i} className="p-3 font-robotoM text-[16px] text-[#4B5563]">{h}</th>
             ))}
           </tr>
         </thead>
@@ -225,9 +282,7 @@ const BestPerformerRow = ({ id, name, score, onTime, purchase, status }) => (
     <td className="p-3 font-robotoR text-[16px]">{onTime}</td>
     <td className="p-3 font-robotoR text-[16px]">{purchase}</td>
     <td className="p-3">
-      <span className="px-3 py-1 font-robotoR text-sm rounded-full bg-green-100 text-[#166534]">
-        {status}
-      </span>
+      <span className="px-3 py-1 font-robotoR text-sm rounded-full bg-green-100 text-[#166534]">{status}</span>
     </td>
   </tr>
 );
@@ -247,19 +302,13 @@ const LowPerformerRow = ({ id, name, score, delay, penalties, action }) => (
     <td className="p-3 font-robotoR text-[16px]">{penalties}</td>
     <td className="p-3">
       {action === "Legal Action" && (
-        <span className="px-3 py-1 text-sm font-robotoR bg-orange-100 text-[#9A3412] rounded-full">
-          ⚖ Legal Action
-        </span>
+        <span className="px-3 py-1 text-sm font-robotoR bg-orange-100 text-[#9A3412] rounded-full">⚖ Legal Action</span>
       )}
       {action === "Collection" && (
-        <span className="px-3 py-1 text-sm font-robotoR bg-red-100 text-[#991B1B] rounded-full">
-          🚫 Collection
-        </span>
+        <span className="px-3 py-1 text-sm font-robotoR bg-red-100 text-[#991B1B] rounded-full">🚫 Collection</span>
       )}
       {action === "Warning" && (
-        <span className="px-3 py-1 text-sm font-robotoR bg-yellow-100 text-[#854D0E] rounded-full">
-          ! Warning
-        </span>
+        <span className="px-3 py-1 text-sm font-robotoR bg-yellow-100 text-[#854D0E] rounded-full">! Warning</span>
       )}
     </td>
   </tr>

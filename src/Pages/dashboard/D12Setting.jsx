@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
+
 import {
   MessageCircle,
   CreditCard,
@@ -17,14 +18,122 @@ import { IoLogoWhatsapp } from "react-icons/io";
 import { MdEmail } from "react-icons/md";
 import { FaQuestionCircle } from "react-icons/fa";
 // IoLogoWhatsapp , MdEmail , FaQuestionCircle
-
+import SettingsService from "../../api/GeneralSetting";
 const inputClasses = "bg-[#F6F8FA] px-3 py-2 border border-gray-300 rounded-md text-sm w-full";
 
-import { useState } from 'react';
 
 const SettingsPage = () => {
   const [isChecked, setIsChecked] = useState(false);
   const toggleCheckbox = () => setIsChecked((prev) => !prev);
+
+  // ---------------- States ----------------
+  const [generalSettings, setGeneralSettings] = useState({
+    businessName: "",
+    timeZone: "",
+    currency: "",
+    language: "",
+  });
+
+  const [paymentSetup, setPaymentSetup] = useState({
+    upi_id: "",
+    accountHolderName: "",
+    accountNumber: "",
+    ifscCode: "",
+    bankName: "",
+  });
+
+  const [invoiceSettings, setInvoiceSettings] = useState({
+    paperSize: "",
+    templateTheme: "",
+    businessLogo: "",
+    defaultTerms: "",
+  });
+
+  // IDs (when already created)
+  const [ids, setIds] = useState({
+    generalId: null,
+    paymentId: null,
+    invoiceId: null,
+  });
+
+  // ---------------- Fetch Existing Data ----------------
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Replace with correct IDs from AuthService/store if needed
+        if (ids.generalId) {
+          const res = await SettingsService.getGeneralSettingsById(
+            ids.generalId
+          );
+          setGeneralSettings(res.data);
+        }
+        if (ids.paymentId) {
+          const res = await SettingsService.getPaymentSetupById(ids.paymentId);
+          setPaymentSetup(res.data);
+        }
+        if (ids.invoiceId) {
+          const res = await SettingsService.getInvoiceTemplateSettingsById(
+            ids.invoiceId
+          );
+          setInvoiceSettings(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching settings:", err);
+      }
+    };
+    fetchData();
+  }, [ids]);
+
+  // ---------------- Save Handler ----------------
+// ---------------- Save Handler ----------------
+const handleSave = async () => {
+  try {
+    // General
+    if (ids.generalId) {
+      await SettingsService.updateGeneralSettings(
+        ids.generalId,
+        generalSettings
+      );
+      const updated = await SettingsService.getGeneralSettingsById(ids.generalId);
+      setGeneralSettings(updated.data);
+    } else {
+      const res = await SettingsService.createGeneralSettings(generalSettings);
+      setIds((prev) => ({ ...prev, generalId: res.data._id }));
+      setGeneralSettings(res.data); // ✅ show newly created immediately
+    }
+
+    // Payment 
+    if (ids.paymentId) {
+      await SettingsService.updatePaymentSetup(ids.paymentId, paymentSetup);
+      const updated = await SettingsService.getPaymentSetupById(ids.paymentId);
+      setPaymentSetup(updated.data);
+    } else {
+      const res = await SettingsService.createPaymentSetup(paymentSetup);
+      setIds((prev) => ({ ...prev, paymentId: res.data._id }));
+      setPaymentSetup(res.data);
+    }
+
+    // Invoice
+    if (ids.invoiceId) {
+      await SettingsService.updateInvoiceTemplateSettings(
+        ids.invoiceId,
+        invoiceSettings
+      );
+      const updated = await SettingsService.getInvoiceTemplateSettingsById(ids.invoiceId);
+      setInvoiceSettings(updated.data);
+    } else {
+      const res = await SettingsService.createInvoiceTemplateSettings(invoiceSettings);
+      setIds((prev) => ({ ...prev, invoiceId: res.data._id }));
+      setInvoiceSettings(res.data);
+    }
+
+    alert("✅ Settings saved successfully");
+  } catch (err) {
+    console.error("Save failed:", err);
+    alert("❌ Failed to save settings");
+  }
+};
+
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 text-sm">
@@ -78,104 +187,210 @@ const SettingsPage = () => {
       </div>
 
       {/* 2. Payment Setup */}
+      {/* 2. Payment Setup */}
       <div className="bg-white border shadow-sm rounded-lg p-5 space-y-5">
         <div className="flex items-center gap-2 text-blue-600 font-semibold text-base">
           <CreditCard className="w-5 h-5" />
           Payment Setup
         </div>
         <div className="grid md:grid-cols-2 gap-4">
-    <div>
-    <div>
-                           <label className="text-sm mb-1 block font-semibold">
-                  UPI ID                 </label>
-          <input placeholder="UPI ID" className={inputClasses} />
-          </div>
-    </div>
-    <div>
           <div>
-                           <h1 className="text-sm mb-1 block font-semibold">
-                 Bank Details                 </h1>
-                 <div className='flex flex-col gap-5'>   
-          <input placeholder="Account Holder Name" className={inputClasses}  />
-          <input placeholder="Account Number" className={inputClasses} />
-          <input placeholder="IFSC Code" className={inputClasses} />
-          <input placeholder="Bank Name" className={inputClasses} />
+            <label className="text-sm mb-1 block font-semibold">UPI ID</label>
+            <input
+              placeholder="UPI ID"
+              className={inputClasses}
+              value={paymentSetup.upi_id}
+              onChange={(e) =>
+                setPaymentSetup({ ...paymentSetup, upi_id: e.target.value })
+              }
+            />
           </div>
+          <div>
+            <h1 className="text-sm mb-1 block font-semibold">Bank Details</h1>
+            <div className="flex flex-col gap-5">
+              <input
+                placeholder="Account Holder Name"
+                className={inputClasses}
+                value={paymentSetup.accountHolderName}
+                onChange={(e) =>
+                  setPaymentSetup({
+                    ...paymentSetup,
+                    accountHolderName: e.target.value,
+                  })
+                }
+              />
+              <input
+                placeholder="Account Number"
+                className={inputClasses}
+                value={paymentSetup.accountNumber}
+                onChange={(e) =>
+                  setPaymentSetup({
+                    ...paymentSetup,
+                    accountNumber: e.target.value,
+                  })
+                }
+              />
+              <input
+                placeholder="IFSC Code"
+                className={inputClasses}
+                value={paymentSetup.ifscCode}
+                onChange={(e) =>
+                  setPaymentSetup({
+                    ...paymentSetup,
+                    ifscCode: e.target.value,
+                  })
+                }
+              />
+              <input
+                placeholder="Bank Name"
+                className={inputClasses}
+                value={paymentSetup.bankName}
+                onChange={(e) =>
+                  setPaymentSetup({
+                    ...paymentSetup,
+                    bankName: e.target.value,
+                  })
+                }
+              />
+            </div>
           </div>
-    </div>
-      
-
- 
         </div>
       </div>
 
       {/* 3. General Settings */}
-      <div className="bg-white border shadow-sm rounded-lg p-5 space-y-5">
+     <div className="bg-white border shadow-sm rounded-lg p-5 space-y-5">
         <div className="flex items-center gap-2 text-blue-600 font-semibold text-base">
           <Settings className="w-5 h-5 text-[#374151]" />
-          <h1 className='text-[#374151]'>  General Settings</h1>
+          <h1 className="text-[#374151]">General Settings</h1>
         </div>
         <div className="flex flex-row justify-between gap-5 w-full ">
-          <div className='flex flex-col gap-3 w-full md:w-1/2'>  
-  
-                                     <label className="text-sm  block font-semibold">
-                  Bussiness Name                 </label>
-          <input placeholder="Your Business Name" className={inputClasses} />
-
-                                               <label className="text-sm  block font-semibold">
-               Time Zone             </label>
-                    <select className={inputClasses}>
-            <option>Time Zone</option>
-          </select>
-
-
+          <div className="flex flex-col gap-3 w-full md:w-1/2">
+            <label className="text-sm block font-semibold">Business Name</label>
+            <input
+              placeholder="Your Business Name"
+              className={inputClasses}
+              value={generalSettings.businessName}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  businessName: e.target.value,
+                })
+              }
+            />
+            <label className="text-sm block font-semibold">Time Zone</label>
+            <select
+              className={inputClasses}
+              value={generalSettings.timeZone}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  timeZone: e.target.value,
+                })
+              }
+            >
+              <option value="">Time Zone</option>
+              <option value="IST">IST</option>
+              <option value="UTC">UTC</option>
+            </select>
           </div>
-         <div className='flex flex-col gap-3 w-full md:w-1/2'>  
-                                              <label className="text-sm  block font-semibold">
-                  Currency Format                </label>
-          <select className={inputClasses}>
-            <option>Currency Format</option>
-          </select>
-                                     <label className="text-sm  block font-semibold">
-                  Language               </label>
-          <select className={inputClasses}>
-            <option>Language</option>
-          </select>
+          <div className="flex flex-col gap-3 w-full md:w-1/2">
+            <label className="text-sm block font-semibold">
+              Currency Format
+            </label>
+            <select
+              className={inputClasses}
+              value={generalSettings.currency}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  currency: e.target.value,
+                })
+              }
+            >
+              <option value="">Currency Format</option>
+              <option value="INR">INR</option>
+              <option value="USD">USD</option>
+            </select>
+            <label className="text-sm block font-semibold">Language</label>
+            <select
+              className={inputClasses}
+              value={generalSettings.language}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  language: e.target.value,
+                })
+              }
+            >
+              <option value="">Language</option>
+              <option value="EN">English</option>
+              <option value="HI">Hindi</option>
+            </select>
           </div>
         </div>
       </div>
 
       {/* 4. Invoice Customization */}
       <div className="bg-white border shadow-sm rounded-lg p-5 space-y-5">
-        <div className="flex items-center gap-2  text-black font-semibold text-base">
+        <div className="flex items-center gap-2 text-black font-semibold text-base">
           <FileText className="w-5 h-5 text-purple-600" />
           Invoice Customization
         </div>
         <div className="grid md:grid-cols-2 gap-4">
-
-<div className='flex flex-col gap-5'>     
-  <div className='flex flex-col gap-3'>  
-           <label className="text-md text-gray-600 " >Paper Size </label>
-          <input placeholder="Paper Size" className={inputClasses} />
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-3">
+              <label className="text-md text-gray-600 ">Paper Size </label>
+              <input
+                placeholder="Paper Size"
+                className={inputClasses}
+                value={invoiceSettings.paperSize}
+                onChange={(e) =>
+                  setInvoiceSettings({
+                    ...invoiceSettings,
+                    paperSize: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-3">
+              <label className="text-sm text-gray-600">Template Theme </label>
+              <input
+                placeholder="Template Theme"
+                className={inputClasses}
+                value={invoiceSettings.templateTheme}
+                onChange={(e) =>
+                  setInvoiceSettings({
+                    ...invoiceSettings,
+                    templateTheme: e.target.value,
+                  })
+                }
+              />
+            </div>
           </div>
-
-          <div className='flex flex-col gap-3'> 
-              <label className="text-sm text-gray-600">Template theme </label>
-          <input placeholder="Template Theme" className={inputClasses} />
-       </div>
-         </div>
-       <div className='flex flex-col gap-5'>  
-          <div className="flex flex-col space-y-2">
-            <label className="text-md text-gray-600">Business Logo</label>
-            <button className="flex items-center gap-2 border bg-white px-3 py-2 rounded shadow-sm text-sm hover:bg-gray-50">
-              <Upload className="w-4 h-4" /> Upload Logo
-            </button>
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col space-y-2">
+              <label className="text-md text-gray-600">Business Logo</label>
+              <button className="flex items-center gap-2 border bg-white px-3 py-2 rounded shadow-sm text-sm hover:bg-gray-50">
+                <Upload className="w-4 h-4" /> Upload Logo
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              <label className="text-md text-gray-600">
+                Default Terms/Notes
+              </label>
+              <input
+                placeholder="Default Terms/Notes"
+                className={inputClasses}
+                value={invoiceSettings.defaultTerms}
+                onChange={(e) =>
+                  setInvoiceSettings({
+                    ...invoiceSettings,
+                    defaultTerms: e.target.value,
+                  })
+                }
+              />
+            </div>
           </div>
-          <div className='flex flex-col gap-3'>   
-            <label className="text-md text-gray-600">Default Terms/Notes</label>
-          <input placeholder="Default Terms/Notes" className={inputClasses} />
-        </div>
-        </div>
         </div>
       </div>
 
@@ -245,7 +460,7 @@ const SettingsPage = () => {
 
       {/* Save Button */}
       <div className="text-right pt-2 w-full justify-end align-middle items-end flex">
-        <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium flex justify-end items-end  align-middle  gap-2 flex-row">
+        <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium flex justify-end items-end  align-middle  gap-2 flex-row"  onClick={handleSave} >
          <FaRegSave />  Save All Settings
         </button>
       </div>
@@ -254,4 +469,3 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
-

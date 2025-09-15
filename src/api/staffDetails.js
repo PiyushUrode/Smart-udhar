@@ -85,7 +85,7 @@ export const StaffService = {
   },
 
   // ✅ Update staff
-  // ✅ Update staff
+// ✅ Update staff
 async updateStaff(id, payload, staffImage) {
   const token = AuthService.getToken();
   const storeId = AuthService.getStoreId();
@@ -99,13 +99,19 @@ async updateStaff(id, payload, staffImage) {
   fd.append("store_id", storeId);
   fd.append("storeProfile_id", storeProfile_id);
 
-  // Fix roles (stringify array)
+  // 👇 Keep roles same as createStaff (comma separated string)
   if (payload.roles) {
-    fd.append("roles", JSON.stringify(payload.roles));
+    if (Array.isArray(payload.roles)) {
+      payload.roles.forEach(role => fd.append("roles", role)); 
+      // each role added separately
+    } else {
+      fd.append("roles", payload.roles);
+    }
   }
 
-  Object.entries(payload).forEach(([k, v]) => {
-    if (k !== "roles") fd.append(k, v ?? "");
+  // Append other fields
+  Object.entries(payload).forEach(([key, value]) => {
+    if (key !== "roles") fd.append(key, value ?? "");
   });
 
   if (staffImage) {
@@ -119,7 +125,6 @@ async updateStaff(id, payload, staffImage) {
   return data;
 }
 ,
-
   // ✅ Delete staff
   async deleteStaff(id) {
     const token = AuthService.getToken();

@@ -294,118 +294,83 @@ async getAllInvoices() {
 }
 ,
 
-  // ✅ 4. Get invoice by ID (already created but aligned here)
-  // async getInvoiceById(invoiceId) {
-  //   try {
-  //     const { token, store_id, storeProfile_id } = getAuthContext();
-
-  //     const { data } = await axiosClient.get(
-  //       `/store-invoice/findBy-id/${invoiceId}`,
-  //       { headers: authHeaders(token) }
-  //     );
-
-  //     console.log("✅ [InvoiceService] Invoice details:", data);
-  //     return { success: true, invoice: data?.data || data };
-  //   } catch (err) {
-  //     console.error("❌ Get invoice error:", err.response?.data || err);
-  //     return { success: false, invoice: null };
-  //   }
-  // },
-
-  // ✅ 5. Low Stock Alert update
   async updateLowStock({ productId, leftProductQty, markAsRead = false }) {
-    try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
+  const { token, store_id, storeProfile_id } = getAuthContext();
 
-      const payload = {
-        store_id,
-        storeProfile_id,
-        productId,
-        updateData: { markAsRead, leftProductQty },
-      };
+  const payload = {
+    store_id,
+    storeProfile_id,
+    productId,
+    updateData: { markAsRead, leftProductQty },
+  };
 
-      const { data } = await axiosClient.post(
-        `/store-invoice/update-low-stock-alert`,
-        payload,
-        { headers: authHeaders(token) }
-      );
+  const { data } = await axiosClient.post(
+    `/store-invoice/update-low-stock-alert`,
+    payload,
+    { headers: authHeaders(token) }
+  );
 
-      console.log("✅ [InvoiceService] Low stock updated:", data);
-      return { success: true, lowStock: data?.data || data };
-    } catch (err) {
-      console.error("❌ Low stock update error:", err.response?.data || err);
-      return { success: false, lowStock: null };
-    }
-  },
+  return { success: true, lowStock: data?.data || data };
+}
+,
 
   // ✅ 6. Filter invoices by type (due, overdue, thisWeek, etc.)
-  async filterInvoices(filterType = "overdue") {
-    try {
-      const { token } = getAuthContext();
+ async filterInvoices(filterType = "overdue") {
+  const { token } = getAuthContext();
+  const { data } = await axiosClient.get(
+    `/store-invoice/filter?filterType=${filterType}`,
+    { headers: authHeaders(token) }
+  );
+  return { success: true, invoices: normalizeArray(data, ["data", "invoices"]) };
+},
 
-      const { data } = await axiosClient.get(
-        `/store-invoice/filter?filterType=${filterType}`,
-        { headers: authHeaders(token) }
-      );
-
-      const invoices = normalizeArray(data, ["data", "invoices"]);
-      console.log("✅ [InvoiceService] Filtered invoices:", invoices);
-
-      return { success: true, invoices };
-    } catch (err) {
-      console.error("❌ Filter invoices error:", err.response?.data || err);
-      return { success: false, invoices: [] };
-    }
-  },
 
   // ✅ 7. Update milestone payments (mark paid/unpaid, counted)
-  async updateMilestones(invoiceId, milestones = []) {
-    try {
-      const { token } = getAuthContext();
+  // ✅ FIXED updateMilestones
+async updateMilestones(invoiceId, milestones = []) {
+  try {
+    const { token } = getAuthContext();
+    const payload = { milestones };
 
-      const payload = { milestones };
+    const { data } = await axiosClient.put(
+      `/store-customer-invoice/paid-milestone/${invoiceId}`,
+      payload,
+      { headers: authHeaders(token) }
+    );
 
-      const { data } = await axiosClient.put(
-        `/store-customer-invoice/paid-milestone/${invoiceId}`,
-        payload,
-        { headers: authHeaders(token) }
-      );
+    return {
+      success: true,
+      invoice: data?.data || null,          // 🔥 Full invoice object return
+      milestones: data?.data?.milestones || [] // Safe milestone access
+    };
+  } catch (err) {
+    console.error("❌ Update milestones error:", err.response?.data || err);
+    return { success: false, invoice: null, milestones: [] };
+  }
+}
+,
 
-      console.log("✅ [InvoiceService] Milestones updated:", data);
-      return { success: true, milestones: data?.milestones || [] };
-    } catch (err) {
-      console.error("❌ Update milestones error:", err.response?.data || err);
-      return { success: false, milestones: [] };
-    }
-  },
 
   // ✅ 8. Export invoice data (PDF/Excel) based on filter
   async exportFilteredPDF(filterType = "thisWeek") {
-    try {
-      const { token } = getAuthContext();
+  const { token } = getAuthContext();
+  const res = await axios.get(
+    `${API_BASE}/store-invoice/export-filter-data?filterType=${filterType}`,
+    { headers: authHeaders(token), responseType: "blob" }
+  );
 
-      const res = await axios.get(
-        `${API_BASE}/store-invoice/export-filter-data?filterType=${filterType}`,
-        {
-          headers: authHeaders(token),
-          responseType: "blob", // important for file download
-        }
-      );
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", `invoice-${filterType}.pdf`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 
-      // create download link
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `invoice-${filterType}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+  return { success: true };
+}
+,
 
-      console.log("✅ [InvoiceService] PDF exported");
-      return { success: true };
-    } catch (err) {
-      console.error("❌ Export PDF error:", err.response?.data || err);
-      return { success: false };
-    }
-  },
+
+
 };

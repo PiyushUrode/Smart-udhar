@@ -19,6 +19,7 @@ const D8PaymentCollectionList = () => {
   const [invoices, setInvoices] = useState([]);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  
   const [summary, setSummary] = useState({
   today: 0,
   subtotal: 0,

@@ -38,8 +38,9 @@ const [paymentMode, setPaymentMode] = useState("");
 const [paymentMethod, setPaymentMethod] = useState("");
 const [transactionId, setTransactionId] = useState("");
 const [milestones, setMilestones] = useState([
-  { id: Date.now(), name: "Advance", amount: "", dueDate: "", status: "" },
+  { id: Date.now(), name: "Promise1", amount: "", dueDate: "", status: "Pending" },
 ]);
+
 
 // Additional Charges
 const [additionalCharges, setAdditionalCharges] = useState({
@@ -195,11 +196,19 @@ const [note, setNote] = useState("");
   };
 
   const handleAddMilestone = () => {
-    setMilestones([
-      ...milestones,
-      { id: Date.now(), name: "", amount: "", dueDate: "", status: "" },
-    ]);
+  const newId = Date.now();
+  const newIndex = milestones.length + 1; // 1 se start hoga
+  const newMilestone = {
+    id: newId,
+    name: `Promise${newIndex}`, // Auto name
+    amount: "",
+    dueDate: new Date().toISOString().split("T")[0], // 
+    status: "Pending", // Always Pending
   };
+
+  setMilestones([...milestones, newMilestone]);
+};
+
 
   const handleMilestoneChange = (id, field, value) => {
     setMilestones((prev) =>
@@ -860,31 +869,40 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
                       setMilestones(newMilestones);
                     }}
                   />
-                  <input
-                    className="border px-2 py-1 rounded bg-white"
-                    placeholder="0.00"
-                    type="number"
-                    value={ms.amount}
-                    onChange={(e) => {
-                      const newMilestones = [...milestones];
-                      newMilestones[index].amount = e.target.value;
-                      setMilestones(newMilestones);
-                    }}
-                  />
-                  <input
-                    className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white"
-                    type="date"
-                    value={ms.dueDate}
-                    onChange={(e) => {
-                      const newMilestones = [...milestones];
-                      newMilestones[index].dueDate = e.target.value;
-                      setMilestones(newMilestones);
-                    }}
-                  />
+  <input
+  className="border px-2 py-1 rounded bg-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+  placeholder="0"
+  type="number"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  value={ms.amount}
+  onChange={(e) => {
+    const newMilestones = [...milestones];
+    // ✅ Sirf integer store karega
+    const onlyDigits = e.target.value.replace(/\D/g, "");
+    newMilestones[index].amount = onlyDigits ? parseInt(onlyDigits, 10) : "";
+    setMilestones(newMilestones);
+  }}
+/>
+
+
+<input
+  className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white"
+  type="date"
+  min={new Date().toISOString().split("T")[0]} // past date disable
+  value={ms.dueDate}
+  onChange={(e) => {
+    const newMilestones = [...milestones];
+    newMilestones[index].dueDate = e.target.value;
+    setMilestones(newMilestones);
+  }}
+/>
+
                   <input
                     className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Status"
                     value={ms.status}
+                    readOnly
                     onChange={(e) => {
                       const newMilestones = [...milestones];
                       newMilestones[index].status = e.target.value;

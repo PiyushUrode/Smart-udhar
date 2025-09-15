@@ -17,69 +17,16 @@ import { Invoice } from "../../api/Invoice"; // your Invoice service
 
 export default function D13Notification() {
   const [reminders, setReminders] = useState([]);
-  // const [items, setItems] = useState([]);
-  // const [logs, setLogs] = useState([]);
+  const [items, setItems] = useState([]);
+  const [logs, setLogs] = useState([]);
   const [milestones, setMilestones] = useState([]);
-  // const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
-
-const notifications = [
-  {
-    icon: <FaGift />,
-    title: "New Reward Feature Available!",
-    message: "Earn points for every invoice sent. Redeem for premium features.",
-    time: "2 hours ago",
-    iconColor: "bg-blue-100 text-blue-600",
-  },
-  {
-    icon: <IoIosWarning color="#EA580C" />,
-    title: "GST Rate Update",
-    message:
-      "New GST rates effective from June 1, 2024. Update your tax settings.",
-    time: "1 day ago",
-    iconColor: "bg-orange-100 text-orange-600",
-  },
-];
-
-  const logs = [
-  {
-    message: "WhatsApp sent to Sharma Traders",
-    time: "2 hours ago",
-    status: "Delivered",
-    statusColor: "bg-[#DCFCE7] text-[#166534]",
-    icon: <FaCheckCircle color="#22C55E" />,
-  },
-  {
-    message: "SMS failed to Patel & Sons",
-    time: "1 day ago",
-    status: "Retry",
-    statusColor: "bg-[#DBEAFE] text-[#1E40AF]",
-    icon: <MdCancel color="#EF4444" />,
-  },
-];
-
-  const items = [
-  {
-    name: "A4 Paper",
-    stock: 3,
-    level: "Low Stock",
-    levelColor: "bg-[#FFEDD5] text-[#9A3412]",
-    message: "Reorder soon",
-    messageColor: "text-orange-600",
-  },
-  {
-    name: "Printer Ink Cartridge",
-    stock: 1,
-    level: "Critical",
-    levelColor: "bg-red-100 text-red-600",
-    message: "Critical - Reorder immediately",
-    messageColor: "text-red-600",
-  },
-];
   // Fetch all data
- useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
+        // 🔹 Fetch invoices for reminders & milestones
         const { invoices } = await Invoice.getAllInvoices();
 
         // Pending Payment Reminders
@@ -87,7 +34,7 @@ const notifications = [
           .filter((inv) => inv.paymentStatus !== "Paid")
           .map((inv) => ({
             id: inv._id,
-            name: inv.name,
+            name: inv.customerName,
             code: `#${inv.invoiceNumber}`,
             status: inv.paymentStatus === "Due" ? "Due Today" : "Overdue",
             statusColor:
@@ -102,10 +49,9 @@ const notifications = [
         // Milestones
         const milestoneInvoices = invoices.filter((inv) => inv.milestones?.length);
         const allMilestones = milestoneInvoices.flatMap((inv) =>
-          inv.milestones.map((ms, idx) => ({
-            id: `${inv._id}-${idx}`,
+          inv.milestones.map((ms) => ({
             invoiceId: inv._id,
-            company: inv.name,
+            company: inv.customerName,
             step: ms.name,
             amount: `₹${ms.amount}`,
             dueDate: ms.dueDate,
@@ -133,7 +79,7 @@ const notifications = [
           }));
         setItems(lowStockItems);
 
-        // System Notifications (example static)
+        // Notifications (example static for now)
         setNotifications([
           {
             id: 1,
@@ -159,6 +105,41 @@ const notifications = [
 
     fetchData();
   }, []);
+
+  // Mark reminder as paid
+  const markAsPaid = async (reminderId) => {
+    const reminder = reminders.find((r) => r.id === reminderId);
+    if (!reminder) return;
+
+    // ✅ Call API to mark as paid
+    await Invoice.createPayment({
+      invoiceId: reminder.id,
+      amount: parseInt(reminder.amount.replace("₹", "")),
+      mode: "cash",
+    });
+
+    // Update local state
+    setReminders((prev) =>
+      prev.map((r) =>
+        r.id === reminderId ? { ...r, status: "Paid", statusColor: "bg-green-100 text-green-700" } : r
+      )
+    );
+    setLogs((prev) => [
+      { message: `Marked ${reminder.name} as Paid`, time: "Just now", status: "Delivered", statusColor: "bg-[#DCFCE7] text-[#166534]", icon: <FaCheckCircle color="#22C55E" /> },
+      ...prev,
+    ]);
+  };
+
+  // Send reminder
+  const sendReminder = (reminderId, type) => {
+    const reminder = reminders.find((r) => r.id === reminderId);
+    if (!reminder) return;
+
+    setLogs((prev) => [
+      { message: `${type} sent to ${reminder.name}`, time: "Just now", status: "Delivered", statusColor: "bg-[#DCFCE7] text-[#166534]", icon: <FaCheckCircle color="#22C55E" /> },
+      ...prev,
+    ]);
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 mt-5 flex flex-col gap-4">
@@ -191,71 +172,22 @@ const notifications = [
       </div>
 
       {/* ------------------ Low Stock Alerts ------------------ */}
-            <div className="max-w-5xl">
+      <div className="max-w-5xl">
         <h2 className="text-lg font-semibold mb-4 flex items-center">
-          <span className="text-orange-600 font-bold mr-2">
-            <FaBox />
-          </span>{" "}
-          Low Stock Alerts
+          <FaBox className="text-orange-600 mr-2" /> Low Stock Alerts
         </h2>
-
-        {items.map((item, index) => (
-          <div
-            key={index}
-            className="flex justify-between items-start bg-white shadow-sm rounded-md p-4 mb-3 border border-[#E5E7EB]"
-          >
+        {items.map((item) => (
+          <div key={item.id} className="flex justify-between items-start bg-white shadow-sm rounded-md p-4 mb-3 border border-[#E5E7EB]">
             <div>
               <h3 className="font-semibold text-[#111827]">{item.name}</h3>
-              <p className="text-sm font-robotoR text-[#4B5563] mt-1">
-                Only {item.stock} left in stock
-              </p>
-              <p className={`text-xs font-robotoM mt-1 ${item.messageColor}`}>
-                {item.message}
-              </p>
+              <p className="text-sm font-robotoR text-[#4B5563] mt-1">Only {item.stock} left in stock</p>
+              <p className={`text-xs font-robotoM mt-1 ${item.messageColor}`}>{item.message}</p>
             </div>
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${item.levelColor} font-medium self-center`}
-            >
-              {item.level}
-            </span>
+            <span className={`text-xs px-2 py-1 rounded-full ${item.levelColor} font-medium self-center`}>{item.level}</span>
           </div>
         ))}
       </div>
 
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold mb-4 text-[#111827] flex items-center">
-          <span className="text-blue-600 mr-2">
-            <IoMdMail />
-          </span>{" "}
-          Reminder Success Logs
-        </h2>
-
-        <div className="bg-white rounded-md shadow-sm p-4 border border-[#E5E7EB]">
-          {logs.map((log, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-start py-2 border-[#E5E7EB] last:border-b-0"
-            >
-              <div className="flex items-start gap-2">
-                <span className="text-xl mt-0.5">{log.icon}</span>
-                <div>
-                  <p className="font-robotoM text-md text-[#111827]">
-                    {log.message}
-                  </p>
-                  <p className="text-sm font-robotoR text-[#4B5563]">
-                    {log.time}
-                  </p>
-                </div>
-              </div>
-              <span
-                className={`text-xs px-3 py-1 rounded-full font-medium self-center ${log.statusColor}`}
-              >
-                {log.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
       {/* ------------------ Milestones ------------------ */}
       <div className="max-w-5xl">
         <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
@@ -275,39 +207,42 @@ const notifications = [
       </div>
 
       {/* ------------------ System Notifications ------------------ */}
-        <div className="max-w-5xl">
+      <div className="max-w-5xl">
         <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
-          <span className="text-indigo-600 mr-2">
-            <FaBullhorn />
-          </span>{" "}
-          System Notifications
+          <FaBullhorn className="text-indigo-600 mr-2" /> System Notifications
         </h2>
-
-        {notifications.map((note, index) => (
-          <div
-            key={index}
-            className="flex items-start gap-3 bg-white border border-[#E5E7EB] rounded-md p-4 mb-3 shadow-sm"
-          >
-            <div
-              className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl ${note.iconColor}`}
-            >
-              {note.icon}
-            </div>
+        {notifications.map((note) => (
+          <div key={note.id} className="flex items-start gap-3 bg-white border border-[#E5E7EB] rounded-md p-4 mb-3 shadow-sm">
+            <div className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl ${note.iconColor}`}>{note.icon}</div>
             <div>
               <h3 className="font-semibold text-gray-900">{note.title}</h3>
-              <p className="text-sm font-robotoR text-[#4B5563]">
-                {note.message}
-              </p>
-              <p className="text-xs font-robotoR text-[#6B7280] mt-1">
-                {note.time}
-              </p>
+              <p className="text-sm font-robotoR text-[#4B5563]">{note.message}</p>
+              <p className="text-xs font-robotoR text-[#6B7280] mt-1">{note.time}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* ------------------ Reminder Logs ------------------ */}
-      
+      <div className="max-w-5xl">
+        <h2 className="text-lg font-semibold mb-4 flex items-center">
+          <IoMdMail className="text-blue-600 mr-2" /> Reminder Success Logs
+        </h2>
+        <div className="bg-white rounded-md shadow-sm p-4 border border-[#E5E7EB]">
+          {logs.map((log, index) => (
+            <div key={index} className="flex justify-between items-start py-2 border-b last:border-b-0 border-[#E5E7EB]">
+              <div className="flex items-start gap-2">
+                <span className="text-xl mt-0.5">{log.icon}</span>
+                <div>
+                  <p className="font-robotoM text-md text-[#111827]">{log.message}</p>
+                  <p className="text-sm font-robotoR text-[#4B5563]">{log.time}</p>
+                </div>
+              </div>
+              <span className={`text-xs px-3 py-1 rounded-full font-medium self-center ${log.statusColor}`}>{log.status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

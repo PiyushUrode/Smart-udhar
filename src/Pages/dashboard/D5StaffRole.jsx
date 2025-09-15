@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { StaffService } from "../../api/staffDetails"; // <-- API service
+import { StaffService } from "../../api/staffDetails"; 
 import {
   FaUserPlus,
   FaUsers,
   FaEllipsisV,
-  FaUserSlash,
   FaFilter,
   FaCircle,
   FaClock,
@@ -13,7 +12,7 @@ import { FaUserShield } from "react-icons/fa6";
 import { FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import product1 from "../../assets/dummyimage/product1.png";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 // ----------------- STAT CONFIG -----------------
 const STAT_TYPE_MAP = {
@@ -35,7 +34,6 @@ const STAT_TYPE_MAP = {
   },
 };
 
-// ----------------- STAT CARD -----------------
 const StatCard = ({ label, value, type }) => {
   const config = STAT_TYPE_MAP[type] || {};
   return (
@@ -48,65 +46,68 @@ const StatCard = ({ label, value, type }) => {
     </div>
   );
 };
+
 const roles = [
-  {
-    name: "Admin",
-    description: "Full access to all modules",
-    count: 2,
-    tags: [{ name: "All Access", color: "bg-blue-100 text-bluecol" }],
-  },
-  {
-    name: "Accountant",
-    description: "View/edit expenses, create invoices",
-    count: 3,
-    tags: [
-      { name: "Expense", color: "bg-purple-100 text-purple-600" },
-      { name: "Invoice", color: "bg-purple-100 text-purple-600" },
-    ],
-  },
-  {
-    name: "Sales Staff",
-    description: "View customers, send reminders",
-    count: 5,
-    tags: [
-      { name: "Customer", color: "bg-green-100 text-green-600" },
-      { name: "Reminder", color: "bg-green-100 text-green-600" },
-    ],
-  },
-  {
-    name: "Viewer",
-    description: "Read-only access to reports",
-    count: 2,
-    tags: [
-      { name: "Reports", color: "bg-gray-100 text-gray-600" },
-      { name: "Dashboard", color: "bg-gray-100 text-gray-600" },
-    ],
-  },
+  { name: "Admin", description: "Full access to all modules", count: 2, tags: [{ name: "All Access", color: "bg-blue-100 text-bluecol" }] },
+  { name: "Accountant", description: "View/edit expenses, create invoices", count: 3, tags: [{ name: "Expense", color: "bg-purple-100 text-purple-600" }, { name: "Invoice", color: "bg-purple-100 text-purple-600" }] },
+  { name: "Sales Staff", description: "View customers, send reminders", count: 5, tags: [{ name: "Customer", color: "bg-green-100 text-green-600" }, { name: "Reminder", color: "bg-green-100 text-green-600" }] },
+  { name: "Viewer", description: "Read-only access to reports", count: 2, tags: [{ name: "Reports", color: "bg-gray-100 text-gray-600" }, { name: "Dashboard", color: "bg-gray-100 text-gray-600" }] },
 ];
+
 const D5StaffRole = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState("Monthly");
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [staffImage, setStaffImage] = useState(null);
 
+  const API_URL = import.meta.env.VITE_API_URL;
 
-const fetchStaff = async () => {
+  // ✅ Handle image change with validation
+  const handleChange = (e) => {
+    const { id, value, files } = e.target;
+    if (files) {
+      const file = files[0];
+      const validTypes = ["image/jpeg", "image/png", "image/jpg"];
+      if (!validTypes.includes(file.type)) {
+        toast.error("❌ Only JPG, JPEG, and PNG formats are allowed");
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("❌ Image size must be less than 2MB");
+        return;
+      }
+      setStaffImage(file);
+    } else {
+      // fallback for text input fields
+      setFormData((prev) => ({ ...prev, [id]: value }));
+    }
+  };
+
+  const fetchStaff = async () => {
     try {
       setLoading(true);
       const res = await StaffService.getAllStaff();
-      const formatted = res?.staff?.map((staff) => ({
-        id: staff._id,
-        name: `${staff.firstName || ""} ${staff.lastName || ""}`.trim(),
-        email: staff.emailId,
-        role: staff.roles?.[0] || "Staff",
-        roleColor: "bg-blue-100 text-blue-600",
-        avatar: staff.image ? `/uploads/staff/${staff.image}` : product1,
-        online: staff.online || false,
-        lastAction: staff.status === "active" ? "Joined the team" : "Updated",
-        actionTime: staff.updatedAt || new Date().toISOString(),
-      }));
+      const formatted = res?.staff?.map((staff) => {
+        const avatarUrl = staff.image
+          ? `${API_URL}/assets/uploadStaffImage/${encodeURIComponent(staff.image)}?t=${Date.now()}`
+          : product1;
+        return {
+          id: staff._id,
+          name: `${staff.firstName || ""} ${staff.lastName || ""}`.trim(),
+          email: staff.emailId,
+          role: staff.roles?.[0] || "Staff",
+          roleColor: "bg-blue-100 text-blue-600",
+          avatar: avatarUrl,
+          online: staff.online || false,
+          lastAction: staff.status === "active" ? "Joined the team" : "Updated",
+          createdAt: staff.createdAt,
+          actionTime: staff.updatedAt || new Date().toISOString(),
+        };
+      });
       setMembers(formatted || []);
     } catch (err) {
       console.error("❌ Failed to fetch staff", err);
@@ -117,36 +118,37 @@ const fetchStaff = async () => {
   };
 
   useEffect(() => {
+    if (members.length > 0) {
+      const sorted = [...members].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setRecentActivity(sorted.slice(0, 5));
+    }
+  }, [members]);
+
+  useEffect(() => {
     fetchStaff();
   }, []);
 
-
-  // 📌 Dropdown handler
   const toggleDropdown = (index) => {
     setOpenDropdownIndex((prev) => (prev === index ? null : index));
   };
 
-  const handleFilterChange = (option) => {
-    setSelectedFilter(option);
-    setOpenDropdownIndex(null);
-  };
   const handleEdit = (id) => {
     navigate(`/dashboard/staff-details/${id}`);
   };
 
-  // 📌 delete handler
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this staff member?")) return;
     try {
       await StaffService.deleteStaff(id);
       toast.success("✅ Staff deleted successfully");
-      fetchStaff(); // reload
+      fetchStaff();
     } catch (err) {
       console.error("❌ Delete failed:", err);
       toast.error(err.response?.data?.message || "Failed to delete staff");
     }
   };
-
   return (
     <div className="px-4 py-12 md:px-10 max-w-screen-xl mx-auto space-y-6 bg-white">
       {/* Header */}
@@ -300,42 +302,35 @@ const fetchStaff = async () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow-md border-2">
-        <div className="border-b p-5">
-          <h2 className="text-base font-semibold text-gray-700 mb-4">
-            Recent Activity
-          </h2>
-        </div>
-        <ul className="text-sm p-4 space-y-4 text-gray-700">
-          <li className="flex gap-4 items-start">
-            <div className="rounded-full p-2 border-2 bg-[#DBEAFE]">
-              <FaUserPlus color="#2563EB" />
+    <div className="bg-white rounded-lg shadow-md border-2">
+  <div className="border-b p-5">
+    <h2 className="text-base font-semibold text-gray-700 mb-4">
+      Recent Activity
+    </h2>
+  </div>
+
+ {recentActivity.length > 0 ? (
+    <ul className="text-sm p-4 space-y-4 text-gray-700">
+      {recentActivity.map((activity, index) => (
+        <li key={index} className="flex gap-4 items-start">
+          <div className="rounded-full p-2 border-2 bg-[#DBEAFE]">
+            <FaUserPlus color="#2563EB" />
+          </div>
+          <div>
+            <span className="font-semibold">{activity.name}</span> joined as{" "}
+            <span className="text-blue-600">{activity.role}</span>
+            <div className="text-gray-500 text-xs">
+              {new Date(activity.createdAt).toLocaleString()}
             </div>
-            <div>
-              Rajesh Kumar added new team member
-              <div className="text-gray-500 text-xs">2 hours ago</div>
-            </div>
-          </li>
-          <li className="flex gap-4 items-start">
-            <div className="rounded-full p-2 border-2 bg-[#F3E8FF]">
-              <FaUserShield color="#9333EA" />
-            </div>
-            <div>
-              Priya Sharma role updated to Accountant
-              <div className="text-gray-500 text-xs">5 hours ago</div>
-            </div>
-          </li>
-          <li className="flex gap-4 items-start">
-            <div className="rounded-full p-2 border-2 bg-[#FEE2E2]">
-              <FaUserSlash color="#DC2626" />
-            </div>
-            <div>
-              Vikash Singh access revoked
-              <div className="text-gray-500 text-xs">1 day ago</div>
-            </div>
-          </li>
-        </ul>
-      </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <div className="p-4 text-gray-500 text-sm">No recent activity found</div>
+  )}
+</div>
+
 
     </div>
   );

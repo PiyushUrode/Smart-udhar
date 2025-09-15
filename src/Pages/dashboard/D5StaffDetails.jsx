@@ -17,15 +17,26 @@ const D5StaffDetails = () => {
     roles: ""
   });
   const [staffImage, setStaffImage] = useState(null);
+  const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    const { id, value, files } = e.target;
-    if (files) {
-      setStaffImage(files[0]);
-    } else {
-      setFormData((prev) => ({ ...prev, [id]: value }));
+const handleChange = (e) => {
+  const { id, value, files } = e.target;
+
+  if (files) {
+    const file = files[0];
+    if (file.size > 2 * 1024 * 1024) {
+      // ✅ Agar 2MB se badi hai to error dikhado
+      setError("Image size must be less than 2MB");
+      setStaffImage(null);
+      return;
     }
-  };
+    setError(""); // clear previous error
+    setStaffImage(file);
+  } else {
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  }
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,7 +114,10 @@ const D5StaffDetails = () => {
               </p>
             </div>
           </div>
-
+          {/* Show error if exists */}
+          {error && (
+            <div className="text-red-500 text-sm mb-2">{error}</div>
+          )}
           {/* Submit */}
           <div className="text-right">
             <button
@@ -118,5 +132,6 @@ const D5StaffDetails = () => {
     </div>
   );
 };
+
 
 export default D5StaffDetails;
