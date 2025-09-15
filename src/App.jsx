@@ -75,6 +75,7 @@ function App() {
           <Route path="expenses-list" element={<D10ExpensesList />} />
           <Route path="statement-download" element={<D11StatementDownload />} />
           <Route path="setting" element={<D12Setting />} />
+          <Route path="setting/:id" element={<D12Setting />} />
           <Route path="notification" element={<D13Notification />} />
           <Route path="gst-calculator" element={<D14GstCalculator />} />
           <Route path="gstreceipt" element={<D14GstCalReceipt />} />

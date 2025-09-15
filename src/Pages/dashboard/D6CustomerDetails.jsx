@@ -5,7 +5,7 @@ import { FaBoxOpen } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { CustomerService } from "../../api/customerService";
 
-const generateScore = () => Math.floor(Math.random() * 101);
+// const generateScore = () => Math.floor(Math.random() * 101);
 
 const CustomerDetailsForm = () => {
   const [customers, setCustomers] = useState([]);
@@ -23,7 +23,7 @@ const CustomerDetailsForm = () => {
         name: cust.name,
         mobile: cust.mobile,
         email: cust.email,
-        address: cust.address || '',  // ✅ Add missing fields
+        address: cust.address || '',
         pin: cust.pin || '',
         city: cust.city,
         state: cust.state,
@@ -31,7 +31,7 @@ const CustomerDetailsForm = () => {
         panNumber: cust.panNumber || '',
         companyName: cust.companyName || '',
         gstNumber: cust.gstNumber || '',
-        score: generateScore(),
+        score: cust.creditScore ?? 0,  // ✅ Use backend value instead of random
       }));
       setCustomers(formatted);
     }
@@ -41,6 +41,7 @@ const CustomerDetailsForm = () => {
     setLoading(false);
   }
 };
+
 
   useEffect(() => {
     fetchCustomers();
@@ -83,10 +84,10 @@ const handleEdit = (customer) => {
           >
             Add Customer
           </button>
-          <div className="flex flex-row gap-2 items-center text-bluecol cursor-pointer">
+          {/* <div className="flex flex-row gap-2 items-center text-bluecol cursor-pointer">
             <h1>Filters</h1>
             <IoIosArrowDown />
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -125,6 +126,8 @@ const handleEdit = (customer) => {
                   <td className="p-3 border-y font-robotoR text-blue-600 hover:underline cursor-pointer">
                     {cust.email}
                   </td>
+
+                  
                   <td
                     className={`p-3 border-y font-robotoR ${getScoreColor(
                       cust.score

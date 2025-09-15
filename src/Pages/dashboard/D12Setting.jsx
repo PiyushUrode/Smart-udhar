@@ -57,32 +57,52 @@ const SettingsPage = () => {
   });
 
   // ---------------- Fetch Existing Data ----------------
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Replace with correct IDs from AuthService/store if needed
-        if (ids.generalId) {
-          const res = await SettingsService.getGeneralSettingsById(
-            ids.generalId
-          );
-          setGeneralSettings(res.data);
-        }
-        if (ids.paymentId) {
-          const res = await SettingsService.getPaymentSetupById(ids.paymentId);
-          setPaymentSetup(res.data);
-        }
-        if (ids.invoiceId) {
-          const res = await SettingsService.getInvoiceTemplateSettingsById(
-            ids.invoiceId
-          );
-          setInvoiceSettings(res.data);
-        }
-      } catch (err) {
-        console.error("Error fetching settings:", err);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      // 🔹 Fetch existing General Settings
+      const general = await SettingsService.getGeneralSettings();
+      if (general?._id) {
+        setIds((prev) => ({ ...prev, generalId: general._id }));
+        setGeneralSettings({
+          businessName: general.businessName || "",
+          timeZone: general.timeZone || "",
+          currency: general.currency || "",
+          language: general.language || "",
+        });
       }
-    };
-    fetchData();
-  }, [ids]);
+
+      // 🔹 Fetch existing Payment Setup
+      const payment = await SettingsService.getPaymentSetup();
+      if (payment?._id) {
+        setIds((prev) => ({ ...prev, paymentId: payment._id }));
+        setPaymentSetup({
+          upi_id: payment.upi_id || "",
+          accountHolderName: payment.accountHolderName || "",
+          accountNumber: payment.accountNumber || "",
+          ifscCode: payment.ifscCode || "",
+          bankName: payment.bankName || "",
+        });
+      }
+
+      // 🔹 Fetch existing Invoice Settings
+      const invoice = await SettingsService.getInvoiceTemplateSettings();
+      if (invoice?._id) {
+        setIds((prev) => ({ ...prev, invoiceId: invoice._id }));
+        setInvoiceSettings({
+          paperSize: invoice.paperSize || "",
+          templateTheme: invoice.templateTheme || "",
+          businessLogo: invoice.businessLogo || "",
+          defaultTerms: invoice.defaultTerms || "",
+        });
+      }
+    } catch (err) {
+      console.error("❌ Error fetching previous settings:", err);
+    }
+  };
+
+  fetchData();
+}, []);
 
   // ---------------- Save Handler ----------------
 // ---------------- Save Handler ----------------

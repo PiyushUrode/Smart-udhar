@@ -1,5 +1,7 @@
 // src/config/constants.js
 export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+console.log(API_BASE);
+
 
 // Storage Keys (consistent naming)
 export const STORAGE_KEYS = {
