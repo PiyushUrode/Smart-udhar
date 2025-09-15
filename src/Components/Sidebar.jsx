@@ -64,10 +64,10 @@ const sections = [
   {
     title: "More",
     items: [
-      { label: "Rewards", icon: <FaGift />, path: "/dashboard/reward" },
-      { label: "Coming Soon", icon: <FaClock />, path: "/dashboard/commingsoon" },
-      { label: "Updates", icon: <FaSync />, path: "/dashboard/updates" },
-      { label: "Support", icon: <FaHeadphones />, path: "/dashboard/supports" },
+      { label: "Rewards", icon: <FaGift />, path: "/dashboard/reward" , disabled: true },
+      { label: "Coming Soon", icon: <FaClock />, path: "/dashboard/commingsoon", disabled: true  },
+      { label: "Updates", icon: <FaSync />, path: "/dashboard/updates" , disabled: true },
+      { label: "Support", icon: <FaHeadphones />, path: "/dashboard/supports", disabled: true},
     ],
   },
 ];
@@ -175,17 +175,27 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
               {section.title}
             </h2>
             <ul>
-              {section.items.map((item, idx) => (
-                <li key={idx}>
-                  <Link
-                    to={item.path}
-                    className="mb-2 hover:bg-white hover:text-[#2563EB] text-white p-2 rounded-md flex items-center gap-3 cursor-pointer block"
-                  >
-                    {item.icon}
-                    {isOpen && <span>{item.label}</span>}
-                  </Link>
-                </li>
-              ))}
+{section.items.map((item, idx) => (
+  <li key={idx}>
+    {item.disabled ? (
+      <div
+        className="mb-2 text-gray-300 p-2 rounded-md flex items-center gap-3 cursor-not-allowed opacity-60"
+      >
+        {item.icon}
+        {isOpen && <span>{item.label}</span>}
+      </div>
+    ) : (
+      <Link
+        to={item.path}
+        className="mb-2 hover:bg-white hover:text-[#2563EB] text-white p-2 rounded-md flex items-center gap-3 cursor-pointer block"
+      >
+        {item.icon}
+        {isOpen && <span>{item.label}</span>}
+      </Link>
+    )}
+  </li>
+))}
+
             </ul>
           </div>
         ))}

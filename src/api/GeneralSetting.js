@@ -73,14 +73,14 @@ const SettingsService = {
     return res.data;
   },
 
-  // ---------------- Invoice Template Settings ----------------
+
  async createInvoiceTemplateSettings(payload) {
     const { token, store_id, storeProfile_id } = getAuthContext();
     
 
   const res = await axios.post(
     `${API_BASE}/invoice-template-settings/create`,
-    { ...payload, store_id, storeProfile_id }, // ✅ both snake_case
+    { ...payload, store_id, storeProfile_id }, 
     { headers: authHeaders(token) }
   );
   return res.data;
@@ -90,7 +90,7 @@ const SettingsService = {
   const { token, store_id, storeProfile_id } = getAuthContext();
   const res = await axios.put(
     `${API_BASE}/invoice-template-settings/update/${id}`,
-    { ...payload, store_id, storeProfile_id }, // ✅
+    { ...payload, store_id, storeProfile_id }, 
     { headers: authHeaders(token) }
   );
   return res.data;
