@@ -13,7 +13,7 @@ import { IoMdMail } from "react-icons/io";
 import { FaFlagCheckered } from "react-icons/fa6";
 import { MdCancel } from "react-icons/md";
 import { IoIosWarning } from "react-icons/io";
-import { Invoice } from "../../api/Invoice"; // your Invoice service
+import { Invoice } from "../../api/Invoice.js"; // your Invoice service
 
 export default function D13Notification() {
   const [reminders, setReminders] = useState([]);

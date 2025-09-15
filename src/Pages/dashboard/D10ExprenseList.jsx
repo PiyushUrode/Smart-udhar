@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaFilePdf, FaFileExcel } from "react-icons/fa6";
-import ExpenseService from "../../api/expenseservice"; // ✅ correct import
+import ExpenseService from "../../api/expenseservice.js"; // ✅ correct import
 
 const D10ExprenseList = () => {
   const [showFilters, setShowFilters] = useState(false);

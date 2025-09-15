@@ -3,7 +3,7 @@ import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { IoIosArrowDown } from "react-icons/io";
 import { FaBoxOpen } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { CustomerService } from "../../api/customerService";
+import { CustomerService } from "../../api/customerService.js";
 
 // const generateScore = () => Math.floor(Math.random() * 101);
 

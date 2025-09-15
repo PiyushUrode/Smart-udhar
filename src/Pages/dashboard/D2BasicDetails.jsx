@@ -10,10 +10,10 @@ import { FaUpload } from "react-icons/fa6";
 import Button from "../../common/Button.jsx";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
 import { ProfileService } from "../../api/profileservice.js";
 import { AuthService } from "../../api/authservice.js";
-import { toast } from "react-toastify";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 

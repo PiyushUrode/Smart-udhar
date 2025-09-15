@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FaTrophy, FaExclamationTriangle, FaGavel } from "react-icons/fa";
 import { FaDownload, FaChartLine } from "react-icons/fa6";
 import ReactSpeedometer from "react-d3-speedometer";
-import { Invoice } from "../../api/Invoice"; // check your path
+import { Invoice } from "../../api/Invoice.js"; // check your path
 
 const D9CreditScore = () => {
   const [customers, setCustomers] = useState([]);

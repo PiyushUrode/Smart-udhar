@@ -21,8 +21,8 @@ import {
 } from "react-icons/fa";
 import { Phone, ShoppingCart, CreditCard, Wallet } from "lucide-react";
 import { GoGraph } from "react-icons/go";
-import ExpenseService from "../../api/expenseservice";
-import { AuthService } from "../../api/authservice";
+import { AuthService } from "../../api/authservice.js";
+import ExpenseService from "../../api/expenseservice.js";
 
 const API_URL = import.meta.env.VITE_API_URL;
 

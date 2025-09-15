@@ -7,7 +7,7 @@ import { FaWallet } from "react-icons/fa6";
 import { FaClock } from "react-icons/fa";
 import { RxHamburgerMenu } from "react-icons/rx";
 import { useLocation } from "react-router-dom";
-import {Invoice} from "../../api/Invoice"; // ya jaha tumne Invoice.js rakha hai
+import {Invoice} from "../../api/Invoice.js"; // ya jaha tumne Invoice.js rakha hai
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 

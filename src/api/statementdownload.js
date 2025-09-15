@@ -1,5 +1,5 @@
 // src/api/reportService.js
-import { AuthService } from "./authService";
+import { AuthService } from "./authService.js";
 import { api } from "../api/api.js";
 import axiosClient from "./axiosClient.js";
 

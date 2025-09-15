@@ -1,6 +1,6 @@
 import { FaChevronDown, FaChevronUp, FaCloudUploadAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { StaffService } from "../../api/staffDetails";
+import { StaffService } from "../../api/staffDetails.js";
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 

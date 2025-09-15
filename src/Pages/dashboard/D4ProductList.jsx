@@ -11,8 +11,8 @@ import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ProductService } from "../../api/productservice.js"; // ✅ ProductService
 import product1 from "../../assets/dummyimage/product1.png";
-import { ProductService } from "../../api/productService.js"; // ✅ ProductService
 const API_URL = import.meta.env.VITE_API_URL;
 
 const D4ProductList = () => {

@@ -1,7 +1,7 @@
 import { FaUpload } from "react-icons/fa6";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CustomerService } from "../../api/customerService";
+import { CustomerService } from "../../api/customerService.js";
 
 const D6AddCustomer = () => {
   const location = useLocation();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StaffService } from "../../api/staffDetails"; 
+import { StaffService } from "../../api/staffDetails.js"; 
 import {
   FaUserPlus,
   FaUsers,

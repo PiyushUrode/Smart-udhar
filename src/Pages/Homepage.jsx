@@ -3,9 +3,9 @@ import "../Styles/Homepage.css";
 import logo from "../assets/logo/logo_hr.png";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import Testimonial from "../Components/Homepage/Testimonial";
-import FAQSection from "../Components/Homepage/FAQSection";
-import Blogs from "../Components/Homepage/Blogs";
+import Testimonial from "../Components/Homepage/Testimonial.jsx";
+import FAQSection from "../Components/Homepage/FAQSection.jsx";
+import Blogs from "../Components/Homepage/Blogs.jsx";
 
 import womanImage from "../assets/homepage/hero-img.png";
 import community from "../assets/homepage/community.png";

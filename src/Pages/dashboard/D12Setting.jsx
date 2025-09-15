@@ -18,7 +18,7 @@ import { IoLogoWhatsapp } from "react-icons/io";
 import { MdEmail } from "react-icons/md";
 import { FaQuestionCircle } from "react-icons/fa";
 // IoLogoWhatsapp , MdEmail , FaQuestionCircle
-import SettingsService from "../../api/GeneralSetting";
+import SettingsService from "../../api/GeneralSetting.js";
 const inputClasses = "bg-[#F6F8FA] px-3 py-2 border border-gray-300 rounded-md text-sm w-full";
 
 

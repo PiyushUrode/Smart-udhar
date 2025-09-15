@@ -12,7 +12,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { FaQuestion } from "react-icons/fa";
-import ReportService from "../../api/statementdownload";
+import ReportService from "../../api/statementdownload.js";
 
 const reports = [
   {

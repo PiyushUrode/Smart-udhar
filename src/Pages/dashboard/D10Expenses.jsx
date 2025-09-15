@@ -4,8 +4,8 @@ import { FileDown, FileUp, ChevronDown } from "lucide-react";
 import { FaPercentage, FaQuestion } from "react-icons/fa";
 import { FaChartPie } from "react-icons/fa6";
 import { FaCloudUploadAlt } from "react-icons/fa";
-// import ExpenseService from "../../api/expenseservice"; // Adjust the path as necessary
-import ExpenseService from "../../api/expenseservice"; // ✅
+// import ExpenseService from "../../api/expenseservice.js"; // Adjust the path as necessary
+import ExpenseService from "../../api/expenseservice.js"; // ✅
 import Cookies from "js-cookie"; // to fetch token / storeId from cookie
 
 const D10Expenses = () => {

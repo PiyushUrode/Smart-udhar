@@ -1,6 +1,6 @@
 // src/api/staffDetails.js
-import axiosClient from "./axiosClient";
-import { AuthService } from "./authservice";
+import axiosClient from "./axiosClient.js";
+import { AuthService } from "./authservice.js";
 
 export const StaffService = {
   // ✅ Create new staff

@@ -9,9 +9,9 @@ import { FaChartPie } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { FaRegChartBar } from "react-icons/fa6";
 import { FiEdit, FiTrash2 } from "react-icons/fi"; // ✅ Added
+import { Invoice } from "../../api/Invoice.js"; // ✅ ad
 
 import React, { useState, useEffect } from "react";
-import { Invoice } from "../../api/Invoice"; // ✅ ad
 
 
 

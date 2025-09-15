@@ -1,6 +1,6 @@
 // src/api/dashboardService.js
-import axiosClient from "./axiosClient";
-import { AuthService } from "./authservice";
+import axiosClient from "./axiosClient.js";
+import { AuthService } from "./authservice.js";
 
 // ----------------- Helpers -----------------
 function getAuthContext() {
