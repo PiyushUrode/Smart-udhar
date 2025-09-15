@@ -1,13 +1,16 @@
-// services/reportService.js
+// src/api/reportService.js
 import { AuthService } from "./authService";
 import { api } from "../api/api.js";
+import axiosClient from "./axiosClient.js";
 
+// 🔹 Common Auth Context
 function getstoreProfile_id() {
   return (
     AuthService.getstoreProfile_id?.() ||
     localStorage.getItem("storeProfile_id")
   );
 }
+
 function getAuthContext() {
   const token = AuthService.getToken?.();
   const store_id = AuthService.getStoreId?.();
@@ -20,12 +23,15 @@ function getAuthContext() {
   return { token, store_id, storeProfile_id };
 }
 
-// 📂 Generic Export (PDF/Excel)
+function authHeaders(token) {
+  return { Authorization: `Bearer ${token}` };
+}
+
+// 🔹 Generic Export
 async function exportReport(reportType, format, startDate, endDate, filter) {
   try {
     const { token } = getAuthContext();
 
-    // example: /store-expense/export-pdf?filter=Daily
     const endpoint = `/${reportType}/export-${format}?startDate=${startDate}&endDate=${endDate}${
       filter ? `&filter=${filter}` : ""
     }`;
@@ -35,7 +41,6 @@ async function exportReport(reportType, format, startDate, endDate, filter) {
       responseType: "blob",
     });
 
-    // ⬇ Trigger download
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement("a");
     link.href = url;
@@ -52,5 +57,118 @@ async function exportReport(reportType, format, startDate, endDate, filter) {
   }
 }
 
-const ReportService = { exportReport };
+// 🔹 Product-specific Excel Export
+async function exportProductsExcel() {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const response = await axiosClient.get(
+      `/store-product/export-excel/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token), responseType: "blob" }
+    );
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `products_${Date.now()}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    return { success: true };
+  } catch (err) {
+    console.error("❌ exportProductsExcel error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+// 🔹 Product-specific PDF Export
+async function exportProductsPDF() {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const response = await axiosClient.get(
+      `/store-product/export-pdf/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token), responseType: "blob" }
+    );
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `products_${Date.now()}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    return { success: true };
+  } catch (err) {
+    console.error("❌ exportProductsPDF error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+
+async function exportCustomersToExcel() {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const res = await axiosClient.get(
+      `/store-customer/export-excel/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token), responseType: "blob" }
+    );
+
+    // ⬇ Trigger download
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `customers_${Date.now()}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    return { success: true };
+  } catch (err) {
+    console.error("❌ exportCustomersToExcel error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function exportCustomersToPDF() {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const res = await axiosClient.get(
+      `/store-customer/export-pdf/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token), responseType: "blob" }
+    );
+
+    if (!res.data || res.data.size === 0) {
+      throw new Error("Empty PDF received — check backend export logic");
+    }
+
+    const url = window.URL.createObjectURL(
+      new Blob([res.data], { type: "application/pdf" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `customers_${Date.now()}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    return { success: true };
+  } catch (err) {
+    console.error("❌ exportCustomersToPDF error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+
+
+
+const ReportService = {
+  exportReport,
+  exportProductsExcel,
+  exportProductsPDF,
+  exportCustomersToExcel,
+  exportCustomersToPDF,
+
+};
+
 export default ReportService;

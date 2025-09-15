@@ -1,9 +1,13 @@
-import React, { useState } from "react";
 import { FaChevronDown, FaChevronUp, FaCloudUploadAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { StaffService } from "../../api/staffDetails";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
 const D5StaffDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const [isOpen, setIsOpen] = useState(true);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -19,47 +23,74 @@ const D5StaffDetails = () => {
   const [staffImage, setStaffImage] = useState(null);
   const [error, setError] = useState("");
 
-const handleChange = (e) => {
-  const { id, value, files } = e.target;
+  // 🔹 Fetch staff if editing
+  useEffect(() => {
+    const fetchStaff = async () => {
+      if (!id) return; // add mode
 
-  if (files) {
-    const file = files[0];
-    if (file.size > 2 * 1024 * 1024) {
-      // ✅ Agar 2MB se badi hai to error dikhado
-      setError("Image size must be less than 2MB");
-      setStaffImage(null);
-      return;
+      try {
+        const res = await StaffService.findStaffById(id);
+        console.log("Fetched Staff:", res);
+
+        // ⚠️ adjust if API response is wrapped
+        const staff = res?.staff || res?.data || res;
+
+        setFormData({
+          firstName: staff.firstName || "",
+          lastName: staff.lastName || "",
+          mobileNumber: staff.mobileNumber || "",
+          emailId: staff.emailId || "",
+          address: staff.address || "",
+          pinNumber: staff.pinNumber || "",
+          city: staff.city || "",
+          state: staff.state || "",
+          roles: staff.roles || ""
+        });
+      } catch (err) {
+        console.error("❌ Failed to fetch staff:", err);
+        toast.error("Failed to load staff details");
+      }
+    };
+
+    fetchStaff();
+  }, [id]);
+
+  const handleChange = (e) => {
+    const { id, value, files } = e.target;
+
+    if (files) {
+      const file = files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        setError("Image size must be less than 2MB");
+        setStaffImage(null);
+        return;
+      }
+      setError("");
+      setStaffImage(file);
+    } else {
+      setFormData((prev) => ({ ...prev, [id]: value }));
     }
-    setError(""); // clear previous error
-    setStaffImage(file);
-  } else {
-    setFormData((prev) => ({ ...prev, [id]: value }));
-  }
-};
-
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await StaffService.createStaff(formData, staffImage);
-      toast.success("✅ Staff member added successfully!");
-      console.log("API Response:", res);
+      let res;
+      if (id) {
+        // 🔹 Edit staff
+        res = await StaffService.updateStaff(id, formData, staffImage);
+        toast.success("✅ Staff updated successfully!");
+      } else {
+        // 🔹 Add staff
+        res = await StaffService.createStaff(formData, staffImage);
+        toast.success("✅ Staff member added successfully!");
+      }
 
-      setFormData({
-        firstName: "",
-        lastName: "",
-        mobileNumber: "",
-        emailId: "",
-        address: "",
-        pinNumber: "",
-        city: "",
-        state: "",
-        roles: ""
-      });
-      setStaffImage(null);
+      console.log("API Response:", res);
+      navigate("/dashboard/staff-list"); // redirect if needed
     } catch (err) {
-      console.error("❌ Error creating staff:", err);
-      toast.error(err.response?.data?.message || "Failed to add staff");
+      console.error("❌ Error saving staff:", err);
+      toast.error(err.response?.data?.message || "Failed to save staff");
     }
   };
 
@@ -70,17 +101,27 @@ const handleChange = (e) => {
         className="flex justify-between items-center bg-[#3B82F6] text-white p-4 rounded-md cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <h2 className="text-lg font-robotoM">Add Staff Details</h2>
+        <h2 className="text-lg font-robotoM">
+          {id ? "Edit Staff Details" : "Add Staff Details"}
+        </h2>
         <span>{isOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
       </div>
 
       {isOpen && (
         <form className="mt-6 p-2 space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {["firstName","lastName","mobileNumber","emailId","address","pinNumber","city","state","roles"].map((field) => (
-              <div key={field} 
-              
-              >
+            {[
+              "firstName",
+              "lastName",
+              "mobileNumber",
+              "emailId",
+              "address",
+              "pinNumber",
+              "city",
+              "state",
+              "roles"
+            ].map((field) => (
+              <div key={field}>
                 <label className="block text-sm font-medium text-[#374151] mb-1 capitalize">
                   {field}
                 </label>
@@ -114,17 +155,17 @@ const handleChange = (e) => {
               </p>
             </div>
           </div>
-          {/* Show error if exists */}
-          {error && (
-            <div className="text-red-500 text-sm mb-2">{error}</div>
-          )}
+
+          {/* Error */}
+          {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+
           {/* Submit */}
           <div className="text-right">
             <button
               type="submit"
               className="bg-[#2176FF] hover:bg-blue-600 text-white font-robotoSb px-6 py-2 rounded-md"
             >
-              Add Member
+              {id ? "Update Member" : "Add Member"}
             </button>
           </div>
         </form>
@@ -132,6 +173,5 @@ const handleChange = (e) => {
     </div>
   );
 };
-
 
 export default D5StaffDetails;

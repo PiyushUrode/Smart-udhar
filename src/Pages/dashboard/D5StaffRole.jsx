@@ -157,7 +157,9 @@ const D5StaffRole = () => {
           Staff Role Management
         </h1>
         <div className="flex gap-3 max-w-5xl flex-wrap">
-          <button className="bg-bluecol flex items-center text-white font-robotoR text-sm px-4 py-3 rounded-md gap-2">
+          <button className="bg-bluecol flex items-center text-white font-robotoR text-sm px-4 py-3 rounded-md gap-2"
+                    onClick={() => navigate("/dashboard/staff-details")}
+          >
             <FaUserPlus /> Add Team Member
           </button>
         </div>

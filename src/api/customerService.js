@@ -298,6 +298,22 @@ export const CustomerService = {
     );
     return res.data;
   },
+
+
+  async exportCustomersToPDF() {
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const res = await axiosClient.get(
+    `/store-customer/export-pdf/${store_id}/${storeProfile_id}`,
+    { headers: authHeaders(token), responseType: "blob" }
+  );
+
+  if (!res.data || res.data.size === 0) {
+    throw new Error("Empty PDF received — check backend export logic");
+  }
+
+  return res.data;
+},
+
 };
 
 export default CustomerService;

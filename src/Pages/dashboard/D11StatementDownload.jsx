@@ -32,8 +32,8 @@ const reports = [
     hasFilter: true,
   },
   {
-    title: "Debit Report",
-    desc: "Track all payments you’ve made or received with detailed transaction history.",
+    title: "Product Report",
+    desc: "Track all Product you’ve made or received with detailed transaction history.",
     formats: ["PDF", "Excel"],
     color: "red",
     icon: <Wallet className="text-red-600" />,
@@ -66,7 +66,7 @@ const reports = [
 const reportApiMap = {
   "Sales Report": "store-sales",
   "Credit Report": "store-credit",
-  "Debit Report": "store-debit",
+  "Product Report": "store-product",
   "Expense Report": "store-expense",
   "Pending Amount Summary": "store-pending",
   "Custom Date Range": "store-custom",
@@ -181,17 +181,53 @@ const D11StatementDownload = () => {
                 )}
               </div>
               <p className="text-sm text-gray-600 mb-4">{report.desc}</p>
-              <div className="flex flex-wrap gap-2">
-                {report.formats.map((format) => (
-                  <span
-                    key={format}
-                    onClick={() => handleDownload(report, format)}
-                    className={`cursor-pointer text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${colorClassMap[report.color]}`}
-                  >
-                    {formatIcons[format]} {format}
-                  </span>
-                ))}
-              </div>
+<div className="flex flex-wrap gap-2">
+  {report.title === "Product Report" ? (
+    <>
+      <span
+        onClick={() => ReportService.exportProductsExcel()}
+        className={`cursor-pointer text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${colorClassMap[report.color]}`}
+      >
+        {formatIcons.Excel} Excel
+      </span>
+      <span
+        onClick={() => ReportService.exportProductsPDF()}
+        className={`cursor-pointer text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${colorClassMap[report.color]}`}
+      >
+        {formatIcons.PDF} PDF
+      </span>
+    </>
+  ) : report.title === "Credit Report" ? (
+    <>
+      <span
+        onClick={() => ReportService.exportCustomersToExcel()}
+        className={`cursor-pointer text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${colorClassMap[report.color]}`}
+      >
+        {formatIcons.Excel} Excel
+      </span>
+      <span
+        onClick={() => ReportService.exportCustomersToPDF()}
+        className={`cursor-pointer text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${colorClassMap[report.color]}`}
+      >
+        {formatIcons.PDF} PDF
+      </span>
+    </>
+  ) : (
+    report.formats.map((format) => (
+      <span
+        key={format}
+        onClick={() => handleDownload(report, format)}
+        className={`cursor-pointer text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${colorClassMap[report.color]}`}
+      >
+        {formatIcons[format]} {format}
+      </span>
+    ))
+  )}
+</div>
+
+
+
+
             </div>
           ))}
         </div>

@@ -63,6 +63,7 @@ function App() {
           <Route path="product-list" element={<D4ProductList />} />
           <Route path="stock-list" element={<D4StockList />} />
           <Route path="staff-role" element={<D5StaffRole />} />
+          <Route path="staff-details/:id" element={<D5StaffDetails />} />
           <Route path="staff-details" element={<D5StaffDetails />} />
           <Route path="add-customer" element={<D6AddCustomer />} />
           <Route path="customer-details" element={<D6CustomerDetails />} />
