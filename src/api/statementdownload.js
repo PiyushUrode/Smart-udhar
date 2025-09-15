@@ -1,7 +1,7 @@
 // src/api/reportService.js
-import { AuthService } from "./authService.js";
+import { AuthService } from "./authservice.js";
 import { api } from "../api/api.js";
-import axiosClient from "./axiosClient.js";
+import axiosClient from "./axiosclient.js";
 
 // 🔹 Common Auth Context
 function getstoreProfile_id() {

@@ -1,4 +1,4 @@
-import { AuthService } from "./authService.js";
+import { AuthService } from "./authservice.js";
 import { api } from "../api/api.js";
 
 // helper

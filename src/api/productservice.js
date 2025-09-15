@@ -1,5 +1,5 @@
 // src/api/productService.js
-import axiosClient from "./axiosClient.js";
+import axiosClient from "./axiosclient.js";
 import { AuthService } from "./authservice.js";
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
