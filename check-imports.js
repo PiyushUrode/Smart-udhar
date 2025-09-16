@@ -13,7 +13,7 @@ function getAllFiles(dir, files = []) {
       files.push(filePath);
     }
   });
-  return files;
+  return files; 
 }
 
 function checkImports() {
