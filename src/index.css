@@ -5,28 +5,28 @@
 
 @font-face {
   font-family: 'Roboto-Medium';
-  src: url('./assets/font/Inter/Roboto/static/Roboto-Medium.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Roboto/static/Roboto-Medium.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Roboto-Regular';
-  src: url('./assets/font/Inter/Roboto/static/Roboto-Regular.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Roboto/static/Roboto-Regular.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Roboto-Bold';
-  src: url('./assets/font/Inter/Roboto/static/Roboto-Bold.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Roboto/static/Roboto-Bold.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Roboto-Thin';
-  src: url('./assets/font/Inter/Roboto/static/Roboto-Thin.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Roboto/static/Roboto-Thin.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Roboto-SemiBold';
-  src: url('./assets/font/Inter/Roboto/static/Roboto-SemiBold.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Roboto/static/Roboto-SemiBold.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'Inter-Medium';
-  src: url('./assets/font/Inter/Inter/static/Inter_18pt-Medium.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Inter/static/Inter_18pt-Medium.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Inter-Regular';
@@ -34,20 +34,20 @@
 }
 @font-face {
   font-family: 'Inter-Bold';
-  src: url('./assets/font/Inter/Inter/static/Inter_18pt-Bold.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Inter/static/Inter_18pt-Bold.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Inter-Light';
-  src: url('./assets/font/Inter/Inter/static/Inter_18pt-Light.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Inter/static/Inter_18pt-Light.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Inter-SemiBold';
-  src: url('./assets/font/Inter/Inter/static/Inter_18pt-SemiBold.ttf') format('truetype');
+  src: url('./user/assets/font/Inter/Inter/static/Inter_18pt-SemiBold.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'InriaSans-Regular';
-  src: url('./assets/font/Inria_Sans/InriaSans-Regular.ttf') format('truetype');
+  src: url('./user/assets/font/Inria_Sans/InriaSans-Regular.ttf') format('truetype');
 }
 
 :root {

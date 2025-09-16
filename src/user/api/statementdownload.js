@@ -1,6 +1,6 @@
 // src/api/reportService.js
 import { AuthService } from "./authservice.js";
-import { api } from "../api/api.js";
+import { api } from "./api.js";
 import axiosClient from "./axiosclient.js";
 
 // 🔹 Common Auth Context

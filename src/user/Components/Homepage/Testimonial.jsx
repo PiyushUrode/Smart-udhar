@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaStar } from "react-icons/fa";
-import star from '../../assets/homepage/testimonial/star.png'
-import review1 from '../../assets/homepage/testimonial/review1.png';
-import review2 from '../../assets/homepage/testimonial/review1.png';
-import review3 from '../../assets/homepage/testimonial/review1.png';
-import review4 from '../../assets/homepage/testimonial/review1.png';
-import review5 from '../../assets/homepage/testimonial/review1.png';
+import star from "../../assets/homepage/testimonial/star.png"
+import review1 from "../../assets/homepage/testimonial/review1.png";
+import review2 from "../../assets/homepage/testimonial/review1.png";
+import review3 from "../../assets/homepage/testimonial/review1.png";
+import review4 from "../../assets/homepage/testimonial/review1.png";
+import review5 from "../../assets/homepage/testimonial/review1.png";
 
-// import unionShape from '../../assets/homepage/testimonial/Union.png';
+// import unionShape from "../../assets/homepage/testimonial/Union.png";
 
 const testimonials = [
   {

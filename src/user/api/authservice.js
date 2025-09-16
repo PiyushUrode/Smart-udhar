@@ -1,5 +1,5 @@
 // src/api/authService.js
-import axiosClient from "../api/axiosclient.js";
+import axiosClient from "./axiosclient.js";
 import Cookies from "js-cookie";
 import { STORAGE_KEYS } from "../config/constant.js";
 

@@ -14,25 +14,26 @@ async function fixImports() {
 
     const importRegex = /import\s+.*?from\s+["'](.*?)["']/g;
     content = content.replace(importRegex, (match, importPath) => {
-      if (
-        importPath.startsWith(".") &&
-        !importPath.endsWith(".js") &&
-        !importPath.endsWith(".jsx")
-      ) {
-        // Possible file paths
-        const fullPathJs = path.resolve(path.dirname(file), importPath + ".js");
-        const fullPathJsx = path.resolve(
-          path.dirname(file),
-          importPath + ".jsx"
-        );
+      if (importPath.startsWith(".")) {
+        // Ensure `.js` or `.jsx` extension
+        if (!importPath.endsWith(".js") && !importPath.endsWith(".jsx")) {
+          const fullPathJs = path.resolve(path.dirname(file), importPath + ".js");
+          const fullPathJsx = path.resolve(path.dirname(file), importPath + ".jsx");
 
-        if (fs.existsSync(fullPathJs)) {
-          changed = true;
-          return match.replace(importPath, importPath + ".js");
-        } else if (fs.existsSync(fullPathJsx)) {
-          changed = true;
-          return match.replace(importPath, importPath + ".jsx");
+          if (fs.existsSync(fullPathJs)) {
+            importPath += ".js";
+          } else if (fs.existsSync(fullPathJsx)) {
+            importPath += ".jsx";
+          }
         }
+
+        // Prefix with /user
+        if (!importPath.includes("/user/")) {
+          importPath = importPath.replace(/^\.\//, "./user/");
+        }
+
+        changed = true;
+        return match.replace(/["'](.*?)["']/, `"${importPath}"`);
       }
       return match;
     });
