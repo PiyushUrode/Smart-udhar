@@ -64,14 +64,15 @@ const SettingsService = {
     return res.data;
   },
 
-  async getGeneralSettingsById(id) {
-    const { token } = getAuthContext();
-    const res = await axios.get(
-      `${API_BASE}/general-settings/findBy-id/${id}`,
-      { headers: authHeaders(token) }
-    );
-    return res.data;
-  },
+  async getAllGeneralSettings() {
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const res = await axios.get(
+    `${API_BASE}/general-settings/find-all/${store_id}/${storeProfile_id}`,
+    { headers: authHeaders(token) }
+  );
+  return res.data?.data || res.data;
+},
+
 
 
  async createInvoiceTemplateSettings(payload) {
@@ -97,14 +98,14 @@ const SettingsService = {
 }
 ,
 
-  async getInvoiceTemplateSettingsById(id) {
-    const { token } = getAuthContext();
-    const res = await axios.get(
-      `${API_BASE}/invoice-template-settings/findBy-id/${id}`,
-      { headers: authHeaders(token) }
-    );
-    return res.data;
-  },
+async getAllInvoiceTemplateSettings() {
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const res = await axios.get(
+    `${API_BASE}/invoice-template-settings/find-all/${store_id}/${storeProfile_id}`,
+    { headers: authHeaders(token) }
+  );
+  return res.data?.data || res.data;
+},
 
   // ---------------- Payment Setup ----------------
   async createPaymentSetup(payload) {
@@ -127,14 +128,14 @@ const SettingsService = {
     return res.data;
   },
 
-  async getPaymentSetupById(id) {
-    const { token } = getAuthContext();
-    const res = await axios.get(
-      `${API_BASE}/payment-setup/findBy-id/${id}`,
-      { headers: authHeaders(token) }
-    );
-    return res.data;
-  },
+async getAllPaymentSetup() {
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const res = await axios.get(
+    `${API_BASE}/payment-setup/find-all/${store_id}/${storeProfile_id}`,
+    { headers: authHeaders(token) }
+  );
+  return res.data?.data || res.data;
+},
 };
 
 export default SettingsService;

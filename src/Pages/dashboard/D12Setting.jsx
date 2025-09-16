@@ -56,44 +56,46 @@ const SettingsPage = () => {
     invoiceId: null,
   });
 
-  // ---------------- Fetch Existing Data ----------------
 useEffect(() => {
   const fetchData = async () => {
     try {
-      // 🔹 Fetch existing General Settings
-      const general = await SettingsService.getGeneralSettings();
-      if (general?._id) {
-        setIds((prev) => ({ ...prev, generalId: general._id }));
+      // 🔹 Fetch General Settings (find-all)
+      const general = await SettingsService.getAllGeneralSettings();
+      if (Array.isArray(general) && general.length > 0) {
+        const g = general[0];
+        setIds((prev) => ({ ...prev, generalId: g._id }));
         setGeneralSettings({
-          businessName: general.businessName || "",
-          timeZone: general.timeZone || "",
-          currency: general.currency || "",
-          language: general.language || "",
+          businessName: g.businessName || "",
+          timeZone: g.timezone || "",
+          currency: g.currencyFormate || "",
+          language: g.language || "",
         });
       }
 
-      // 🔹 Fetch existing Payment Setup
-      const payment = await SettingsService.getPaymentSetup();
-      if (payment?._id) {
-        setIds((prev) => ({ ...prev, paymentId: payment._id }));
+      // 🔹 Fetch Payment Setup (find-all)
+      const payment = await SettingsService.getAllPaymentSetup();
+      if (Array.isArray(payment) && payment.length > 0) {
+        const p = payment[0];
+        setIds((prev) => ({ ...prev, paymentId: p._id }));
         setPaymentSetup({
-          upi_id: payment.upi_id || "",
-          accountHolderName: payment.accountHolderName || "",
-          accountNumber: payment.accountNumber || "",
-          ifscCode: payment.ifscCode || "",
-          bankName: payment.bankName || "",
+          upi_id: p.upi_id || "",
+          accountHolderName: p.accountHolderName || "",
+          accountNumber: p.accountNumber || "",
+          ifscCode: p.ifscCode || "",
+          bankName: p.bankName || "",
         });
       }
 
-      // 🔹 Fetch existing Invoice Settings
-      const invoice = await SettingsService.getInvoiceTemplateSettings();
-      if (invoice?._id) {
-        setIds((prev) => ({ ...prev, invoiceId: invoice._id }));
+      // 🔹 Fetch Invoice Settings (find-all)
+      const invoice = await SettingsService.getAllInvoiceTemplateSettings();
+      if (Array.isArray(invoice) && invoice.length > 0) {
+        const i = invoice[0];
+        setIds((prev) => ({ ...prev, invoiceId: i._id }));
         setInvoiceSettings({
-          paperSize: invoice.paperSize || "",
-          templateTheme: invoice.templateTheme || "",
-          businessLogo: invoice.businessLogo || "",
-          defaultTerms: invoice.defaultTerms || "",
+          paperSize: i.paperSize || "",
+          templateTheme: i.templateTheme || "",
+          businessLogo: i.businessLogo || "",
+          defaultTerms: i.defaultTerms || "",
         });
       }
     } catch (err) {
@@ -103,6 +105,7 @@ useEffect(() => {
 
   fetchData();
 }, []);
+
 
   // ---------------- Save Handler ----------------
 // ---------------- Save Handler ----------------
@@ -115,7 +118,7 @@ const handleSave = async () => {
         generalSettings
       );
       const updated = await SettingsService.getGeneralSettingsById(ids.generalId);
-      setGeneralSettings(updated.data);
+      setGeneralSettings(updated);
     } else {
       const res = await SettingsService.createGeneralSettings(generalSettings);
       setIds((prev) => ({ ...prev, generalId: res.data._id }));
@@ -126,7 +129,7 @@ const handleSave = async () => {
     if (ids.paymentId) {
       await SettingsService.updatePaymentSetup(ids.paymentId, paymentSetup);
       const updated = await SettingsService.getPaymentSetupById(ids.paymentId);
-      setPaymentSetup(updated.data);
+      setPaymentSetup(updated);
     } else {
       const res = await SettingsService.createPaymentSetup(paymentSetup);
       setIds((prev) => ({ ...prev, paymentId: res.data._id }));
@@ -140,7 +143,7 @@ const handleSave = async () => {
         invoiceSettings
       );
       const updated = await SettingsService.getInvoiceTemplateSettingsById(ids.invoiceId);
-      setInvoiceSettings(updated.data);
+      setInvoiceSettings(updated);
     } else {
       const res = await SettingsService.createInvoiceTemplateSettings(invoiceSettings);
       setIds((prev) => ({ ...prev, invoiceId: res.data._id }));
@@ -480,9 +483,16 @@ const handleSave = async () => {
 
       {/* Save Button */}
       <div className="text-right pt-2 w-full justify-end align-middle items-end flex">
-        <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium flex justify-end items-end  align-middle  gap-2 flex-row"  onClick={handleSave} >
-         <FaRegSave />  Save All Settings
-        </button>
+      <div className="text-right pt-2 w-full justify-end align-middle items-end flex">
+  <button
+    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium flex justify-end items-end align-middle gap-2 flex-row"
+    onClick={handleSave}
+  >
+    <FaRegSave /> 
+    {ids.generalId || ids.paymentId || ids.invoiceId ? "Update Settings" : "Save All Settings"}
+  </button>
+</div>
+
       </div>
     </div>
   );
