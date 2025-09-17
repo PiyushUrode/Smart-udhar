@@ -11,47 +11,38 @@ const LoginPage = () => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  // Step 1: Send OTP
-  // const handleGetOtp = async () => {
-  //   if (phone.length !== 10) return toast.error("Enter valid 10-digit number");
 
-  //   try {
-  //     const res = await AuthService.loginSendOtp(phone);
-  //     toast.success(res.message || "OTP sent!");
-  //     setStep("otp");
-  //   } catch (err) {
-  //     toast.error(err.message);
-  //   }
-  // };
 
 
 const handleGetOtp = async () => {
   if (phone.length !== 10) {
     return toast.error("Enter a valid 10-digit number");
   }
+
+  if (loading) return; // ✅ already loading, ignore extra clicks
+  setLoading(true);
+
   try {
     console.log("[login] Sending OTP to:", phone);
     const res = await AuthService.loginSendOtp(phone);
 
-    console.log("[login] OTP response:", res);
-
-    // Success message
     toast.success(res.message || "OTP sent!");
 
-    // 👇 Backend से जो otp आया उसे popup करो
     if (res?.mobile_otp) {
       toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 20000 });
-    } else {
-      console.warn("⚠️ No OTP found in response:", res);
     }
 
     setStep("otp");
   } catch (err) {
     console.error("[login] OTP error:", err);
     toast.error(err.message || "Failed to send OTP");
+  } finally {
+    setLoading(false); // ✅ reset loading
   }
 };
+
 
 
 
@@ -133,7 +124,7 @@ const handleKeyDown = (e, index) => {
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
-                <button className="btn otp" onClick={handleGetOtp}>Get OTP</button>
+                <button className="btn otp" onClick={handleGetOtp}  disabled={loading} >   {loading ? "Sending..." : "Get OTP"}</button>
               </>
             )}
 

@@ -21,42 +21,46 @@ const D2BusinessList = () => {
   // ✅ Fetch all businesses
  // ✅ Fetch all businesses
   const fetchBusinesses = async () => {
-    if (!store_id || !token) {
-      alert("⚠️ Store ID or Token missing. Please login again.");
-      setLoading(false);
-      return;
-    }
+  if (!store_id || !token) {
+    alert("⚠️ Store ID or Token missing. Please login again.");
+    setLoading(false);
+    return;
+  }
 
-    try {
-      const res = await axios.get(
-        `${API_BASE}/store-business-profile/find-all/${store_id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  try {
+    const res = await axios.get(
+      `${API_BASE}/store-business-profile/find-all/${store_id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      console.log("📌 API Response:", res.data);
+    let data =
+      res.data?.businesses ||
+      res.data?.data ||
+      (Array.isArray(res.data) ? res.data : []);
 
-      let data =
-        res.data?.businesses ||
-        res.data?.data ||
-        (Array.isArray(res.data) ? res.data : []);
+    setBusinesses(data);
 
-      setBusinesses(data);
+    // ✅ Persist last active business
+    const lastActiveId = localStorage.getItem("storeProfile_id");
+
+if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
+  // Last active exists in current data → use it
+  setstoreProfile_id(lastActiveId);
+} else if (!lastActiveId && data.length > 0) {
+  // Only set first business if there was no previous active business
+  setstoreProfile_id(data[0]._id);
+  localStorage.setItem("storeProfile_id", data[0]._id);
+}
 
 
-      if (data.length > 0 && storeProfile_id) {
-        const exists = data.some((b) => String(b._id) === String(storeProfile_id));
-        if (!exists) {
-          localStorage.removeItem("storeProfile_id");
-          setstoreProfile_id("");
-        }
-      }
-    } catch (err) {
-      console.error("❌ Error fetching businesses:", err);
-      setBusinesses([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error("❌ Error fetching businesses:", err);
+    setBusinesses([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchBusinesses();
@@ -142,11 +146,11 @@ const handleSetActive = (id) => {
                 <tr>
                   <th className="p-4">Business Name</th>
                   <th className="p-4">GST Number</th>
-                  <th className="p-4">Address</th>
+                  {/* <th className="p-4">Address</th> */}
                   <th className="p-4">Mobile</th>
                   <th className="p-4">Email</th>
-                  <th className="p-4">Industry</th>
-                  <th className="p-4">Created At</th>
+                  {/* <th className="p-4">Industry</th> */}
+                  {/* <th className="p-4">Created At</th> */}
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
@@ -171,16 +175,16 @@ const handleSetActive = (id) => {
           )}
         </td>
         <td className="p-4">{item.gstNumber || "-"}</td>
-        <td className="p-4">{item.address || "-"}</td>
+        {/* <td className="p-4">{item.address || "-"}</td> */}
         <td className="p-4">{item.mobile || "-"}</td>
         <td className="p-4">{item.email || "-"}</td>
-        <td className="p-4">{item.industry || "-"}</td>
-        <td className="p-4">
+        {/* <td className="p-4">{item.industry || "-"}</td> */}
+        {/* <td className="p-4">
           {item.created_at
             ? new Date(item.created_at).toLocaleDateString()
             : "-"}
-        </td>
-        <td className="p-4 flex gap-3">
+        </td> */}
+        <td className="p-4 flex  gap-3">
           <button
             onClick={() => handleSetActive(item._id)}
             className={`flex items-center gap-1 ${
