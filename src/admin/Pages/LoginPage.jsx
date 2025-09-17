@@ -59,16 +59,13 @@ const LoginPage = () => {
         }
       );
 
-      toast.success(res.data.message || "Login successful!");
-      // Save token if backend returns one
-      if (res.data.store_id) {
-        localStorage.setItem("store_id", res.data.store_id);
-      }
+      toast.success(res.data.message || "Login successful!");   
+      
        if (res.data.token) {
         localStorage.setItem("authToken", res.data.token);
       }
 
-      navigate("/dashboard");
+      navigate("/admin/dashboard");
     } catch (error) {
       console.error(error);
       toast.error(
