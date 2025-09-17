@@ -104,7 +104,7 @@ function App() {
 </Route>
 
 
-<Route path="/admin/login" element={<LoginPageAdmin setAuth={setIsAuthenticated} />} />
+<Route path="/admin" element={<LoginPageAdmin setAuth={setIsAuthenticated} />} />
 {/* admin */}
 <Route path="/admin/dashboard/*" element={<DashboardLayoutAdmin />}>  
   <Route index element={<D1DashboardHomeAdmin />} />
