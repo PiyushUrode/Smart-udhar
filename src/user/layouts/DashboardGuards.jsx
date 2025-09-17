@@ -3,7 +3,6 @@ import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 function DashboardGuards({ children }) {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
@@ -40,36 +39,33 @@ function DashboardGuards({ children }) {
   //   }
   // }, [navigate]);
 
+  useEffect(() => {
+    try {
+      const storeId = Cookies.get("store_id");
+      const profileId = localStorage.getItem("storeProfile_id");
 
-useEffect(() => {
-  try {
-    const storeId = Cookies.get("store_id");
-    const profileId = localStorage.getItem("storeProfile_id");
+      if (!storeId || !profileId) {
+        setError("⚠️ No active business profile found. Please select one.");
+        setChecking(false);
 
-    if (!storeId || !profileId) {
-      setError("⚠️ No active business profile found. Please select one.");
+        setTimeout(() => {
+          console.log("Navigating to /admin/dashboard");
+          
+          navigate("/admin/dashboard");
+        }, 1000);
+        return;
+      }
+
+      setChecking(false);
+    } catch (err) {
+      setError("Unexpected error. Please login again.");
       setChecking(false);
 
       setTimeout(() => {
-        navigate("/dashboard/bussinessList");
+        navigate("/login");
       }, 1000);
-      return;
     }
-
-    setChecking(false);
-  } catch (err) {
-    setError("Unexpected error. Please login again.");
-    setChecking(false);
-
-    setTimeout(() => {
-      navigate("/login");
-    }, 1000);
-  }
-}, [navigate]);
-
-
-
-
+  }, [navigate]);
 
   if (checking) {
     return (
