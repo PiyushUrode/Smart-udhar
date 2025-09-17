@@ -136,6 +136,9 @@ function App() {
           />
         </Route>
 
+        {/* --------------------- ----------------------- Admin ------------------------------- --------------------------- */}
+
+        {/* admin login */}
         <Route
           path="/admin"
           element={<LoginPageAdmin setAuth={setIsAuthenticated} />}
@@ -144,7 +147,7 @@ function App() {
         <Route path="/admin/dashboard/*" element={<DashboardLayoutAdmin />}>
           <Route index element={<D1DashboardHomeAdmin />} />
 
-           <Route path="store-list" element={<Storelist />} />
+          <Route path="store-list" element={<Storelist />} />
           <Route path="customer-list" element={<BusinessCustomerViewer />} />
           <Route path="product-list" element={<BusinessProductViewer />} />
           <Route path="staff-list" element={<BusinessStaffViewer />} />
@@ -165,7 +168,6 @@ function App() {
           />
           <Route path="subscriptions/create/" element={<CreateSubcription />} />
           <Route path="subscriptions/view" element={<ViewSubscription />} />
-
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />
