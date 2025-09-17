@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
-import DashboardGuards from "./layouts/DashboardGuards.jsx";
-import DashboardLayout from "./layouts/DashboardLayout.jsx";
+import DashboardGuards from "./user/layouts/DashboardGuards.jsx";
+import DashboardLayout from "./user/layouts/DashboardLayout.jsx";
 import Homepage from "./user/Pages/Homepage.jsx";
 import LoginPage from "./user/Pages/LoginPage.jsx";
 import SignUpPage from "./user/Pages/Signuppage.jsx";
@@ -34,6 +34,17 @@ import D18Supports from "./user/Pages/dashboard/D18Supports.jsx";
 import A1AmountCollection from "./user/Pages/dashboard/A1AmountCollection.jsx";
 import A2AverageCreditScore from "./user/Pages/dashboard/A2AverageCreditScore.jsx";
 
+
+
+
+
+
+// import DashboardGuardsAdmin from "./user/layouts/DashboardGuards.jsx";
+import DashboardLayoutAdmin from "./user/layouts/DashboardLayout.jsx";
+import D1DashboardHomeAdmin from "./admin/Pages/dashboard/D1DashboardHome.jsx";
+import LoginPageAdmin from "./admin/Pages/LoginPage.jsx";
+
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true); // adjust as per your logic
 
@@ -56,7 +67,8 @@ function App() {
   <Route
     path="*"
     element={
-      <DashboardGuards>
+      // <DashboardGuards>
+      //         </DashboardGuards>
         <Routes>
           <Route path="product" element={<D3Product />} />
           <Route path="product/:id" element={<D3Product />} />
@@ -86,9 +98,18 @@ function App() {
           <Route path="amount-collection" element={<A1AmountCollection />} />
           <Route path="average-credit-score" element={<A2AverageCreditScore />} />
         </Routes>
-      </DashboardGuards>
+
     }
   />
+</Route>
+
+
+<Route path="/admin/login" element={<LoginPageAdmin setAuth={setIsAuthenticated} />} />
+{/* admin */}
+<Route path="/admin/dashboard/*" element={<DashboardLayoutAdmin />}>  
+  <Route index element={<D1DashboardHomeAdmin />} />
+
+
 </Route>
 
 

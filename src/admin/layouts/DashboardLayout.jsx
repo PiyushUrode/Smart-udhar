@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import Sidebar from "../user/Components/Sidebar.jsx";
-import Navbar from "../user/Components/Navbar.jsx";
+import Sidebar from "../Components/Sidebar";
+import Navbar from "../Components/Navbar";
 
 const MainDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // expanded/collapsed

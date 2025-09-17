@@ -110,7 +110,6 @@ const Navbar = ({ toggleSidebar }) => {
           title={t("calculator")}
         />
 
-        {/* Notification with Badge */}
         <div className="relative">
           <FaBell
             onClick={() => navigate("/dashboard/notification")}
