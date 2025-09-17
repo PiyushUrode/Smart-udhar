@@ -9,6 +9,8 @@ import {
   FaSync, FaHeadphones, FaUsers, FaChartLine
 } from "react-icons/fa";
 
+
+
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const sections = [
   {
@@ -132,7 +134,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       return (
         <div className="text-white font-bold text-sm mb-1 flex gap-2 items-center">
           <FaBuilding />
-          <span>{activeBusinessName}</span>  {/* ← यहाँ active name show होगा */}
+          <h1 className="text-white font-robotoSb activateanimation ">{activeBusinessName}</h1>  
         </div>
       );
     } else {
@@ -160,7 +162,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
         >
           ☰
         </button>
-                <div className="text-white font-interB sm:hidden"> <h1>{activeBusinessName}</h1></div>
+                <div className="text-white font-robotoB sm:hidden "> <span>{activeBusinessName}</span></div>
       </div>
 
       {/* Menu */}

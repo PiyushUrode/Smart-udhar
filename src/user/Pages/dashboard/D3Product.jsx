@@ -6,8 +6,6 @@ import Cookies from "js-cookie";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 import { ProductService } from "../../api/productservice.js"; // ✅ new service i
-import Button from "../../common/Button.jsx";
-
 
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // must match backend multer limit
