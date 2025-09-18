@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaCommentSms } from "react-icons/fa6";
 import Select from "react-select";
 import { FaWhatsapp } from "react-icons/fa";
@@ -15,45 +15,47 @@ import { FaBox } from "react-icons/fa6";
 import { IoIosSearch } from "react-icons/io";
 import { FaSearch } from "react-icons/fa";
 import { CiCalendarDate } from "react-icons/ci";
-import { Invoice  } from "../../api/Invoice.js"
-import { useRef } from "react";
+import { Invoice  } from "../../api/Invoice.js";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
-
+// NEW: date picker + date-fns
+import DatePicker from "react-datepicker";
+import { parse, format, isValid } from "date-fns";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function D7CreateInvoice({ onCustomerSelect  }) {
-// ----------------- STATES -----------------
-const [customers, setCustomers] = useState([]);
-const [loading, setLoading] = useState(true);
-const [searchTerm, setSearchTerm] = useState("");
-const [selectedCustomer, setSelectedCustomer] = useState(null);
-const [searchTriggered, setSearchTriggered] = useState(false);
+  // ----------------- STATES -----------------
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [searchTriggered, setSearchTriggered] = useState(false);
 
+  // Payment
+  const [showStep3, setShowStep3] = useState(false);
+  const [showStep4, setShowStep4] = useState(false);
+  const [paymentMode, setPaymentMode] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [transactionId, setTransactionId] = useState("");
 
-// Payment
-const [showStep3, setShowStep3] = useState(false);
-const [showStep4, setShowStep4] = useState(false);
-const [paymentMode, setPaymentMode] = useState("");
-const [paymentMethod, setPaymentMethod] = useState("");
-const [transactionId, setTransactionId] = useState("");
-const [milestones, setMilestones] = useState([
-  { id: Date.now(), name: "Promise1", amount: "", dueDate: "", status: "Pending" },
-]);
+  // NOTE: storing milestone.dueDate as string in `dd/MM/yyyy` format
+  const [milestones, setMilestones] = useState([
+    { id: Date.now(), name: "Promise1", amount: "", dueDate: format(new Date(), "dd/MM/yyyy"), status: "Pending" },
+  ]);
 
+  // Additional Charges
+  const [additionalCharges, setAdditionalCharges] = useState({
+    deliveryFee: "",
+    packingCharges: "",
+    discount: "",
+    other: "",
+  });
 
-// Additional Charges
-const [additionalCharges, setAdditionalCharges] = useState({
-  deliveryFee: 0,
-  packingCharges: 0,
-  discount: 0,
-  other: 0,
-});
+  // Notes
+  const [note, setNote] = useState("");
 
-// Notes
-const [note, setNote] = useState("");
-
-// ----------------- PARTIAL CASH FOR MIXED PAYMENT -----------------
+  // ----------------- PARTIAL CASH FOR MIXED PAYMENT -----------------
   const [partialCashAmount, setPartialCashAmount] = useState(0);
 
   // ----------------- INVOICE SUMMARY STATE -----------------
@@ -130,8 +132,6 @@ const [note, setNote] = useState("");
   }, []);
 
   const handleSelectProduct = (rowId, product) => {
-    console.log("🔍 Selected Product Full:", product);
-
     setRows((prev) =>
       prev.map((row) =>
         row.id === rowId
@@ -178,9 +178,6 @@ const [note, setNote] = useState("");
     );
   };
 
-
-
-  // --------------fetch product end ------------------
   // ----------------- PAYMENT LOGIC -----------------
   const handlePaymentMode = (mode) => {
     setPaymentMode(mode);
@@ -196,19 +193,18 @@ const [note, setNote] = useState("");
   };
 
   const handleAddMilestone = () => {
-  const newId = Date.now();
-  const newIndex = milestones.length + 1; // 1 se start hoga
-  const newMilestone = {
-    id: newId,
-    name: `Promise${newIndex}`, // Auto name
-    amount: "",
-    dueDate: new Date().toISOString().split("T")[0], // 
-    status: "Pending", // Always Pending
+    const newId = Date.now();
+    const newIndex = milestones.length + 1; // 1 se start hoga
+    const newMilestone = {
+      id: newId,
+      name: `Promise${newIndex}`,
+      amount: "",
+      dueDate: format(new Date(), "dd/MM/yyyy"),
+      status: "Pending",
+    };
+
+    setMilestones([...milestones, newMilestone]);
   };
-
-  setMilestones([...milestones, newMilestone]);
-};
-
 
   const handleMilestoneChange = (id, field, value) => {
     setMilestones((prev) =>
@@ -224,292 +220,279 @@ const [note, setNote] = useState("");
     }));
   };
 
-// STEP 1: Preview kholne ke liye
-const handlePreview = () => {
-  if (!selectedCustomer?._id) {
-    alert("Please select a customer!");
-    return;
-  }
-  if (!paymentMode) {
-    alert("Please select a payment mode!");
-    return;
-  }
-  if (rows.some((r) => !r.productId || r.qty <= 0)) {
-    alert("Please add at least one valid product!");
-    return;
-  }
+  // STEP 1: Preview kholne ke liye
+  const [previewInvoice, setPreviewInvoice] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const { subtotal, totalTax, total, totalReceived, dueBalance } = invoiceSummary;
+  const handlePreview = () => {
+    if (!selectedCustomer?._id) {
+      alert("Please select a customer!");
+      return;
+    }
+    if (!paymentMode) {
+      alert("Please select a payment mode!");
+      return;
+    }
+    if (rows.some((r) => !r.productId || r.qty <= 0)) {
+      alert("Please add at least one valid product!");
+      return;
+    }
 
-  const payload = {
-    customerId: selectedCustomer._id,
-    name: selectedCustomer.name,
-    phone: selectedCustomer.mobile,
-    address: selectedCustomer.address,
-    balance: selectedCustomer.balance,
-    creditScore: selectedCustomer.creditScore,
-    paymentMode,
-    paymentMethod,
-    transactionId,
-    deliveryFee: Number(additionalCharges.deliveryFee) || 0,
-    packingCharges: Number(additionalCharges.packingCharges) || 0,
-    discount: Number(additionalCharges.discount) || 0,
-    other: Number(additionalCharges.other) || 0,
-    note,
-    subtotal,
-    tax: totalTax,
-    total,
-    totalReceived,
-    dueBalance,
-    paymentStatus:
-      totalReceived === total ? "Paid" : totalReceived > 0 ? "Partial" : "Unpaid",
-    products: rows.map((p) => {
-      const prod = products.find((x) => x._id === p.productId || x.id === p.productId) || {};
-      return {
-        productId: p.productId,
-        name: prod?.name || prod?.product_name || "Unnamed",
-        qty: Number(p.qty),
-        unit: p.unit,
-        price: Number(p.price),
-        tax: Number(p.tax),
-        total: calculateTotal(p),
-      };
-    }),
-    ...(paymentMode === "debt"
-      ? {
-          milestones: milestones.map((m) => ({
-            milestoneName: m.name,
-            amount: Number(m.amount) || 0,
-            paymentMode: m.paymentMode || paymentMode,
-            dueDate: m.dueDate ? new Date(m.dueDate).toISOString() : null,
-            status: m.status || "Pending",
-          })),
-        }
-      : {}),
+    const { subtotal, totalTax, total, totalReceived, dueBalance } = invoiceSummary;
+
+    const payload = {
+      customerId: selectedCustomer._id,
+      name: selectedCustomer.name,
+      phone: selectedCustomer.mobile,
+      address: selectedCustomer.address,
+      balance: selectedCustomer.balance,
+      creditScore: selectedCustomer.creditScore,
+      paymentMode,
+      paymentMethod,
+      transactionId,
+      deliveryFee: Number(additionalCharges.deliveryFee) || 0,
+      packingCharges: Number(additionalCharges.packingCharges) || 0,
+      discount: Number(additionalCharges.discount) || 0,
+      other: Number(additionalCharges.other) || 0,
+      note,
+      subtotal,
+      tax: totalTax,
+      total,
+      totalReceived,
+      dueBalance,
+      paymentStatus:
+        totalReceived === total ? "Paid" : totalReceived > 0 ? "Partial" : "Unpaid",
+      products: rows.map((p) => {
+        const prod = products.find((x) => x._id === p.productId || x.id === p.productId) || {};
+        return {
+          productId: p.productId,
+          name: prod?.name || prod?.product_name || "Unnamed",
+          qty: Number(p.qty),
+          unit: p.unit,
+          price: Number(p.price),
+          tax: Number(p.tax),
+          total: calculateTotal(p),
+        };
+      }),
+      ...(paymentMode === "debt"
+        ? {
+            milestones: milestones.map((m) => {
+              let isoDue = null;
+              if (m.dueDate) {
+                const parsed = parse(m.dueDate, "dd/MM/yyyy", new Date());
+                isoDue = isValid(parsed) ? parsed.toISOString() : null;
+              }
+              return {
+                milestoneName: m.name,
+                amount: Number(m.amount) || 0,
+                paymentMode: m.paymentMode || paymentMode,
+                dueDate: isoDue,
+                status: m.status || "Pending",
+              };
+            }),
+          }
+        : {}),
+    };
+
+    if (
+      paymentMode === "debt" &&
+      Math.abs(
+        milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0) - dueBalance
+      ) > 0.01
+    ) {
+      alert(`Milestones total must equal Due Balance (${dueBalance.toFixed(2)})!`);
+      return;
+    }
+
+    // Sirf preview ke liye state set karna
+    setPreviewInvoice(payload);
+    setShowPreview(true);
   };
 
-  if (
-    paymentMode === "debt" &&
-    Math.abs(
-      milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0) - dueBalance
-    ) > 0.01
-  ) {
-    alert(`Milestones total must equal Due Balance (${dueBalance.toFixed(2)})!`);
-    return;
-  }
+  const handleSubmit = async () => {
+    try {
+      const res = await Invoice.createInvoice(previewInvoice);
 
-  // Sirf preview ke liye state set karna
-  setPreviewInvoice(payload);
-  setShowPreview(true);
-};
+      if (res.success) {
+        alert("✅ Invoice created successfully!");
+        setShowPreview(false);
+        setPreviewInvoice(null);
 
-// STEP 2: API call sirf preview ke andar submit pe
-const handleSubmit = async () => {
-  try {
-    const res = await Invoice.createInvoice(previewInvoice);
+        // reset
+        setSelectedCustomer(null);
+        setPaymentMode("");
+        setPaymentMethod("");
+        setTransactionId("");
+        setAdditionalCharges({
+          deliveryFee: 0,
+          packingCharges: 0,
+          discount: 0,
+          other: 0,
+        });
+        setNote("");
+        setPartialCashAmount(0);
+        setMilestones([]);
 
-    if (res.success) {
-      alert("✅ Invoice created successfully!");
-      setShowPreview(false);
-      setPreviewInvoice(null);
+        setRows([
+          {
+            id: Date.now(),
+            productId: "",
+            qty: 1,
+            unit: "pcs",
+            price: 0,
+            tax: 0,
+          },
+        ]);
 
-      // 🟢 Reset form (fresh state ke liye)
-      setSelectedCustomer(null);
-      setPaymentMode("");
-      setPaymentMethod("");
-      setTransactionId("");
-      setAdditionalCharges({
-        deliveryFee: 0,
-        packingCharges: 0,
-        discount: 0,
-        other: 0,
-      });
-      setNote("");
-      setPartialCashAmount(0);
-      setMilestones([]);
-
-      // default ek khali row new invoice ke liye
-      setRows([
-        {
-          id: Date.now(),
-          productId: "",
-          qty: 1,
-          unit: "pcs",
-          price: 0,
-          tax: 0,
-        },
-      ]);
-
-      // 🟢 Invoice list refresh
-      const refreshed = await Invoice.getAllInvoices();
-      if (refreshed?.success) {
-        setInvoices(refreshed.invoices || []);
-        setTodayCollection(refreshed.todayCollection || 0);
-        setTotalCollection(refreshed.totalCollection || 0);
+        const refreshed = await Invoice.getAllInvoices();
+        if (refreshed?.success) {
+          setInvoices(refreshed.invoices || []);
+          setTodayCollection(refreshed.todayCollection || 0);
+          setTotalCollection(refreshed.totalCollection || 0);
+        }
+      } else {
+        alert("❌ Failed to create invoice");
       }
-    } else {
-      alert("❌ Failed to create invoice");
+    } catch (err) {
+      console.error("❌ Error:", err);
+      alert("Error creating invoice");
     }
-  } catch (err) {
-    console.error("❌ Error:", err);
-    alert("Error creating invoice");
-  }
-};
+  };
 
-// ----------------- Row-level Calculation Function -----------------
-// This function calculates the total for a single row (used for displaying per-row totals in the table)
-const calculateTotal = (row) => {
-  const subtotal = (row.qty || 0) * (row.price || 0);
-  const taxAmount = (subtotal * (row.tax || 0)) / 100;
-  return subtotal + taxAmount;  // Returns row total including tax
-};
+  // ----------------- Row-level Calculation Function -----------------
+  const calculateTotal = (row) => {
+    const subtotal = (row.qty || 0) * (row.price || 0);
+    const taxAmount = (subtotal * (row.tax || 0)) / 100;
+    return subtotal + taxAmount;  // Returns row total including tax
+  };
 
-// ----------------- Main Invoice Summary Calculation -----------------
-// This function calculates the overall invoice summary
-const calculateInvoiceSummary = () => {
-  // Calculate subtotal WITHOUT tax (base amount from products only)
-  const subtotal = rows.reduce((sum, row) => sum + (row.qty * row.price), 0);
+  // ----------------- Main Invoice Summary Calculation -----------------
+  const calculateInvoiceSummary = () => {
+    const subtotal = rows.reduce((sum, row) => sum + (row.qty * row.price), 0);
 
-  // Calculate total tax from all rows
-  const totalTax = rows.reduce((sum, row) => {
-    const rowSubtotal = row.qty * row.price;
-    return sum + (rowSubtotal * (row.tax || 0)) / 100;
-  }, 0);
+    const totalTax = rows.reduce((sum, row) => {
+      const rowSubtotal = row.qty * row.price;
+      return sum + (rowSubtotal * (row.tax || 0)) / 100;
+    }, 0);
 
-  // Additional charges
-  const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
-  const packingCharges = Number(additionalCharges.packingCharges) || 0;
-  const discount = Number(additionalCharges.discount) || 0;
-  const other = Number(additionalCharges.other) || 0;
+    const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
+    const packingCharges = Number(additionalCharges.packingCharges) || 0;
+    const discount = Number(additionalCharges.discount) || 0;
+    const other = Number(additionalCharges.other) || 0;
 
-  // Calculate grand total: subtotal + tax + delivery + packing - discount + other
-  const total = subtotal + totalTax + deliveryFee + packingCharges - discount + other;
+    const total = subtotal + totalTax + deliveryFee + packingCharges - discount + other;
 
-  // Calculate received amount and due balance
-  const totalReceived = Number(partialCashAmount) || 0;
-  const dueBalance = total - totalReceived;
+    const totalReceived = Number(partialCashAmount) || 0;
+    const dueBalance = total - totalReceived;
 
-  // Update invoice summary state with all values
-  setInvoiceSummary({
-    subtotal,        // Base product amount (without tax)
-    totalTax,        // Total tax amount
-    total,           // Grand total (subtotal + tax + charges - discount)
-    totalReceived,   // Amount already paid
-    dueBalance,      // Remaining amount to pay
-    deliveryFee,
-    packingCharges,
-    discount,
-    other,
-  });
-};
+    setInvoiceSummary({
+      subtotal,
+      totalTax,
+      total,
+      totalReceived,
+      dueBalance,
+      deliveryFee,
+      packingCharges,
+      discount,
+      other,
+    });
+  };
 
-  // ----------------- NEW: useEffect for Real-Time Update -----------------
   useEffect(() => {
     calculateInvoiceSummary();
   }, [rows, additionalCharges, partialCashAmount]);
 
-// previous invoices
+  // previous invoices
   const [invoices, setInvoices] = useState([]);
-const [todayCollection, setTodayCollection] = useState(0);
-const [totalCollection, setTotalCollection] = useState(0);
+  const [todayCollection, setTodayCollection] = useState(0);
+  const [totalCollection, setTotalCollection] = useState(0);
 
-useEffect(() => {
-  const fetchInvoices = async () => {
-    try {
-      const res = await Invoice.getAllInvoices();
-      if (res.success) {
-        setInvoices(res.invoices);
-        setTodayCollection(res.todayCollection);
-        setTotalCollection(res.totalCollection);
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const res = await Invoice.getAllInvoices();
+        if (res.success) {
+          setInvoices(res.invoices);
+          setTodayCollection(res.todayCollection);
+          setTotalCollection(res.totalCollection);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching invoices:", err);
       }
+    };
+
+    fetchInvoices();
+  }, []);
+
+  const previewRef = useRef(null);
+
+  const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
+    if (!previewRef.current) {
+      alert("Preview not ready for PDF.");
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4",
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth - 40;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let position = 20;
+
+      if (imgHeight <= pageHeight - 40) {
+        pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight);
+      } else {
+        let heightLeft = imgHeight;
+        let y = 20;
+        const pageCanvas = document.createElement("canvas");
+        const pageCtx = pageCanvas.getContext("2d");
+
+        while (heightLeft > 0) {
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = Math.min(canvas.height, Math.floor((canvas.width * (pageHeight - 40)) / imgWidth));
+          pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+          pageCtx.drawImage(
+            canvas,
+            0,
+            canvas.height - heightLeft,
+            canvas.width,
+            pageCanvas.height,
+            0,
+            0,
+            pageCanvas.width,
+            pageCanvas.height
+          );
+          const pageData = pageCanvas.toDataURL("image/png");
+          if (pdf.internal.getNumberOfPages() > 0) pdf.addPage();
+          pdf.addImage(pageData, "PNG", 20, 20, imgWidth, (pageCanvas.height * imgWidth) / pageCanvas.width);
+          heightLeft -= pageCanvas.height;
+        }
+      }
+
+      pdf.save(fileName);
     } catch (err) {
-      console.error("❌ Error fetching invoices:", err);
+      console.error("PDF generation error:", err);
+      alert("Failed to create PDF.");
     }
   };
 
-  fetchInvoices();
-}, []);
-
-
-const [previewInvoice, setPreviewInvoice] = useState(null); // invoice object returned from API
-const [showPreview, setShowPreview] = useState(false); // whether preview modal is visible
-const previewRef = useRef(null); // ref to preview DOM for PDF capture
-
-const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
-  if (!previewRef.current) {
-    alert("Preview not ready for PDF.");
-    return;
-  }
-
-  try {
-    // capture element to canvas
-    const canvas = await html2canvas(previewRef.current, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "pt",
-      format: "a4",
-    });
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    // calculate image dimensions to fit A4 width with aspect ratio
-    const imgWidth = pageWidth - 40; // margin
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let position = 20;
-
-    // if content longer than a single page, split into pages
-    if (imgHeight <= pageHeight - 40) {
-      pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight);
-    } else {
-      // multiple pages
-      let heightLeft = imgHeight;
-      let y = 20;
-      const pageCanvas = document.createElement("canvas");
-      const pageCtx = pageCanvas.getContext("2d");
-
-      // draw and add pages in chunks
-      while (heightLeft > 0) {
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = Math.min(canvas.height, Math.floor((canvas.width * (pageHeight - 40)) / imgWidth));
-        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pageCtx.drawImage(
-          canvas,
-          0,
-          canvas.height - heightLeft,
-          canvas.width,
-          pageCanvas.height,
-          0,
-          0,
-          pageCanvas.width,
-          pageCanvas.height
-        );
-        const pageData = pageCanvas.toDataURL("image/png");
-        if (pdf.internal.getNumberOfPages() > 0) pdf.addPage();
-        pdf.addImage(pageData, "PNG", 20, 20, imgWidth, (pageCanvas.height * imgWidth) / pageCanvas.width);
-        heightLeft -= pageCanvas.height;
-      }
-    }
-
-    pdf.save(fileName);
-  } catch (err) {
-    console.error("PDF generation error:", err);
-    alert("Failed to create PDF.");
-  }
-};
-
-
-
-
   return (
-    <div className="max-w-7xl mx-auto p-6 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="max-w-7xl mx-auto p-3 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
         <h1 className="text-2xl font-robotoB text-[#1F2937] mb-4">Create New Invoice</h1>
 
@@ -577,16 +560,8 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
                     {selectedCustomer.name}
                   </p>
                   <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">ID:</strong>{" "}
-                    {selectedCustomer._id}
-                  </p>
-                  <p className="font-robotoR">
                     <strong className="text-black font-robotoM">mobile:</strong>{" "}
                     {selectedCustomer.mobile}
-                  </p>
-                  <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">Balance:</strong>{" "}
-                    ₹{selectedCustomer.balance || 0}
                   </p>
                   <p className="font-robotoR">
                     <strong className="text-black font-robotoM">Credit Score:</strong>{" "}
@@ -601,14 +576,9 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
             )}
           </div>
 
-
           {/* Step 2: Add Products/Services */}
           <div className="max-w-7xl mx-auto  my-5 md:mt-10 bg-white  gap-6">
             <div className="lg:col-span-2 space-y-6">
-              {/* Step 2: Add Products */}
-              
-
-          {/* Step 2: Add Products */}
 
 <div className="bg-white rounded-lg font-robotoB shadow-customCard p-4 sm:p-6 w-full max-w-6xl space-y-4">
   <h2 className="flex items-center gap-3 text-base sm:text-lg font-robotoSb text-gray-800">
@@ -618,142 +588,121 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
     Step 2: Add Products/Services
   </h2>
 
-  <div className="w-full overflow-x-auto">
-    <div className="min-w-[700px] flex flex-col space-y-5 px-2">
-      {/* Header */}
-      <div className="grid grid-cols-7 gap-2 sm:gap-4 text-sm font-semibold text-gray-700 border-b py-3">
-        <div className="col-span-2 text-black">Product/Service</div>
-        <div className="text-black">Qty</div>
-        <div className="text-black">Unit</div>
-        <div className="text-black">Price</div>
-        <div className="text-black">Tax</div>
-        <div className="text-black">Total</div>
-      </div>
+  <div className="w-full">
+    {/* Header only for desktop */}
+    <div className="hidden sm:grid grid-cols-7 gap-4 text-sm font-semibold text-gray-700 border-b py-3">
+      <div className="col-span-2">Product/Service</div>
+      <div>Qty</div>
+      <div>Unit</div>
+      <div>Price</div>
+      <div>Tax</div>
+      <div>Total</div>
+    </div>
 
-      {/* Rows */}
-      {rows.map((row) => (
-        <div
-          key={row.id}
-          className="grid grid-cols-7 gap-2 sm:gap-4 items-center py-3 h-auto text-sm px-2"
-        >
-          {/* Product dropdown */}
-
-
-<div className="col-span-2">
- <Select
-  className="text-sm"
-  placeholder="Select Product..."
-  isClearable
-  options={
-    Array.isArray(products)
-      ? products
-          .filter((p) => p && (p._id || p.id)) // ✅ null / undefined / empty hata do
-          .map((p) => ({
-            value: p._id || p.id,
-            label: p.name || p.product_name || "Unnamed",
-          }))
-      : []
-  }
-  value={
-    row.productId
-      ? (() => {
-          const selected = products?.find(
-            (p) => p && (p._id === row.productId || p.id === row.productId)
-          );
-          return selected
-            ? {
-                value: row.productId,
-                label: selected.name || selected.product_name || "Unnamed",
+    {/* Rows */}
+    {rows.map((row) => (
+      <div
+        key={row.id}
+        className="grid grid-cols-2 sm:grid-cols-7 gap-3 sm:gap-4 items-center py-3 border-b sm:border-0"
+      >
+        {/* Product */}
+        <div className="col-span-2">
+          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Product/Service</label>
+          <Select
+            className="text-sm"
+            placeholder="Select Product..."
+            isClearable
+            options={Array.isArray(products)
+              ? products.filter((p) => p && (p._id || p.id)).map((p) => ({
+                  value: p._id || p.id,
+                  label: p.name || p.product_name || "Unnamed",
+                }))
+              : []}
+            value={
+              row.productId
+                ? (() => {
+                    const selected = products?.find(
+                      (p) => p && (p._id === row.productId || p.id === row.productId)
+                    );
+                    return selected
+                      ? { value: row.productId, label: selected.name || selected.product_name || "Unnamed" }
+                      : null;
+                  })()
+                : null
+            }
+            onChange={(selectedOption) => {
+              if (selectedOption) {
+                const selectedProduct = products?.find(
+                  (p) => p && (p._id === selectedOption.value || p.id === selectedOption.value)
+                );
+                if (selectedProduct) handleSelectProduct(row.id, selectedProduct);
+              } else {
+                handleSelectProduct(row.id, null);
               }
-            : null;
-        })()
-      : null
-  }
-  onChange={(selectedOption) => {
-    if (selectedOption) {
-      const selectedProduct = products?.find(
-        (p) => p && (p._id === selectedOption.value || p.id === selectedOption.value)
-      );
-      if (selectedProduct) {
-        handleSelectProduct(row.id, selectedProduct);
-      }
-    } else {
-      handleSelectProduct(row.id, null); // clear
-    }
-  }}
-  menuPortalTarget={document.body}
-  styles={{
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-    control: (base) => ({
-      ...base,
-      minHeight: "42px", // ✅ thoda height bada diya
-      borderColor: "#d1d5db", // Tailwind gray-300
-      boxShadow: "none",
-      "&:hover": { borderColor: "#2563eb" }, // Tailwind blue-600 hover
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: "#000", // ✅ selected value black
-    }),
-    input: (base) => ({
-      ...base,
-      color: "#000", // ✅ typing text black
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: "#6b7280", // Tailwind gray-500
-    }),
-    option: (base, state) => ({
-      ...base,
-      color: "#000", // ✅ dropdown text black
-      backgroundColor: state.isSelected
-        ? "#2563eb"
-        : state.isFocused
-        ? "#e5e7eb"
-        : "#fff",
-    }),
-  }}
-/>
+            }}
+            menuPortalTarget={document.body}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              control: (base) => ({
+                ...base,
+                minHeight: "42px",
+                borderColor: "#d1d5db",
+                boxShadow: "none",
+                "&:hover": { borderColor: "#2563eb" },
+              }),
+            }}
+          />
+        </div>
 
-
-</div>
-
-
-          {/* Qty */}
+        {/* Qty */}
+        <div>
+          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Qty</label>
           <input
             type="number"
             min="1"
             value={row.qty}
             onChange={(e) => handleChange(row.id, "qty", e.target.value)}
-            className="border px-2 py-1 rounded bg-white"
+            className="w-full border px-2 py-1 rounded bg-white"
           />
+        </div>
 
-          {/* Unit */}
+        {/* Unit */}
+        <div>
+          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Unit</label>
           <input
             placeholder="Unit"
             value={row.unit}
             onChange={(e) => handleChange(row.id, "unit", e.target.value)}
-            className="border px-2 py-1 rounded bg-white"
+            className="w-full border px-2 py-1 rounded bg-white"
           />
+        </div>
 
-          {/* Price */}
+        {/* Price */}
+        <div>
+          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Price</label>
           <input
             type="number"
             placeholder="0.00"
             value={row.price}
             onChange={(e) => handleChange(row.id, "price", e.target.value)}
-            className="border px-2 py-1 rounded bg-white"
+            className="w-full border px-2 py-1 rounded bg-white"
           />
+        </div>
 
-          {/* Tax fixed */}
+        {/* Tax */}
+        <div>
+          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Tax</label>
           <input
             type="text"
             value={`${row.tax}%`}
             readOnly
-            className="border px-2 py-1 rounded bg-white"
+            className="w-full border px-2 py-1 rounded bg-white"
           />
+        </div>
 
-          {/* Total */}
+        {/* Total */}
+        <div>
+          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Total</label>
           <div className="flex items-center gap-2">
             ₹{calculateTotal(row).toFixed(2)}
             <button
@@ -764,8 +713,8 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
             </button>
           </div>
         </div>
-      ))}
-    </div>
+      </div>
+    ))}
   </div>
 
   {/* Add Row button */}
@@ -779,13 +728,104 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
 
 
 
+
+
+          {/* Step 5: Additional Charges */}
+       {/* Step 5: Additional Charges */}
+<div className="bg-white rounded-lg shadow-customCard p-4">
+  <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
+    <div className="bg-[#2563EB] p-2.5 rounded-full">
+      <FaPlus color="white" size={14} />
+    </div>
+    Step 3: Additional Charges
+  </h2>
+<div className="grid grid-cols-2 gap-3 font-robotoR text-md">
+  <div>
+    <label className="block text-sm mb-1 font-robotoM">Delivery Fee</label>
+    <input
+      className="w-full border px-2 py-1 rounded bg-white 
+      "
+      placeholder="0.00"
+      type="number"
+      min="0"                // ❌ Negative values block
+      inputMode="decimal"    // ✅ Mobile keyboards show numeric with dot
+      value={additionalCharges.deliveryFee}
+      onChange={(e) =>
+        handleAdditionalChange(
+          "deliveryFee",
+          e.target.value < 0 ? 0 : e.target.value // ❌ Prevents manual negative typing
+        )
+      }
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm mb-1 font-robotoM">Packing Charges</label>
+    <input
+      className="w-full border px-2 py-1 rounded bg-white 
+       "
+      placeholder="0.00"
+      type="number"
+      min="0"
+      inputMode="decimal"
+      value={additionalCharges.packingCharges}
+      onChange={(e) =>
+        handleAdditionalChange(
+          "packingCharges",
+          e.target.value < 0 ? 0 : e.target.value
+        )
+      }
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm mb-1 font-robotoM">Discount</label>
+    <input
+      className="w-full border px-2 py-1 rounded bg-white 
+     "
+      placeholder="0.00"
+      type="number"
+      min="0"
+      inputMode="decimal"
+      value={additionalCharges.discount}
+      onChange={(e) =>
+        handleAdditionalChange(
+          "discount",
+          e.target.value < 0 ? 0 : e.target.value
+        )
+      }
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm mb-1 font-robotoM">Other</label>
+    <input
+      className="w-full border px-2 py-1 rounded bg-white 
+"
+      placeholder="0.00"
+      type="number"
+      min="0"
+      inputMode="decimal"
+      value={additionalCharges.other}
+      onChange={(e) =>
+        handleAdditionalChange(
+          "other",
+          e.target.value < 0 ? 0 : e.target.value
+        )
+      }
+    />
+  </div>
+</div>
+
+</div>
+
 {/* Step 3: Payment Mode */}
           <div className="bg-white rounded-lg shadow-customCard p-4">
             <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
               <div className="bg-[#2563EB] p-2.5 rounded-full">
                 <FaRegCreditCard color="white" size={14} />
               </div>
-              Step 3: Payment Mode
+              Step 4: Payment Mode
             </h2>
             <div className="flex flex-col sm:flex-row space-x-3">
               <button
@@ -810,7 +850,7 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
                 <div className="bg-[#2563EB] p-2.5 rounded-full">
                   <FaCalculator color="white" size={14} />
                 </div>
-                Step 4: Payment Method
+                Step 5: Payment Method
               </h2>
 
               <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
@@ -844,83 +884,11 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
                 <div className="bg-[#2563EB] p-2.5 rounded-full">
                   <FaCalculator color="white" size={14} />
                 </div>
-                Step 4: Promise Date
+                Step 5: Promise Date
               </h2>
 
-              <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-                <div>Milestone Name</div>
-                <div>Amount (₹)</div>
-                <div>Due Date</div>
-                <div>Status</div>
-              </div>
 
-              {milestones.map((ms, index) => (
-                <div
-                  key={ms.id}
-                  className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded"
-                >
-                  <input
-                    className="border px-2 py-1 rounded bg-white"
-                    placeholder="Milestone Name"
-                    value={ms.name}
-                    onChange={(e) => {
-                      const newMilestones = [...milestones];
-                      newMilestones[index].name = e.target.value;
-                      setMilestones(newMilestones);
-                    }}
-                  />
-  <input
-  className="border px-2 py-1 rounded bg-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-  placeholder="0"
-  type="number"
-  inputMode="numeric"
-  pattern="[0-9]*"
-  value={ms.amount}
-  onChange={(e) => {
-    const newMilestones = [...milestones];
-    // ✅ Sirf integer store karega
-    const onlyDigits = e.target.value.replace(/\D/g, "");
-    newMilestones[index].amount = onlyDigits ? parseInt(onlyDigits, 10) : "";
-    setMilestones(newMilestones);
-  }}
-/>
-
-
-<input
-  className="border px-2 py-1 font-interR text-sm sm:text-md rounded bg-white"
-  type="date"
-  min={new Date().toISOString().split("T")[0]} // past date disable
-  value={ms.dueDate}
-  onChange={(e) => {
-    const newMilestones = [...milestones];
-    newMilestones[index].dueDate = e.target.value;
-    setMilestones(newMilestones);
-  }}
-/>
-
-                  <input
-                    className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Status"
-                    value={ms.status}
-                    readOnly
-                    onChange={(e) => {
-                      const newMilestones = [...milestones];
-                      newMilestones[index].status = e.target.value;
-                      setMilestones(newMilestones);
-                    }}
-                  />
-                </div>
-              ))}
-
-              <button
-                onClick={handleAddMilestone}
-                className="text-bluecol font-robotoR text-sm sm:text-md mt-2"
-              >
-                + Add Milestone
-              </button>
-
-              {/* Partial Cash Input for Debt/Mixed */}
-              <div className="mt-4 border-t pt-4">
+ <div className="mt-4 border-t py-4">
                 <label className="block text-sm mb-1 font-robotoM">Partial Cash Paid (Mixed Payment)</label>
                 <input
                   type="number"
@@ -933,73 +901,94 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
                   Remaining Due: ₹{invoiceSummary.dueBalance.toFixed(2)}
                 </p>
               </div>
+
+              <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
+                <div>Milestone Name</div>
+                <div>Amount (₹)</div>
+                <div>Due Date</div>
+                <div>Status</div>
+              </div>
+
+
+
+{milestones.map((ms, index) => (
+  <div
+    key={ms.id}
+    className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded items-center"
+  >
+    <input
+      className="border px-2 py-1 rounded bg-white"
+      placeholder="Milestone Name"
+      value={ms.name}
+      onChange={(e) => {
+        const newMilestones = [...milestones];
+        newMilestones[index].name = e.target.value;
+        setMilestones(newMilestones);
+      }}
+    />
+
+    <input
+      className="border px-2 py-1 rounded bg-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      placeholder="0"
+      type="number"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      value={ms.amount}
+      onChange={(e) => {
+        const newMilestones = [...milestones];
+        const onlyDigits = e.target.value.replace(/\D/g, "");
+        newMilestones[index].amount = onlyDigits ? parseInt(onlyDigits, 10) : "";
+        setMilestones(newMilestones);
+      }}
+    />
+
+    <DatePicker
+      className="w-full h-10 border border-gray-300 px-2 py-1 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+      selected={ms.dueDate ? parse(ms.dueDate, "dd/MM/yyyy", new Date()) : null}
+      onChange={(date) => {
+        const newMilestones = [...milestones];
+        newMilestones[index].dueDate = date ? format(date, "dd/MM/yyyy") : "";
+        setMilestones(newMilestones);
+      }}
+      dateFormat="dd/MM/yyyy"
+      minDate={new Date()}
+      placeholderText="Select due date"
+    />
+<div className="relative flex flex-row gap-2">  
+    <input
+      className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+      placeholder="Status"
+      value={ms.status}
+      readOnly
+    />
+
+    {/* 🔹 Delete button */}
+    <button
+      onClick={() => {
+        const newMilestones = milestones.filter((_, i) => i !== index);
+        setMilestones(newMilestones);
+      }}
+      className="text-red-500 hover:text-red-700 flex justify-center items-center"
+    >
+      <FaTrash />
+    </button>
+  </div>
+  </div>
+))}
+
+
+              <button
+                onClick={handleAddMilestone}
+                className="text-bluecol font-robotoR text-sm sm:text-md mt-2"
+              >
+                + Add Milestone
+              </button>
+
             </div>
           )}
 
 
-
-
-          {/* Step 5: Additional Charges */}
-       {/* Step 5: Additional Charges */}
-<div className="bg-white rounded-lg shadow-customCard p-4">
-  <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-    <div className="bg-[#2563EB] p-2.5 rounded-full">
-      <FaPlus color="white" size={14} />
-    </div>
-    Step 5: Additional Charges
-  </h2>
-  <div className="grid grid-cols-2 gap-3 font-robotoR text-md">
-    <div>
-      <label className="block text-sm mb-1 font-robotoM">Delivery Fee</label>
-      <input
-        className="w-full border px-2 py-1 rounded bg-white"
-        placeholder="0.00"
-        type="number"
-        value={additionalCharges.deliveryFee}
-        onChange={(e) => handleAdditionalChange("deliveryFee", e.target.value)}
-      />
-    </div>
-    <div>
-      <label className="block text-sm mb-1 font-robotoM">Packing Charges</label>
-      <input
-        className="w-full border px-2 py-1 rounded bg-white"
-        placeholder="0.00"
-        type="number"
-        value={additionalCharges.packingCharges}
-        onChange={(e) => handleAdditionalChange("packingCharges", e.target.value)}
-      />
-    </div>
-    <div>
-      <label className="block text-sm mb-1 font-robotoM">Discount</label>
-      <input
-        className="w-full border px-2 py-1 rounded bg-white"
-        placeholder="0.00"
-        type="number"
-        value={additionalCharges.discount}
-        onChange={(e) => handleAdditionalChange("discount", e.target.value)}
-      />
-    </div>
-    <div>
-      <label className="block text-sm mb-1 font-robotoM">Other</label>
-      <input
-        className="w-full border px-2 py-1 rounded bg-white"
-        placeholder="0.00"
-        type="number"
-        value={additionalCharges.other}
-        onChange={(e) => handleAdditionalChange("other", e.target.value)}
-      />
-    </div>
-  </div>
-</div>
-
-
-
-
           {/* Step 6: Add Note */}
-          {/* box-shadow: 0px 4px 6px 0px #0000001A;
-
-box-shadow: 0px 2px 4px 0px #0000001A;
- */}
 <div className="bg-white rounded-lg shadow-lg shadow-[#0000001A] p-4 shadow-customCard">
   <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
     <div className="bg-[#2563EB] p-2.5 rounded-full">
@@ -1016,7 +1005,6 @@ box-shadow: 0px 2px 4px 0px #0000001A;
   ></textarea>
 </div>
 
-          
         </div>
 
         <div className="flex flex-col sm:flex-row justify-start gap-4 p-4">
@@ -1027,10 +1015,6 @@ box-shadow: 0px 2px 4px 0px #0000001A;
             <LuNewspaper size={24} />
             Generate Invoice
           </button>
-          {/* <button className="flex justify-center items-center gap-2 text-bluecol bg-white border-bluecol border-2 font-robotoM text-md px-4 py-2 rounded">
-            <LuNewspaper size={24} />
-            Generate Quotation
-          </button> */}
         </div>
       </div>
       </div>
@@ -1053,7 +1037,6 @@ box-shadow: 0px 2px 4px 0px #0000001A;
           <button
             onClick={() => {
               setShowPreview(false);
-              // Optional: clear previewInvoice and reset form after closing
               setPreviewInvoice(null);
             }}
             className="px-3 py-1 border rounded"
@@ -1168,11 +1151,11 @@ box-shadow: 0px 2px 4px 0px #0000001A;
 <ul className="text-sm font-robotoR text-black space-y-3">
           <li className="flex justify-between">
             <span>Subtotal:</span>
-            <span>₹{invoiceSummary.subtotal.toFixed(2)}</span>  {/* Dynamic */}
+            <span>₹{invoiceSummary.subtotal.toFixed(2)}</span>
           </li>
           <li className="flex justify-between hidden">
             <span>Tax :</span>
-            <span>₹{invoiceSummary.totalTax.toFixed(2)}</span>  {/* Unhidden if needed */}
+            <span>₹{invoiceSummary.totalTax.toFixed(2)}</span>
           </li>
           <li className="flex justify-between">
             <span>Total Received:</span>
@@ -1182,10 +1165,6 @@ box-shadow: 0px 2px 4px 0px #0000001A;
             <span>Due Balance:</span>
             <span>₹{invoiceSummary.dueBalance.toFixed(2)}</span>
           </li>
-          {/* <li className="flex justify-between">
-            <span>Paid / Not Paid:</span>
-            <span>₹{invoiceSummary.paidNotPaid.toFixed(2)}</span>
-          </li> */}
           <li className="flex justify-between">
             <span>Delivery Fee:</span>
             <span>₹{invoiceSummary.deliveryFee.toFixed(2)}</span>
@@ -1199,24 +1178,6 @@ box-shadow: 0px 2px 4px 0px #0000001A;
             <span>₹{invoiceSummary.total.toFixed(2)}</span>
           </li>
         </ul>
-        {/* <div className="mt-6 space-y-2">
-          <h3 className="text-md font-robotoM">Quick Actions</h3>
-          <button className="flex items-center gap-2 text-black font-robotoR text-md">
-            <FaPrint color="#4B5563" />
-            Print Invoice
-          </button>
-          <br />
-          <button className="flex items-center gap-2 text-black font-robotoR text-md">
-            <FaWhatsapp color="#16A34A" />
-            Share via WhatsApp
-          </button>
-          <br />
-          <button className="flex items-center gap-2 text-black font-robotoR text-md">
-            <FaCommentSms color="#2563EB" />
-            Send via SMS
-          </button>
-        </div> */}
-
 
 {/* Previous Invoices Section */}
 <div className="mt-6">
@@ -1231,24 +1192,15 @@ box-shadow: 0px 2px 4px 0px #0000001A;
         className="flex justify-between items-center shadow-customCard border-2 rounded-lg border-[#E5E7EB] text-sm p-2 mb-2"
       >
         <div>
-          {/* Customer Name */}
           <p className="font-robotoSb text-[16px]">{inv.name}</p>
-
-          {/* Last Paid / Created Date */}
           <p className="text-gray-500 font-robotoR text-sm">
-            Last Paid:{" "}
-            {inv.updatedAt
-              ? new Date(inv.updatedAt).toLocaleDateString()
-              : new Date(inv.createdAt).toLocaleDateString()}
+            Last Paid: {inv.updatedAt ? new Date(inv.updatedAt).toLocaleDateString() : new Date(inv.createdAt).toLocaleDateString()}
           </p>
-
-          {/* Due Amount */}
           <p className="text-red-500 font-robotoM text-xs">
             Due: ₹{inv.dueBalance?.toFixed(2) || 0}
           </p>
         </div>
 
-        {/* View Invoice Button */}
         <button
           onClick={() => console.log("View Invoice:", inv._id)}
           className="bg-[#E6FEE2] text-[#16A34A] px-2 py-1 rounded-full font-robotoM text-xs"

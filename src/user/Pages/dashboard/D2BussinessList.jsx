@@ -4,6 +4,10 @@ import { FaPlusCircle, FaEdit, FaTrash, FaCheckCircle } from "react-icons/fa";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setActiveBusiness } from "../../../reactStore/businessSlice.js"; 
+
+
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -13,6 +17,12 @@ const D2BusinessList = () => {
  const [storeProfile_id, setstoreProfile_id] = useState(
     localStorage.getItem("storeProfile_id") || ""
   );
+
+
+const { activeBusinessId } = useSelector((state) => state.business);
+
+
+
 
   const store_id = Cookies.get("store_id");
   const token = Cookies.get("authToken");
@@ -93,7 +103,8 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
   const handleAdd = () => {
     navigate("/dashboard/information");
   };
-  
+  const dispatch = useDispatch();
+
 
   // ✅ Set Active Business
   // const handleSetActive = (id) => {
@@ -103,17 +114,21 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
   //   alert("✔️ Active business set successfully!");
   // };
 
-  // ✅ Set Active Business
-const handleSetActive = (id) => {
-  // localStorage me dono set karna
-  localStorage.setItem("storeProfile_id", id);         // agar kahi use ho raha hai to
-  localStorage.setItem("storeProfile_id", id);         // ye main key hai jo guard & APIs use karenge
+  const handleSetActive = (id, name) => {
+  // 1️⃣ Redux update
+  dispatch(setActiveBusiness({ id, name }));
 
+  // 2️⃣ Local state update
   setstoreProfile_id(id);
 
-  console.log("✅ Active Business ID:", id);
+  // 3️⃣ LocalStorage update
+  localStorage.setItem("storeProfile_id", id);
+
+  // 4️⃣ Notification
   alert("✔️ Active business set successfully!");
 };
+
+
 
 
   return (
@@ -156,14 +171,13 @@ const handleSetActive = (id) => {
               </thead>
 <tbody>
   {businesses.map((item) => {
-    // ✅ यहाँ define करो
-    const isActive = String(storeProfile_id) === String(item._id);
+ const isActive = String(activeBusinessId) === String(item._id);
 
     return (
       <tr
         key={item._id}
-        className={`border-b border-gray-200 hover:bg-gray-50 text-nowrap transition-colors ${
-          isActive ? "bg-green-50" : ""
+        className={`border-b border-gray-200 hover:bg-gray-50 text-nowrap transition-colors
+           ${isActive ? "bg-green-50" : ""
         }`}
       >
         <td className="p-4 font-medium">
@@ -184,23 +198,25 @@ const handleSetActive = (id) => {
             ? new Date(item.created_at).toLocaleDateString()
             : "-"}
         </td> */}
-        <td className="p-4 flex  gap-3">
-          <button
-            onClick={() => handleSetActive(item._id)}
+
+ <td className="p-4 flex gap-3">
+   <button
+            onClick={() => handleSetActive(item._id, item.businessName)}
             className={`flex items-center gap-1 ${
-              isActive
-                ? "text-green-600"
-                : "text-gray-600 hover:text-green-600"
+              isActive ? "text-green-600" : "text-gray-600 hover:text-green-600"
             }`}
           >
             <FaCheckCircle /> {isActive ? "Active" : "Set Active"}
           </button>
+
           <button
             onClick={() => handleEdit(item)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <FaEdit /> Edit
           </button>
+
+
           <button
             onClick={() => handleDelete(item._id)}
             className="flex items-center gap-1 text-red-600 hover:text-red-800"
@@ -208,6 +224,7 @@ const handleSetActive = (id) => {
             <FaTrash /> Delete
           </button>
         </td>
+
       </tr>
     );
   })}

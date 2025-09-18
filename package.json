@@ -12,6 +12,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.7",
     "axios": "^1.11.0",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.18",
     "glob": "^11.0.3",
     "html2canvas": "^1.4.1",
@@ -27,6 +28,7 @@
     "react-apexcharts": "^1.7.0",
     "react-csv": "^2.2.2",
     "react-d3-speedometer": "^3.1.1",
+    "react-datepicker": "^8.7.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^15.6.0",

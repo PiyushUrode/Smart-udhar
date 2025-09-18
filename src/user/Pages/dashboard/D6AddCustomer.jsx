@@ -191,41 +191,101 @@ const D6AddCustomer = () => {
       </div>
 
       {/* FORM */}
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 px-10 max-w-5xl"
+   <form
+  onSubmit={handleSubmit}
+  className="grid grid-cols-1 md:grid-cols-2 gap-6 px-10 max-w-5xl"
+>
+  {[
+    { key: "name", label: "Name *" },
+    { key: "mobile", label: "Mobile *" },
+    { key: "email", label: "Email *", type: "email" },
+    { key: "address", label: "Address *" },
+    { key: "pin", label: "PIN" },
+    { key: "city", label: "City *" },
+    { key: "state", label: "State *" },
+    { key: "aadharCardNumber", label: "Aadhar Card Number" },
+    { key: "panNumber", label: "PAN Number" },
+    { key: "companyName", label: "Company Name" },
+    { key: "gstNumber", label: "GST Number" },
+  ].map((field) => (
+    <div key={field.key} className="w-full">
+      <label className="block text-sm text-gray-600">{field.label}</label>
+
+      {/* 🔹 Mobile Number with dropdown */}
+      {field.key === "mobile" ? (
+        <div className="flex mt-1">
+          <select
+            className="border rounded-l-md bg-gray-100 text-sm px-2 py-2"
+            value={formData.countryCode || "+91"}
+            onChange={(e) =>
+              setFormData({ ...formData, countryCode: e.target.value })
+            }
+          >
+            <option value="+91">+91 (IN)</option>
+            <option value="+58">+58 (VE)</option>
+          </select>
+          <input
+            type="text"
+            name={field.key}
+            value={formData[field.key]}
+            onChange={handleChange}
+            placeholder="Enter Mobile Number"
+            className={`flex-1 border rounded-r-md px-4 py-2 text-sm ${
+              errors[field.key] ? "border-red-500" : "bg-gray-100"
+            }`}
+          />
+        </div>
+      ) : (
+        <input
+          type={field.type || "text"}
+          name={field.key}
+          value={formData[field.key]}
+          onChange={handleChange}
+          placeholder={`Enter ${field.label}`}
+          className={`w-full border rounded-md px-4 py-2 mt-1 text-sm ${
+            errors[field.key] ? "border-red-500" : "bg-gray-100"
+          }`}
+        />
+      )}
+
+      {errors[field.key] && (
+        <p className="text-red-500 text-xs mt-1">{errors[field.key]}</p>
+      )}
+    </div>
+  ))}
+
+  {/* 🔹 Customer Image Upload (after GST field) */}
+  <div className="">
+    <label className="block text-sm text-gray-600">Upload Customer Image</label>
+    <div className="border border-dashed border-gray-400 p-6 mt-2 flex flex-col items-center text-center rounded-md hover:border-blue-400 transition">
+      <FaUpload size={28} color="#9CA3AF" />
+      <label
+        htmlFor="customerImage"
+        className="cursor-pointer mt-2 text-sm text-gray-600"
       >
-        {[
-          { key: "name", label: "Name *" },
-          { key: "mobile", label: "Mobile *" },
-          { key: "email", label: "Email *", type: "email" },
-          { key: "address", label: "Address *" },
-          { key: "pin", label: "PIN" },
-          { key: "city", label: "City *" },
-          { key: "state", label: "State *" },
-          { key: "aadharCardNumber", label: "Aadhar Card Number" },
-          { key: "panNumber", label: "PAN Number" },
-          { key: "companyName", label: "Company Name" },
-          { key: "gstNumber", label: "GST Number" },
-        ].map((field) => (
-          <div key={field.key}>
-            <label className="block text-sm text-gray-600">{field.label}</label>
-            <input
-              type={field.type || "text"}
-              name={field.key}
-              value={formData[field.key]}
-              onChange={handleChange}
-              placeholder={`Enter ${field.label}`}
-              className={`w-full border rounded-md px-4 py-2 mt-1 text-sm ${
-                errors[field.key] ? "border-red-500" : "bg-gray-100"
-              }`}
-            />
-            {errors[field.key] && (
-              <p className="text-red-500 text-xs mt-1">{errors[field.key]}</p>
-            )}
-          </div>
-        ))}
-      </form>
+        Drop file here or click to upload
+      </label>
+      <input
+        id="customerImage"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            setFormData({ ...formData, customerImage: file });
+          }
+        }}
+      />
+      <p className="mt-2 text-sm font-semibold text-gray-700">
+        {formData.customerImage
+          ? formData.customerImage.name
+          : "Upload Image Here"}
+      </p>
+    </div>
+  </div>
+</form>
+
 
       {/* ACTION BUTTONS */}
       <div className="mt-8 flex flex-wrap justify-center items-center gap-4">

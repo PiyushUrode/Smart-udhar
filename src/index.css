@@ -154,3 +154,27 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
+/* Remove number input spinners for WebKit browsers (Chrome, Edge, Safari, Opera) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove spinner for Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Optional: ensure up/down arrows hidden on focused elements too */
+input[type="number"]:focus::-webkit-inner-spin-button,
+input[type="number"]:focus::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+/* Optional: make sure any vendor-specific appearance removed */
+input[type="number"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}

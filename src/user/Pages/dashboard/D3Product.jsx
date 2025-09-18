@@ -8,6 +8,8 @@ import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 import { ProductService } from "../../api/productservice.js"; // ✅ new service i
 
 
+
+
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // must match backend multer limit
 
 // ProductForm and ServiceForm - unchanged (omitted here for brevity in message).
@@ -103,7 +105,7 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         <input
           name="sales_price"
           type="number"
-          min="1"
+          min="0"
           step="0.01"
           required
           placeholder="₹ 0.00"
@@ -119,8 +121,8 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         <input
           name="purchase_price"
           type="number"
-          min="1"
-          // step="0.01"
+          min="0"
+          step="0.01"
           required
           placeholder="₹ 0.00"
           className={`w-full bg-[#F6F8FA] p-2 rounded border ${errors.purchase_price ? 'border-red-500' : 'border-gray-300'}`}
@@ -306,7 +308,7 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
           <input
             name="sales_price"
             type="number"
-            min="1"
+            min="0"
             step="0.01"
             required
             placeholder="₹ 0.00"
@@ -423,7 +425,7 @@ export default function D3Product() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [errors, setErrors] = useState({});
   const [isEditMode, setIsEditMode] = useState(!!id); // Check if in edit mode
-  const [popupType, setPopupType] = useState(null);
+
   // Fetch product data for edit mode
   useEffect(() => {
     if (id) {
@@ -479,8 +481,6 @@ export default function D3Product() {
     return map[field] || field;
   };
 
-  
-
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
@@ -505,88 +505,34 @@ export default function D3Product() {
     setErrors((prev) => ({ ...prev, [name]: false }));
   };
 
-const validateForm = () => {
-  const newErrors = {};
-  const requiredFields =
-    activeTab === "product"
-      ? ["name", "quantity", "unit", "min_quantity", "sales_price", "purchase_price", "category", "hsn_number", "tax", "price_type"]
-      : ["name", "quantity", "unit", "sales_price", "hsn_number", "tax"];
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields =
+      activeTab === "product"
+        ? ["name", "quantity", "unit", "min_quantity", "sales_price", "purchase_price", "category"]
+        : ["name", "quantity", "unit", "sales_price"];
 
-  // ✅ Step 1: Required field check
-  requiredFields.forEach((field) => {
-    const val = formData[field];
-    if (val === "" || val === null || val === undefined) {
-      newErrors[field] = `${friendlyFieldName(field)} is required`;
-    }
-  });
+    const missingFields = [];
 
-  // ✅ Step 2: Strong field-wise validation
-
-  // Name
-  if (formData.name && !/^[a-zA-Z0-9\s&.-]{2,50}$/.test(formData.name)) {
-    newErrors.name = "Name must be 2-50 chars (letters, numbers, . - & allowed)";
-  }
-
-  // Quantity
-  if (formData.quantity && (!/^\d+$/.test(formData.quantity) || parseInt(formData.quantity) <= 0)) {
-    newErrors.quantity = "Quantity must be a positive number";
-  }
-
-  // Min Quantity
-  if (formData.min_quantity && (!/^\d+$/.test(formData.min_quantity) || parseInt(formData.min_quantity) < 0)) {
-    newErrors.min_quantity = "Min Quantity must be 0 or more";
-  }
-
-  // Unit
-  if (formData.unit && !/^[a-zA-Z]{1,10}$/.test(formData.unit)) {
-    newErrors.unit = "Unit must be alphabetic (e.g., kg, pcs)";
-  }
-
-  // Sales Price
-  if (formData.sales_price && (!/^\d+(\.\d{1,2})?$/.test(formData.sales_price) || formData.sales_price <= 0)) {
-    newErrors.sales_price = "Sales price must be a valid positive amount";
-  }
-
-  // Purchase Price
-  if (formData.purchase_price && (!/^\d+(\.\d{1,2})?$/.test(formData.purchase_price) || formData.purchase_price < 0)) {
-    newErrors.purchase_price = "Purchase price must be a valid number (0 or more)";
-  }
-
-  // Category
-  if (formData.category && !/^[a-zA-Z0-9\s&.-]{2,30}$/.test(formData.category)) {
-    newErrors.category = "Category must be 2-30 chars (letters, numbers, . - & allowed)";
-  }
-
-  // ✅ HSN Number (4–8 digit numeric only)
-  if (formData.hsn_number && !/^\d{4,8}$/.test(formData.hsn_number)) {
-    newErrors.hsn_number = "HSN must be 4-8 digit numeric value";
-  }
-
-  // ✅ Tax (0–100, allow decimals like 18.5)
-  if (formData.tax && (!/^\d+(\.\d{1,2})?$/.test(formData.tax) || formData.tax < 0 || formData.tax > 100)) {
-    newErrors.tax = "Tax must be between 0 and 100 (max 2 decimal places)";
-  }
-
-  // ✅ Price Type (only predefined values allowed)
-  const allowedPriceTypes = ["MRP", "Wholesale", "Retail"];
-  if (formData.price_type && !allowedPriceTypes.includes(formData.price_type)) {
-    newErrors.price_type = `Price type must be one of: ${allowedPriceTypes.join(", ")}`;
-  }
-
-  // ✅ Step 3: Show errors
-  setErrors(newErrors);
-
-  if (Object.keys(newErrors).length > 0) {
-    toast.error("⚠️ Please fix form errors before submitting!", {
-      position: "top-right",
-      autoClose: 4000,
+    requiredFields.forEach((field) => {
+      const val = formData[field];
+      if (val === "" || val === null || val === undefined) {
+        newErrors[field] = true;
+        missingFields.push(friendlyFieldName(field));
+      }
     });
-    return false;
-  }
 
-  return true;
-};
+    setErrors(newErrors);
 
+    if (missingFields.length > 0) {
+      toast.error(`Please fill required fields: ${missingFields.join(", ")}`, {
+        position: "top-right",
+        autoClose: 4000,
+      });
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -701,11 +647,7 @@ const validateForm = () => {
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
 
-
         ))}
-              {popupType && (
-        <Button type={popupType} onClose={() => setPopupType(null)} />
-      )} 
       </div>
 
       {activeTab === "product" && (
