@@ -16,6 +16,7 @@ import {
   FaInfoCircle,
   FaUserFriends,
   FaFileAlt,
+  FaMoneyBillWaveAlt,
 } from "react-icons/fa";
 
 import { MdCategory, MdSubscriptions, MdVisibility } from "react-icons/md";
@@ -44,6 +45,7 @@ const sections = [
       { label: "Staff List", icon: <FaUsers />, path: "/admin/dashboard/staff-list" },
       { label: "Customer List", icon: <FaUsers />, path: "/admin/dashboard/customer-list" },
       { label: "Invoice List", icon: <FaFileInvoice />, path: "/admin/dashboard/invoice-list" },
+      { label: "Expense List", icon: <FaMoneyBillWaveAlt />, path: "/admin/dashboard/expense-list" },
       // { label: "Session Management", icon: <FaSync />, path: "/admin/dashboard/session-management" },
     ],
   },

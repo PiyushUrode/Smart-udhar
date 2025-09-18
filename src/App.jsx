@@ -47,6 +47,7 @@ import BusinessProductViewer from "./admin/Pages/StoreList/product-list";
 import BusinessCustomerViewer from "./admin/Pages/StoreList/customer-list";
 import BusinessStaffViewer from "./admin/Pages/StoreList/staff-list";
 import BusinessInvoiceViewer from "./admin/Pages/StoreList/invoice-list";
+import BusinessExpenseViewer from "./admin/Pages/StoreList/expense-list.jsx";
 // invoice-list.jsx
 
 // Notification Pages
@@ -152,7 +153,7 @@ function App() {
           <Route path="product-list" element={<BusinessProductViewer />} />
           <Route path="staff-list" element={<BusinessStaffViewer />} />
           <Route path="invoice-list" element={<BusinessInvoiceViewer />} />
-
+          <Route path="expense-list" element={<BusinessExpenseViewer />} />
           {/* NOtification */}
           <Route path="send-notification" element={<SendNotification />} />
           <Route path="show-notification" element={<ShowNotificationList />} />
