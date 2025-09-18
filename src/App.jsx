@@ -1,17 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import DashboardGuards from "./user/layouts/DashboardGuards.jsx";
 import DashboardLayout from "./user/layouts/DashboardLayout.jsx";
 import Homepage from "./user/Pages/Homepage.jsx";
 import LoginPage from "./user/Pages/LoginPage.jsx";
 import SignUpPage from "./user/Pages/Signuppage.jsx";
-import {useAuth} from "./user/context/useAuth.js";
 
-// User Routes
 import D1DashboardHome from "./user/Pages/dashboard/D1DashboardHome.jsx";
 import D2BasicDetails from "./user/Pages/dashboard/D2BasicDetails.jsx";
 import D2BussinessList from "./user/Pages/dashboard/D2BussinessList.jsx";
 import D3Product from "./user/Pages/dashboard/D3Product.jsx";
 import D4ProductList from "./user/Pages/dashboard/D4ProductList.jsx";
-import D4StockList from "./user/Pages/dashboard/D4StockList.jsx";
+import D4StockList from "./user/Pages/dashboard/D4StockList.jsx"
 import D5StaffRole from "./user/Pages/dashboard/D5StaffRole.jsx";
 import D5StaffDetails from "./user/Pages/dashboard/D5StaffDetails.jsx";
 import D6AddCustomer from "./user/Pages/dashboard/D6AddCustomer.jsx";
@@ -34,55 +34,42 @@ import D18Supports from "./user/Pages/dashboard/D18Supports.jsx";
 import A1AmountCollection from "./user/Pages/dashboard/A1AmountCollection.jsx";
 import A2AverageCreditScore from "./user/Pages/dashboard/A2AverageCreditScore.jsx";
 
-// Admin
-import DashboardLayoutAdmin from "./admin/layouts/DashboardLayout.jsx";
+
+
+
+
+
+// import DashboardGuardsAdmin from "./user/layouts/DashboardGuards.jsx";
+import DashboardLayoutAdmin from "./user/layouts/DashboardLayout.jsx";
 import D1DashboardHomeAdmin from "./admin/Pages/dashboard/D1DashboardHome.jsx";
 import LoginPageAdmin from "./admin/Pages/LoginPage.jsx";
 
-// Store list pages
-import Storelist from "./admin/Pages/StoreList/storelist";
-import BusinessProductViewer from "./admin/Pages/StoreList/product-list";
-import BusinessCustomerViewer from "./admin/Pages/StoreList/customer-list";
-import BusinessStaffViewer from "./admin/Pages/StoreList/staff-list";
-import BusinessInvoiceViewer from "./admin/Pages/StoreList/invoice-list";
-
-// Notification Pages
-import SendNotification from "./admin/Pages/Notification/Notification";
-import ShowNotificationList from "./admin/Pages/Notification/ShowNotification";
-
-// Subscription pages
-import ViewSubscription from "./admin/Pages/Subcriptions/ViewSubscription";
-import CreateSubcription from "./admin/Pages/Subcriptions/CreateSubcription";
-import SubscriptionCategory from "./admin/Pages/Subcriptions/SubscriptionCategory";
 
 function App() {
-  const { isAuthenticated, role } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // adjust as per your logic
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<Homepage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage setAuth={setIsAuthenticated} />} />
         <Route path="/signup" element={<SignUpPage />} />
 
-        {/* ================== USER DASHBOARD ================== */}
-        <Route
-          path="/dashboard/*"
-          element={
-            isAuthenticated && role === "user" ? (
-              <DashboardLayout />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        >
-          <Route index element={<D1DashboardHome />} />
-          <Route path="information" element={<D2BasicDetails />} />
-          <Route path="information/:id" element={<D2BasicDetails />} />
-          <Route path="bussinessList" element={<D2BussinessList />} />
+<Route path="/dashboard/*" element={<DashboardLayout />}>
+  <Route index element={<D1DashboardHome />} />
 
-          {/* Protected user routes */}
+  {/* Ye pages hamesha accessible (guard ke bahar) */}
+  <Route path="information" element={<D2BasicDetails />} />
+  <Route path="information/:id" element={<D2BasicDetails />} />
+  <Route path="bussinessList" element={<D2BussinessList />} />
+
+  {/* ✅ Ye sab guard ke andar */}
+  <Route
+    path="*"
+    element={
+      // <DashboardGuards>
+      //         </DashboardGuards>
+        <Routes>
           <Route path="product" element={<D3Product />} />
           <Route path="product/:id" element={<D3Product />} />
           <Route path="product-list" element={<D4ProductList />} />
@@ -94,10 +81,7 @@ function App() {
           <Route path="customer-details" element={<D6CustomerDetails />} />
           <Route path="create-invoice" element={<D7CreateInvoice />} />
           <Route path="payment-collection" element={<D8PaymentCollection />} />
-          <Route
-            path="payment-collectionList"
-            element={<D8PaymentCollectionList />}
-          />
+          <Route path="payment-collectionList" element={<D8PaymentCollectionList />} />
           <Route path="credit-score" element={<D9CreditScore />} />
           <Route path="expenses" element={<D10Expenses />} />
           <Route path="expenses-list" element={<D10ExpensesList />} />
@@ -113,45 +97,23 @@ function App() {
           <Route path="supports" element={<D18Supports />} />
           <Route path="amount-collection" element={<A1AmountCollection />} />
           <Route path="average-credit-score" element={<A2AverageCreditScore />} />
-        </Route>
+        </Routes>
 
-        {/* ================== ADMIN DASHBOARD ================== */}
-        <Route path="/admin" element={<LoginPageAdmin />} />
-        <Route
-          path="/admin/dashboard/*"
-          element={
-            isAuthenticated && role === "admin" ? (
-              <DashboardLayoutAdmin />
-            ) : (
-              <Navigate to="/admin" />
-            )
-          }
-        >
-          <Route index element={<D1DashboardHomeAdmin />} />
-          <Route path="store-list" element={<Storelist />} />
-          <Route path="customer-list" element={<BusinessCustomerViewer />} />
-          <Route path="product-list" element={<BusinessProductViewer />} />
-          <Route path="staff-list" element={<BusinessStaffViewer />} />
-          <Route path="invoice-list" element={<BusinessInvoiceViewer />} />
+    }
+  />
+</Route>
 
-          {/* Notification */}
-          <Route path="send-notification" element={<SendNotification />} />
-          <Route path="show-notification" element={<ShowNotificationList />} />
 
-          {/* Subscription */}
-          <Route
-            path="subscriptions/category/create"
-            element={<SubscriptionCategory />}
-          />
-          <Route
-            path="subscriptions/create/:id"
-            element={<CreateSubcription />}
-          />
-          <Route path="subscriptions/create/" element={<CreateSubcription />} />
-          <Route path="subscriptions/view" element={<ViewSubscription />} />
-        </Route>
+<Route path="/admin" element={<LoginPageAdmin setAuth={setIsAuthenticated} />} />
+{/* admin */}
+<Route path="/admin/dashboard/*" element={<DashboardLayoutAdmin />}>  
+  <Route index element={<D1DashboardHomeAdmin />} />
 
-        {/* Fallback */}
+
+</Route>
+
+
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
