@@ -22,6 +22,7 @@
     "jspdf-autotable": "^5.0.2",
     "lucide": "^0.525.0",
     "lucide-react": "^0.525.0",
+    "mitt": "^3.0.1",
     "react": "^19.1.0",
     "react-apexcharts": "^1.7.0",
     "react-csv": "^2.2.2",

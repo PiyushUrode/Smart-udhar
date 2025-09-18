@@ -12,6 +12,13 @@ export const AuthService = {
     });
     console.log("[AuthService] register responsnse:", data);
 
+  if (data?.token) {
+      Cookies.set(STORAGE_KEYS.tokenCookie, data.token, { expires: 1 });
+    }
+    if (data?.refreshToken) {
+      Cookies.set(STORAGE_KEYS.refreshTokenCookie, data.refreshToken, { expires: 7 });
+    }
+
     if (data?.store?.id) {
       Cookies.set(STORAGE_KEYS.storeIdCookie, data.store.id, { expires: 7 });
     }
@@ -29,6 +36,9 @@ export const AuthService = {
 
     if (data?.token) {
       Cookies.set(STORAGE_KEYS.tokenCookie, data.token, { expires: 7 });
+    }
+     if (data?.refreshToken) {
+      Cookies.set(STORAGE_KEYS.refreshTokenCookie, data.refreshToken, { expires: 7 });
     }
 
     return data;
@@ -56,6 +66,12 @@ export const AuthService = {
     if (data?.token) {
       Cookies.set(STORAGE_KEYS.tokenCookie, data.token, { expires: 7 });
     }
+
+     if (data?.refreshToken) {
+      Cookies.set(STORAGE_KEYS.refreshTokenCookie, data.refreshToken, { expires: 7 });
+    }
+
+
     if (data?.store_id) {
       Cookies.set(STORAGE_KEYS.storeIdCookie, data.store_id, { expires: 7 });
     }
@@ -77,6 +93,7 @@ export const AuthService = {
   logout() {
     console.log("[AuthService] logout called");
     Cookies.remove(STORAGE_KEYS.tokenCookie);
+    Cookies.remove(STORAGE_KEYS.refreshTokenCookie);
     Cookies.remove(STORAGE_KEYS.storeIdCookie);
     localStorage.clear();
   },
