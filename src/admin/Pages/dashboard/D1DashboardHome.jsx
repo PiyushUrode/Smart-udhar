@@ -132,17 +132,17 @@ const D1DashboardHome = () => {
 
         if (current?.status === "success") {
           setStats({
-            totalSum: current.totalSum,
+            totalSum:Math.floor(current.totalSum),
             totalSumChange: percentChange(
               current.totalSum,
               previous?.totalSum
             ),
-            paidSum: current.paidSum,
+            paidSum: Math.floor(current.paidSum),
             paidSumChange: percentChange(
               current.paidSum,
               previous?.paidSum
             ),
-            pendingSum: current.pendingSum,
+            pendingSum: Math.floor(current.pendingSum),
             pendingSumChange: percentChange(
               current.pendingSum,
               previous?.pendingSum
