@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import { Link } from "react-router-dom";
 
-export default function BusinessProductViewer() {
+export default function ProductViewer() {
   const API_URL = import.meta.env.VITE_API_URL;
   const Auth_token = localStorage.getItem("authToken");
   const [mobile, setMobile] = useState("");
@@ -11,22 +13,25 @@ export default function BusinessProductViewer() {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit] = useState(5);
   const [loading, setLoading] = useState(false);
+  const [expandedRow, setExpandedRow] = useState(null);
 
   const token = Auth_token;
 
-  // ✅ Step 0: Fetch all products (Admin)
-  const fetchAllProductsAdmin = async () => {
+  // Fetch all products (Admin)
+  const fetchAllProductsAdmin = async (pageNumber = 1, pageLimit = limit) => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_URL}/admin/product-list`, {
+        params: { page: pageNumber, limit: pageLimit },
         headers: { Authorization: token },
       });
 
       if (res.data.success) {
         setProducts(res.data.products || []);
-        setPage(1);
-        setTotalPages(1); // admin API returns all products, no pagination
+        setPage(pageNumber);
+        setTotalPages(Math.ceil(res.data.total / pageLimit) || 1);
       }
     } catch (err) {
       console.error("Error fetching admin products:", err);
@@ -39,12 +44,12 @@ export default function BusinessProductViewer() {
     fetchAllProductsAdmin();
   }, []);
 
-  // Step 1: Fetch store by mobile
+  // Fetch store by mobile
   const fetchStoreByMobile = async () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        API_URL + "/store-auth/profileBy-number",
+        `${API_URL}/store-auth/profileBy-number`,
         { mobile },
         {
           headers: {
@@ -65,7 +70,7 @@ export default function BusinessProductViewer() {
     }
   };
 
-  // Step 2: Fetch businesses
+  // Fetch businesses
   const fetchBusinessProfiles = async (id) => {
     try {
       setLoading(true);
@@ -83,34 +88,90 @@ export default function BusinessProductViewer() {
     }
   };
 
-  // Step 3: Fetch products for selected business
-  const fetchProducts = async (pageNumber = 1, businessId = selectedBusiness) => {
+  // Fetch products
+  const fetchProducts = async (
+    pageNumber = 1,
+    businessId = selectedBusiness,
+    pageLimit = limit
+  ) => {
     if (!storeId || !businessId) return;
     try {
       setLoading(true);
       const res = await axios.get(
-        `${API_URL}/store-product/find-all/${storeId}/${businessId}`,
+        `${API_URL}/admin/product-list/${storeId}/${businessId}`,
         {
-          params: { page: pageNumber, limit: 5 },
+          params: { page: pageNumber, limit: pageLimit },
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: token,
             "Content-Type": "application/json",
           },
         }
       );
-      setProducts(res.data.products || []);
-      setPage(res.data.currentPage);
-      setTotalPages(res.data.totalPages);
+
+      if (res.data.success) {
+        setProducts(res.data.products || []);
+        setPage(pageNumber);
+        setTotalPages(Math.ceil(res.data.total / pageLimit) || 1);
+      }
     } catch (err) {
-      console.error("Error fetching products:", err.response?.data || err.message);
+      console.error(
+        "Error fetching products:",
+        err.response?.data || err.message
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const pagination = (newPage) => {
+    if (newPage < 1 || newPage > totalPages) return;
+
+    storeId
+      ? fetchProducts(newPage, selectedBusiness, limit)
+      : fetchAllProductsAdmin(newPage, limit);
+  };
+
+  const RowPerPage = (newLimit) => {
+    setLimit(newLimit);
+    storeId
+      ? fetchProducts(1, selectedBusiness, newLimit)
+      : fetchAllProductsAdmin(1, newLimit);
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    if (products.length === 0) return;
+
+    const worksheetData = products.map((prod, index) => ({
+      "S.No": (page - 1) * limit + index + 1,
+      Name: prod.name,
+      "Product Image": prod.product_image || "-",
+      Quantity: prod.quantity,
+      "Min Quantity": prod.min_quantity,
+      "Sold Quantity": prod.sold_quantity,
+      Unit: prod.unit,
+      "Sales Price": prod.sales_price,
+      "Purchase Price": prod.purchase_price,
+      Category: prod.category || "-",
+      "HSN Number": prod.hsn_number || "-",
+      Tax: prod.tax || 0,
+      "Price Type": prod.price_type || "-",
+      "Product Type": prod.product_type || "-",
+      "Created At": new Date(prod.createdAt).toLocaleDateString(),
+      "Updated At": new Date(prod.updatedAt).toLocaleDateString(),
+      "Store Mobile": prod.storeMobile || "-",
+      "Business Name": prod.businessName || "-",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+
+    XLSX.writeFile(workbook, "products.xlsx");
+  };
+
   return (
     <div className="max-w-6xl mx-auto mt-12 p-6 bg-white shadow-lg rounded-2xl space-y-6">
-      {/* Loader */}
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -118,7 +179,7 @@ export default function BusinessProductViewer() {
         </div>
       )}
 
-      {/* Step 1: Mobile Input */}
+      {/* Mobile Input */}
       <div className="space-y-2">
         <label className="font-semibold text-gray-700">Enter Vendor Number</label>
         <div className="flex gap-2">
@@ -138,7 +199,7 @@ export default function BusinessProductViewer() {
         </div>
       </div>
 
-      {/* Step 2: Business Dropdown */}
+      {/* Business Dropdown */}
       {businesses.length > 0 && (
         <div className="space-y-2">
           <label className="font-semibold text-gray-700">Select Business</label>
@@ -147,7 +208,7 @@ export default function BusinessProductViewer() {
             onChange={(e) => {
               const newBusinessId = e.target.value;
               setSelectedBusiness(newBusinessId);
-              fetchProducts(1, newBusinessId);
+              fetchProducts(1, newBusinessId, limit);
             }}
             className="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-400 focus:outline-none bg-[#F6F8FA]"
           >
@@ -161,80 +222,160 @@ export default function BusinessProductViewer() {
         </div>
       )}
 
-      {/* Step 3: Products List */}
+      {/* Product List */}
       {products.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-            Products {totalPages > 1 && `(Page ${page})`}
-          </h3>
+          <div className="flex flex-wrap justify-between items-center border-b pb-2">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Products {totalPages > 1 && `(Page ${page})`}
+            </h3>
 
-          {/* Products Table */}
-          <div className="overflow-x-auto text-nowrap text-center">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={exportToExcel}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition"
+              >
+                Export Excel
+              </button>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">
+                  Rows per page:
+                </label>
+                <select
+                  value={limit}
+                  onChange={(e) => RowPerPage(parseInt(e.target.value))}
+                  className="border bg-white rounded-lg p-1 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Table */}
+          <div className="overflow-x-auto text-center">
             <table className="w-full border-collapse border border-gray-200 text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="border px-4 py-2 text-left">Name</th>
-                  <th className="border px-4 py-2 text-left">Image</th>
-                  <th className="border px-4 py-2 text-left">Quantity</th>
-                  <th className="border px-4 py-2 text-left">Min Qty</th>
-                  <th className="border px-4 py-2 text-left">Sold</th>
-                  <th className="border px-4 py-2 text-left">Unit</th>
-                  <th className="border px-4 py-2 text-left">Sales Price</th>
-                  <th className="border px-4 py-2 text-left">Purchase Price</th>
-                  <th className="border px-4 py-2 text-left">Category</th>
-                  <th className="border px-4 py-2 text-left">HSN</th>
-                  <th className="border px-4 py-2 text-left">Tax</th>
-                  <th className="border px-4 py-2 text-left">Type</th>
-                  <th className="border px-4 py-2 text-left">Vendor Number</th>
-                  <th className="border px-4 py-2 text-left">Business Name</th>
+                  <th className="border px-2 py-2"></th>
+                  <th className="border px-2 py-2">S.No</th>
+                  <th className="border px-2 py-2">Product Name</th>
+                  <th className="border px-2 py-2">Quantity</th>
+                  <th className="border px-2 py-2">Unit</th>
+                  <th className="border px-2 py-2">Sales Price</th>
                 </tr>
               </thead>
-              <tbody>
-                {products.map((prod) => (
-                  <tr key={prod._id} className="hover:bg-gray-50">
-                    <td className="border px-4 py-2 text-left">{prod.name}</td>
-                    <td className="border px-4 py-2">
-                      {prod.product_image ? (
-                        <img
-                          src={`${'https://smartudharapi.furfoori.com'}/assets/uploadsProduct/${prod.product_image}`}
-                          alt={prod.name}
-                          className="h-10 mx-auto"
-                        />
-                      ) : (
-                        "-"
+              <tbody className="text-nowrap">
+                {products.map((prod, index) => {
+                  const isExpanded = expandedRow === prod._id;
+                  return (
+                    <React.Fragment key={prod._id}>
+                      <tr className="hover:bg-gray-50">
+                        <td className="border px-2 py-2 text-center w-10">
+                          <button
+                            onClick={() =>
+                              setExpandedRow(isExpanded ? null : prod._id)
+                            }
+                            className="flex items-center justify-center w-5 h-5 bg-blue-100 hover:bg-blue-200 rounded-full transition"
+                          >
+                            {isExpanded ? "−" : "+"}
+                          </button>
+                        </td>
+                        <td className="border px-4 py-2">
+                          {(page - 1) * limit + index + 1}
+                        </td>
+                        <td className="border px-4 py-2">{prod.name}</td>
+                        <td className="border px-4 py-2">{prod.quantity}</td>
+                        <td className="border px-4 py-2">{prod.unit}</td>
+                        <td className="border px-4 py-2">{prod.sales_price}</td>
+                      </tr>
+
+                      {isExpanded && (
+                        <tr className="bg-gray-50">
+                          <td colSpan={7} className="p-4 text-left">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <strong>Min Quantity:</strong> {prod.min_quantity}
+                              </div>
+                              <div>
+                                <strong>Sold Quantity:</strong> {prod.sold_quantity}
+                              </div>
+                              <div>
+                                <strong>Purchase Price:</strong> {prod.purchase_price}
+                              </div>
+                              <div>
+                                <strong>Category:</strong> {prod.category || "-"}
+                              </div>
+                              <div>
+                                <strong>HSN Number:</strong> {prod.hsn_number || "-"}
+                              </div>
+                              <div>
+                                <strong>Tax:</strong> {prod.tax || 0}
+                              </div>
+                              <div>
+                                <strong>Price Type:</strong> {prod.price_type || "-"}
+                              </div>
+                              <div>
+                                <strong>Product Type:</strong> {prod.product_type || "-"}
+                              </div>
+                              <div>
+                                <strong>Created At:</strong>{" "}
+                                {new Date(prod.createdAt).toLocaleDateString()}
+                              </div>
+                              <div>
+                                <strong>Updated At:</strong>{" "}
+                                {new Date(prod.updatedAt).toLocaleDateString()}
+                              </div>
+                              <div>
+                                <strong>Store Mobile:</strong> {prod.storeMobile || "-"}
+                              </div>
+                              <div>
+                                <strong>Business Name:</strong> {prod.businessName || "-"}
+                              </div>
+                              <div>
+                                <strong>Product Image: 
+                                  {prod.product_image ?   <Link to={`${API_URL}/assets/uploadsProduct/${prod.product_image}`} target="_blank" className="text-blue-600" rel="noopener noreferrer"> View</Link>: ""}
+                                  </strong>{" "}
+                                {prod.product_image ? (
+                                  <Link to={`${API_URL}/assets/uploadsProduct/${prod.product_image}`} target="_blank" rel="noopener noreferrer">
+                                   <img
+                                     src={`${API_URL}/assets/uploadsProduct/${prod.product_image}`}
+                                     alt={prod.name}
+                                     className="w-20 h-20 object-cover rounded"
+                                     />                                 
+                                     </Link>
+                                ) : (
+                                  "-"
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td className="border px-4 py-2">{prod.quantity}</td>
-                    <td className="border px-4 py-2">{prod.min_quantity}</td>
-                    <td className="border px-4 py-2">{prod.sold_quantity}</td>
-                    <td className="border px-4 py-2">{prod.unit}</td>
-                    <td className="border px-4 py-2">{prod.sales_price}</td>
-                    <td className="border px-4 py-2">{prod.purchase_price}</td>
-                    <td className="border px-4 py-2">{prod.category}</td>
-                    <td className="border px-4 py-2">{prod.hsn_number}</td>
-                    <td className="border px-4 py-2">{prod.tax}%</td>
-                    <td className="border px-4 py-2">{prod.product_type}</td>
-                    <td className="border px-4 py-2">{prod.storeMobile || "-"}</td>
-                    <td className="border px-4 py-2">{prod.businessName || "-"}</td>
-                  </tr>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 mt-4">
               <button
                 disabled={page <= 1}
-                onClick={() => fetchProducts(page - 1)}
+                onClick={() => pagination(page - 1)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Prev
               </button>
               <button
                 disabled={page >= totalPages}
-                onClick={() => fetchProducts(page + 1)}
+                onClick={() => pagination(page + 1)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next

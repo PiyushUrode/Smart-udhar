@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import * as XLSX from "xlsx";
 
 export default function BusinessInvoiceViewer() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -11,22 +12,25 @@ export default function BusinessInvoiceViewer() {
   const [invoices, setInvoices] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit] = useState(5);
   const [loading, setLoading] = useState(false);
+  const [expandedRow, setExpandedRow] = useState(null);
 
   const token = Auth_token;
 
-  // ✅ Step 0: Fetch all invoices (Admin)
-  const fetchAllInvoicesAdmin = async () => {
+  // Fetch all invoices (Admin)
+  const fetchAllInvoicesAdmin = async (pageNumber = 1, pageLimit = limit) => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_URL}/admin/invoice-list`, {
+        params: { page: pageNumber, limit: pageLimit },
         headers: { Authorization: token },
       });
 
       if (res.data.success) {
         setInvoices(res.data.invoices || []);
-        setPage(1);
-        setTotalPages(1); // admin API returns all invoices, no pagination
+        setPage(pageNumber);
+        setTotalPages(Math.ceil(res.data.total / pageLimit) || 1);
       }
     } catch (err) {
       console.error("Error fetching admin invoices:", err);
@@ -35,12 +39,11 @@ export default function BusinessInvoiceViewer() {
     }
   };
 
-  // Fetch once when component loads
   useEffect(() => {
     fetchAllInvoicesAdmin();
   }, []);
 
-  // ✅ Step 1: Fetch store by mobile
+  // Fetch store by mobile
   const fetchStoreByMobile = async () => {
     try {
       setLoading(true);
@@ -66,7 +69,7 @@ export default function BusinessInvoiceViewer() {
     }
   };
 
-  // ✅ Step 2: Fetch businesses
+  // Fetch businesses
   const fetchBusinessProfiles = async (id) => {
     try {
       setLoading(true);
@@ -84,28 +87,31 @@ export default function BusinessInvoiceViewer() {
     }
   };
 
-  // ✅ Step 3: Fetch invoices
+  // Fetch invoices
   const fetchInvoices = async (
     pageNumber = 1,
-    businessId = selectedBusiness
+    businessId = selectedBusiness,
+    pageLimit = limit
   ) => {
     if (!storeId || !businessId) return;
     try {
       setLoading(true);
       const res = await axios.get(
-        `${API_URL}/store-invoice/find-all/${storeId}/${businessId}`,
+        `${API_URL}/admin/invoice-list/${storeId}/${businessId}`,
         {
-          params: { page: pageNumber, limit: 5 },
+          params: { page: pageNumber, limit: pageLimit },
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: token,
             "Content-Type": "application/json",
           },
         }
       );
 
-      setInvoices(res.data.data || []);
-      setPage(res.data.currentPage || 1);
-      setTotalPages(res.data.totalPages || 1);
+      if (res.data.success) {
+        setInvoices(res.data.invoices || []);
+        setPage(pageNumber);
+        setTotalPages(Math.ceil(res.data.total / pageLimit) || 1);
+      }
     } catch (err) {
       console.error(
         "Error fetching invoices:",
@@ -116,9 +122,64 @@ export default function BusinessInvoiceViewer() {
     }
   };
 
+  const pagination = (newPage) => {
+    if (newPage < 1 || newPage > totalPages) return;
+
+    storeId
+      ? fetchInvoices(newPage, selectedBusiness, limit)
+      : fetchAllInvoicesAdmin(newPage, limit);
+  };
+
+  const RowPerPage = (newLimit) => {
+    setLimit(newLimit);
+    storeId
+      ? fetchInvoices(1, selectedBusiness, newLimit)
+      : fetchAllInvoicesAdmin(1, newLimit);
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    if (invoices.length === 0) return;
+
+    const worksheetData = invoices.map((inv, index) => ({
+      "S.No": (page - 1) * limit + index + 1,
+      "Invoice ID": inv.invoiceId,
+      "Customer Name": inv.customerName || inv.name || "-",
+      "Customer Phone": inv.customerPhone || inv.phone || "-",
+      Balance: inv.balance || 0,
+      "Credit Score": inv.creditScore || "-",
+      Products: inv.products
+        .map((p) => `${p.name} (${p.qty} ${p.unit}) - ${p.total}`)
+        .join(", "),
+      "Payment Mode": inv.paymentMode,
+      "Payment Method": inv.paymentMethod,
+      "Transaction ID": inv.transactionId || "-",
+      "Delivery Fee": inv.deliveryFee || 0,
+      "Packing Charges": inv.packingCharges || 0,
+      Discount: inv.discount || 0,
+      "Other Charges": inv.other || 0,
+      Note: inv.note || "-",
+      Subtotal: inv.subtotal || 0,
+      Tax: inv.tax || 0,
+      Total: inv.total || 0,
+      "Total Received": inv.totalReceived || 0,
+      "Due Balance": inv.dueBalance || 0,
+      "Payment Status": inv.paymentStatus || "-",
+      "Store Mobile": inv.storeMobile || "-",
+      "Business Name": inv.businessName || "-",
+      "Created At": new Date(inv.createdAt).toLocaleDateString(),
+      "Updated At": new Date(inv.updatedAt).toLocaleDateString(),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+
+    XLSX.writeFile(workbook, "invoices.xlsx");
+  };
+
   return (
     <div className="max-w-6xl mx-auto mt-12 p-6 bg-white shadow-lg rounded-2xl space-y-6">
-      {/* Loader */}
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -126,11 +187,9 @@ export default function BusinessInvoiceViewer() {
         </div>
       )}
 
-      {/* Step 1: Mobile Input */}
+      {/* Mobile Input */}
       <div className="space-y-2">
-        <label className="font-semibold text-gray-700">
-          Enter Vendor Number
-        </label>
+        <label className="font-semibold text-gray-700">Enter Vendor Number</label>
         <div className="flex gap-2">
           <input
             type="text"
@@ -148,7 +207,7 @@ export default function BusinessInvoiceViewer() {
         </div>
       </div>
 
-      {/* Step 2: Business Dropdown */}
+      {/* Business Dropdown */}
       {businesses.length > 0 && (
         <div className="space-y-2">
           <label className="font-semibold text-gray-700">Select Business</label>
@@ -157,7 +216,7 @@ export default function BusinessInvoiceViewer() {
             onChange={(e) => {
               const newBusinessId = e.target.value;
               setSelectedBusiness(newBusinessId);
-              fetchInvoices(1, newBusinessId);
+              fetchInvoices(1, newBusinessId, limit);
             }}
             className="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-400 focus:outline-none bg-[#F6F8FA]"
           >
@@ -171,65 +230,185 @@ export default function BusinessInvoiceViewer() {
         </div>
       )}
 
-      {/* Step 3: Invoices List */}
+      {/* Invoice List */}
       {invoices.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-            Invoices {totalPages > 1 && `(Page ${page})`}
-          </h3>
+          <div className="flex flex-wrap justify-between items-center border-b pb-2">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Invoices {totalPages > 1 && `(Page ${page})`}
+            </h3>
 
-          {/* Invoices Table */}
-          <div className="overflow-x-auto text-nowrap text-center">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={exportToExcel}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition"
+              >
+                Export Excel
+              </button>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">
+                  Rows per page:
+                </label>
+                <select
+                  value={limit}
+                  onChange={(e) => RowPerPage(parseInt(e.target.value))}
+                  className="border bg-white rounded-lg p-1 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Invoice Table */}
+          <div className="overflow-x-auto text-center">
             <table className="w-full border-collapse border border-gray-200 text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="border px-4 py-2">Invoice ID</th>
-                  <th className="border px-4 py-2">Customer</th>
-                  <th className="border px-4 py-2">Phone</th>
-                  <th className="border px-4 py-2">Subtotal</th>
-                  <th className="border px-4 py-2">Tax</th>
-                  <th className="border px-4 py-2">Total</th>
-                  <th className="border px-4 py-2">Payment Status</th>
-                  <th className="border px-4 py-2">Created At</th>
-                  <th className="border px-4 py-2 text-left">Vendor Number</th>
-                  <th className="border px-4 py-2 text-left">Vendor Shop</th>
+                  <th className="border px-2 py-2"></th>
+                  <th className="border px-2 py-2">S.No</th>
+                  <th className="border px-2 py-2">Invoice ID</th>
+                  <th className="border px-2 py-2">Customer</th>
+                  <th className="border px-2 py-2">Amount</th>
                 </tr>
               </thead>
-              <tbody>
-                {invoices.map((inv) => (
-                  <tr key={inv._id} className="hover:bg-gray-50">
-                    <td className="border px-4 py-2">{inv.invoiceId}</td>
-                    <td className="border px-4 py-2">{inv.name}</td>
-                    <td className="border px-4 py-2">{inv.phone}</td>
-                    <td className="border px-4 py-2">{inv.subtotal}</td>
-                    <td className="border px-4 py-2">{inv.tax}</td>
-                    <td className="border px-4 py-2">{inv.total}</td>
-                    <td className="border px-4 py-2">{inv.paymentStatus}</td>
-                    <td className="border px-4 py-2">
-                      {new Date(inv.createdAt).toLocaleDateString()}
-                    </td>
-                      <td className="border px-4 py-2">{inv.storeMobile?inv.storeMobile:'-'}</td>
-                    <td className="border px-4 py-2">{inv.businessName?inv.businessName:'-'}</td>
-                    
-                  </tr>
-                ))}
+              <tbody className="text-nowrap">
+                {invoices.map((inv, index) => {
+                  const isExpanded = expandedRow === inv._id;
+                  return (
+                    <React.Fragment key={inv._id}>
+                      <tr className="hover:bg-gray-50">
+                        <td className="border px-2 py-2 text-center w-10">
+                          <button
+                            onClick={() =>
+                              setExpandedRow(isExpanded ? null : inv._id)
+                            }
+                            className="flex items-center justify-center w-5 h-5 bg-blue-100 hover:bg-blue-200 rounded-full transition"
+                          >
+                            {isExpanded ? "−" : "+"}
+                          </button>
+                        </td>
+                        <td className="border px-4 py-2">
+                          {(page - 1) * limit + index + 1}
+                        </td>
+                        <td className="border px-4 py-2">{inv.invoiceId}</td>
+                        <td className="border px-4 py-2">
+                          {inv.customerName || inv.name || "-"}
+                        </td>
+                        <td className="border px-4 py-2">{inv.total}</td>
+                      </tr>
+
+                      {isExpanded && (
+                        <tr className="bg-gray-50">
+                          <td colSpan={7} className="p-4 text-left">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <strong>Customer Phone:</strong>{" "}
+                                {inv.customerPhone || inv.phone || "-"}
+                              </div>
+                              <div>
+                                <strong>Balance:</strong> {inv.balance || 0}
+                              </div>
+                              <div>
+                                <strong>Credit Score:</strong>{" "}
+                                {inv.creditScore || "-"}
+                              </div>
+                              <div>
+                                <strong>Payment Mode:</strong>{" "}
+                                {inv.paymentMode || "-"}
+                              </div>
+                              <div>
+                                <strong>Payment Method:</strong>{" "}
+                                {inv.paymentMethod || "-"}
+                              </div>
+                              <div>
+                                <strong>Transaction ID:</strong>{" "}
+                                {inv.transactionId || "-"}
+                              </div>
+                              <div>
+                                <strong>Delivery Fee:</strong>{" "}
+                                {inv.deliveryFee || 0}
+                              </div>
+                              <div>
+                                <strong>Packing Charges:</strong>{" "}
+                                {inv.packingCharges || 0}
+                              </div>
+                              <div>
+                                <strong>Discount:</strong> {inv.discount || 0}
+                              </div>
+                              <div>
+                                <strong>Other Charges:</strong> {inv.other || 0}
+                              </div>
+                              <div>
+                                <strong>Subtotal:</strong> {inv.subtotal || 0}
+                              </div>
+                              <div>
+                                <strong>Tax:</strong> {inv.tax || 0}
+                              </div>
+                              <div>
+                                <strong>Total:</strong> {inv.total || 0}
+                              </div>
+                              <div>
+                                <strong>Total Received:</strong>{" "}
+                                {inv.totalReceived || 0}
+                              </div>
+                              <div>
+                                <strong>Due Balance:</strong>{" "}
+                                {inv.dueBalance || 0}
+                              </div>
+                              <div>
+                                <strong>Payment Status:</strong>{" "}
+                                {inv.paymentStatus || "-"}
+                              </div>
+                              <div>
+                                <strong>Note:</strong> {inv.note || "-"}
+                              </div>
+                              <div>
+                                <strong>Store Mobile:</strong>{" "}
+                                {inv.storeMobile || "-"}
+                              </div>
+                              <div>
+                                <strong>Business Name:</strong>{" "}
+                                {inv.businessName || "-"}
+                              </div>
+                              <div className="col-span-2">
+                                <strong>Products:</strong>
+                                <ul className="list-disc ml-6">
+                                  {inv.products.map((p) => (
+                                    <li key={p.productId}>
+                                      {p.name} - {p.qty} {p.unit} - {p.total}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 mt-4">
               <button
                 disabled={page <= 1}
-                onClick={() => fetchInvoices(page - 1)}
+                onClick={() => pagination(page - 1)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Prev
               </button>
               <button
                 disabled={page >= totalPages}
-                onClick={() => fetchInvoices(page + 1)}
+                onClick={() => pagination(page + 1)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next

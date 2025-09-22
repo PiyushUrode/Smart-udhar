@@ -1,38 +1,26 @@
 import React, { useState, useEffect } from "react";
-import {
-  Bell,
-  CheckCircle2,
-  Archive,
-  AlertTriangle,
-  Info,
-  XCircle,
-  Trash2,
-} from "lucide-react";
+import { Bell, Trash2, Cpu } from "lucide-react";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
-const priorityMap = {
-  urgent: { icon: <XCircle size={16} />, color: "bg-red-100 text-red-700" },
-  warning: {
-    icon: <AlertTriangle size={16} />,
-    color: "bg-yellow-100 text-yellow-700",
-  },
-  info: { icon: <Info size={16} />, color: "bg-blue-100 text-blue-700" },
-  success: {
-    icon: <CheckCircle2 size={16} />,
-    color: "bg-green-100 text-green-700",
-  },
+// ✅ Default fallback icon/color for unknown types
+const defaultType = {
+  icon: <Cpu size={16} />,
+  color: "bg-gray-100 text-gray-700",
 };
 
 const ShowNotificationList = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState("all");
+  const [availableTypes, setAvailableTypes] = useState(["system"]); // 👈 always start with system
 
   // ✅ Fetch notifications
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const token = localStorage.getItem("authToken");
-        const res = await fetch(API_URL+"/notification/list", {
+        const res = await fetch(API_URL + "/notification/list", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -56,11 +44,19 @@ const ShowNotificationList = () => {
               id: n._id,
               title: n.title,
               message: n.message,
+              type: n.type?.toLowerCase() || "system", // 👈 always fallback to system
               time: formattedDate,
-              priority: "info", // default for now
             };
           });
+
+          // collect unique types dynamically + system
+          const uniqueTypes = [
+            
+            ...new Set(mapped.map((n) => n.type?.toLowerCase())),
+          ];
+
           setNotifications(mapped);
+          setAvailableTypes(uniqueTypes);
         }
       } catch (err) {
         console.error("Error fetching notifications:", err);
@@ -80,20 +76,16 @@ const ShowNotificationList = () => {
 
     try {
       const token = localStorage.getItem("authToken");
-      const res = await fetch(
-        API_URL+`/notification/delete/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? token : "",
-          },
-        }
-      );
+      const res = await fetch(API_URL + `/notification/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? token : "",
+        },
+      });
 
       const data = await res.json();
       if (data.success) {
-        // Remove from state without refetch
         setNotifications((prev) => prev.filter((n) => n.id !== id));
       } else {
         alert("Failed to delete notification");
@@ -104,6 +96,12 @@ const ShowNotificationList = () => {
     }
   };
 
+  // ✅ Apply filter
+  const filteredNotifications =
+    filterType === "all"
+      ? notifications
+      : notifications.filter((n) => n.type === filterType);
+
   if (loading) {
     return <p className="p-4 text-gray-500">Loading notifications...</p>;
   }
@@ -112,41 +110,75 @@ const ShowNotificationList = () => {
     <div className="p-4 w-full max-w-7xl mt-5 md:mt-10 mx-auto space-y-6 font-interR">
       {/* Page Title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-interSb text-bluecol flex items-center gap-2">
-          <Bell size={20} /> Notification Center
+        <h1 className="text-xl font-bold text-blue-700 flex items-center gap-2">
+          <Bell size={22} /> Notification Center
         </h1>
+
         {/* Bell with count */}
         <div className="relative hidden md:inline">
           <Bell className="text-gray-600" size={22} />
-          <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white w-5 h-5 flex items-center justify-center rounded-full font-interSb">
+          <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white w-5 h-5 flex items-center justify-center rounded-full font-bold">
             {notifications.length}
           </span>
         </div>
       </div>
 
+      {/* Filter Tabs */}
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        <button
+          onClick={() => setFilterType("all")}
+          className={`px-4 py-1.5 text-sm rounded-full border transition ${
+            filterType === "all"
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
+          }`}
+        >
+          All
+        </button>
+        {availableTypes.map((type) => (
+          <button
+            key={type}
+            onClick={() => setFilterType(type)}
+            className={`px-4 py-1.5 text-sm rounded-full border capitalize transition ${
+              filterType === type
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
+            }`}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+
       {/* Notification Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {notifications.length === 0 ? (
+        {filteredNotifications.length === 0 ? (
           <p className="text-gray-500">No notifications found.</p>
         ) : (
-          notifications.map((noti) => {
-            const priority = priorityMap[noti.priority] || priorityMap.info;
-
+          filteredNotifications.map((noti) => {
             return (
               <div
                 key={noti.id}
-                className="flex items-start justify-between bg-white rounded-xl shadow-customCard p-5 transition-all duration-150"
+                className="flex items-start justify-between bg-white rounded-xl shadow-md hover:shadow-lg border border-gray-100 p-5 transition-all duration-150"
               >
                 <div className="flex gap-4">
+                  {/* Icon */}
                   <div
-                    className={`w-9 h-9 flex items-center justify-center rounded-full ${priority.color}`}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full ${defaultType.color}`}
                   >
-                    {priority.icon}
+                    {defaultType.icon}
                   </div>
+
+                  {/* Content */}
                   <div className="space-y-1">
-                    <h3 className="font-robotoM text-base text-gray-900">
-                      {noti.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">
+                        {noti.title}
+                      </h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-200 text-gray-800 capitalize">
+                        {noti.type}
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-600">{noti.message}</p>
                     <span className="text-xs text-gray-400">{noti.time}</span>
                   </div>
