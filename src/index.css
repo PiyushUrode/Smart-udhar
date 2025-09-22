@@ -114,3 +114,89 @@ html, body {
     @apply text-[#374151];
   }
 }
+
+
+/* Autofill background override */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important; /* 👈 white bg */
+  -webkit-text-fill-color: #374151 !important; /* 👈 text black */
+  transition: background-color 5000s ease-in-out 0s; /* autofill bg fade */
+}
+
+/* Dark mode example */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffffc6 inset !important; /* custom bg */
+  -webkit-text-fill-color: #374151 !important;
+}
+
+
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important; /* 👈 white bg */
+  -webkit-text-fill-color: #374151 !important; /* 👈 text black */
+  transition: background-color 5000s ease-in-out 0s; /* autofill bg fade */
+}
+
+/* Dark mode example */
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffffc6 inset !important; /* custom bg */
+  -webkit-text-fill-color: #374151 !important;
+}
+
+/* Chrome, Safari, Edge, Opera ke liye */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox ke liye */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Remove number input spinners for WebKit browsers (Chrome, Edge, Safari, Opera) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove spinner for Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Optional: ensure up/down arrows hidden on focused elements too */
+input[type="number"]:focus::-webkit-inner-spin-button,
+input[type="number"]:focus::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+/* Optional: make sure any vendor-specific appearance removed */
+input[type="number"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+
+/* custom scroll */
+
+/* Add this in your global CSS file */
+.custom-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: #f9fafb; /* very light white/gray */
+  border-radius: 10px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #93c5fd; /* soft blue */
+  border-radius: 10px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #60a5fa; /* slightly darker blue on hover */
+}

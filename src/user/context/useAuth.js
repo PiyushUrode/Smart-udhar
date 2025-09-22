@@ -1,8 +1,7 @@
-// src/context/useAuth.js
 import { useContext } from "react";
-import { AuthContext } from "./AuthContext.jsx";  // ✅ named import
+import { AuthContext } from "../api/AuthContext.js"; // ✅ ab sahi import
 
-// Custom hook for cleaner usage
+
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) {

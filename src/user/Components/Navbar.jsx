@@ -26,7 +26,7 @@ const Navbar = ({ toggleSidebar }) => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(`${API_URL}/notifications`);
+        const res = await fetch(`${ API_URL}/dashboard/notification`);
         const data = await res.json();
 
         if (data.success && data.data) {

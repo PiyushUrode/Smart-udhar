@@ -8,6 +8,9 @@ import logo from "../assets/logo/logo_hr.png";
 import lockImage from "../assets/login/login side img.webp";
 import icon from "../assets/login/icon.webp";
 import { toast } from "react-toastify";
+import whatsapp from '../assets/login/whatsapp_icon.webp';
+import callicon from '../assets/login/call_icon.webp';
+import "../Styles/login.css"
 
 const SignupPage = () => {
   // Local state for step handling
@@ -15,34 +18,20 @@ const SignupPage = () => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
 
   // From Auth Context → login() will set token + storeProfile_id
   const { login } = useAuth();
 
-  /**
-   * Step 1: Request OTP
-   */
-  // const handleGetOtp = async () => {
-  //   if (phone.length !== 10) {
-  //     return toast.error("Enter a valid 10-digit number");
-  //   }
-  //   try {
-  //     console.log("[Signup] Sending OTP to:", phone);
-  //     const res = await AuthService.register(phone); // 🔹 call API
-  //     toast.success(res.message || "OTP sent!");
-  //     console.log("[Signup] OTP response:", res);
-  //     setStep("otp");
-  //   } catch (err) {
-  //     console.error("[Signup] OTP error:", err);
-  //     toast.error(err.message || "Failed to send OTP");
-  //   }
-  // };
 
 
 const handleGetOtp = async () => {
   if (phone.length !== 10) {
     return toast.error("Enter a valid 10-digit number");
   }
+    if (loading) return; // ✅ already loading, ignore extra clicks
+  setLoading(true);
   try {
     console.log("[Signup] Sending OTP to:", phone);
     const res = await AuthService.register(phone);
@@ -63,6 +52,9 @@ const handleGetOtp = async () => {
   } catch (err) {
     console.error("[Signup] OTP error:", err);
     toast.error(err.message || "Failed to send OTP");
+  }
+  finally {
+    setLoading(false); // ✅ reset loading
   }
 };
 
@@ -146,6 +138,17 @@ const handleKeyDown = (e, index) => {
               <p className="l-para">Enter your mobile number to get started</p>
             </div>
 
+            <div>
+               <button className="btn whatsapp">
+              <img src={whatsapp} alt="" />
+              Continue with WhatsApp
+            </button>
+            <button className="btn truecaller">
+              <img src={callicon} alt="" />
+              Continue with Truecaller
+            </button>
+    {/* <div className="divider">OR</div> */}
+            </div>
             {/* Step 1: Phone input */}
             {step === "phone" && (
               <>
@@ -159,7 +162,7 @@ const handleKeyDown = (e, index) => {
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
-                <button className="btn otp" onClick={handleGetOtp}>Get OTP</button>
+                <button className="btn otp" onClick={handleGetOtp}  disabled={loading}   > {loading ? "Sending..." : "Get OTP"}</button>
               </>
             )}
 

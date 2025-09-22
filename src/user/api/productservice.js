@@ -242,35 +242,37 @@ async exportProductsPDF() {
   }
 },
 
- async uploadExcel(file) {
-    try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
-      const fd = new FormData();
-      fd.append("excelFile", file);
-      fd.append("store_id", store_id.toString());
-      fd.append("storeProfile_id", storeProfile_id.toString());
+async uploadExcel(file) {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const fd = new FormData();
 
-      const { data } = await axiosClient.post(
-        "/store-product/upload-excel",
-        fd,
-        {
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+    fd.append("excelFile", file);
+    fd.append("schema", "Product");  // ✅ yaha schema add karo
+    fd.append("store_id", store_id.toString());
+    fd.append("storeProfile_id", storeProfile_id.toString());
 
-      return {
-        success: data?.success ?? true,
-        message: data?.message,
-        count: data?.count || 0,
-      };
-    } catch (err) {
-      console.error("❌ uploadExcel error:", err);
-      return { success: false, error: err.message };
-    }
-  },
+    const { data } = await axiosClient.post(
+      "/store-product/upload-excel",
+      fd,
+      {
+        headers: {
+          ...authHeaders(token),
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return {
+      success: data?.success ?? true,
+      message: data?.message,
+      count: data?.count || 0,
+    };
+  } catch (err) {
+    console.error("❌ uploadExcel error:", err);
+    return { success: false, error: err.message };
+  }
+},
 
 
   /**

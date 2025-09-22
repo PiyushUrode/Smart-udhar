@@ -150,9 +150,9 @@ const handleEdit = (customer) => {
                     >
                       <FiTrash2 className="w-5 h-5" />
                     </button>
-                    <button className="text-[#4B5563] hover:text-gray-700">
+                    {/* <button className="text-[#4B5563] hover:text-gray-700">
                       <FaBoxOpen className="w-5 h-5" />
-                    </button>
+                    </button> */}
                   </td>
                 </tr>
               ))}
