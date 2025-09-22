@@ -535,88 +535,117 @@ export default function D3Product() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!validateForm()) {
+  if (!validateForm()) {
+    return;
+  }
+
+  try {
+    const payload = { ...formData };
+    const file = formData.product_image || null;
+    delete payload.product_image;
+
+    // 🔹 Set safe defaults
+    if (!payload.hsn_number) payload.hsn_number = "DEFAULT_HSN";
+    if (!payload.tax) payload.tax = "0";
+    if (!payload.price_type) payload.price_type = "fixed";
+
+    if (activeTab === "service") {
+      if (!payload.purchase_price || payload.purchase_price === "") payload.purchase_price = "0";
+      if (!payload.category || payload.category === "") payload.category = "General";
+      if (!payload.min_quantity || payload.min_quantity === "") payload.min_quantity = "0";
+    } else {
+      payload.min_quantity = payload.min_quantity || "0";
+    }
+
+    // Always stringify gstInclusive for backend safety
+    payload.gstInclusive = String(payload.gstInclusive);
+
+    // =========================
+    // 🧮 Tax Calculation Logic
+    // =========================
+    const sales = parseFloat(payload.sales_price || "0");
+    const taxRate = parseFloat(payload.tax || "0");
+
+    if (activeTab === "product") {
+      // price_type = "fixed" → already inclusive
+      // price_type = "without" → add GST
+      if (payload.price_type === "without" && taxRate > 0) {
+        const inclusivePrice = sales + (sales * taxRate) / 100;
+        payload.sales_price = inclusivePrice.toFixed(2);
+      }
+    }
+
+    if (activeTab === "service") {
+      // gstInclusive = "true" → already inclusive
+      // gstInclusive = "false" → add GST
+      if (payload.gstInclusive === "false" && taxRate > 0) {
+        const inclusivePrice = sales + (sales * taxRate) / 100;
+        payload.sales_price = inclusivePrice.toFixed(2);
+      }
+    }
+
+    // Product type (used by API)
+    const productType = activeTab === "product" ? "inventory" : "service";
+
+    // =========================
+    // 🔹 API CALL
+    // =========================
+    let res;
+    if (isEditMode) {
+      res = await ProductService.updateProduct(id, payload, file, productType);
+    } else {
+      res = await ProductService.createProduct(payload, file, productType);
+    }
+
+    if (res.success) {
+      toast.success(
+        `${activeTab === "product" ? "Product" : "Service"} ${isEditMode ? "updated" : "saved"} successfully!`,
+        { position: "top-right", autoClose: 3000 }
+      );
+      setFormData(initialFormData);
+      setErrors({});
+      setShowAdvanced(false);
+      if (isEditMode) navigate("/dashboard/product-list"); // Redirect to product list after update
+    } else {
+      throw new Error(res.error || "Operation failed");
+    }
+  } catch (err) {
+    console.error(`❌ Error ${isEditMode ? "updating" : "saving"} product:`, err);
+
+    if (err?.message && err.message.includes("too large")) {
+      toast.error(err.message, { position: "top-right", autoClose: 5000 });
       return;
     }
 
-    try {
-      const payload = { ...formData };
-      const file = formData.product_image || null;
-      delete payload.product_image;
+    const backendMessage = err?.response?.data?.message || err?.response?.data?.error;
+    const status = err?.response?.status;
 
-      if (!payload.hsn_number) payload.hsn_number = "DEFAULT_HSN";
-      if (!payload.tax) payload.tax = "0";
-      if (!payload.price_type) payload.price_type = "fixed";
-
-      if (activeTab === "service") {
-        if (!payload.purchase_price || payload.purchase_price === "") payload.purchase_price = "0";
-        if (!payload.category || payload.category === "") payload.category = "General";
-        if (!payload.min_quantity || payload.min_quantity === "") payload.min_quantity = "0";
-      } else {
-        payload.min_quantity = payload.min_quantity || "0";
-      }
-
-      payload.gstInclusive = String(payload.gstInclusive);
-
-      const productType = activeTab === "product" ? "inventory" : "service";
-
-      let res;
-      if (isEditMode) {
-        // Update product
-        res = await ProductService.updateProduct(id, payload, file, productType);
-      } else {
-        // Create product
-        res = await ProductService.createProduct(payload, file, productType);
-      }
-
-      if (res.success) {
-        toast.success(
-          `${activeTab === "product" ? "Product" : "Service"} ${isEditMode ? "updated" : "saved"} successfully!`,
-          { position: "top-right", autoClose: 3000 }
-        );
-        setFormData(initialFormData);
-        setErrors({});
-        setShowAdvanced(false);
-        if (isEditMode) navigate("/dashboard/product-list"); // Redirect to product list after update
-      } else {
-        throw new Error(res.error || "Operation failed");
-      }
-    } catch (err) {
-      console.error(`❌ Error ${isEditMode ? "updating" : "saving"} product:`, err);
-
-      if (err?.message && err.message.includes("too large")) {
-        toast.error(err.message, { position: "top-right", autoClose: 5000 });
-        return;
-      }
-
-      const backendMessage = err?.response?.data?.message || err?.response?.data?.error;
-      const status = err?.response?.status;
-
-      if (backendMessage && backendMessage.toLowerCase().includes("file too large")) {
-        const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
-        toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
-        return;
-      }
-
-      if (backendMessage) {
-        toast.error(backendMessage, { position: "top-right", autoClose: 5000 });
-        return;
-      }
-
-      if (status === 413) {
-        const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
-        toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
-        return;
-      }
-
-      toast.error(
-        `Failed to ${isEditMode ? "update" : "save"} ${activeTab === "product" ? "product" : "service"}. Please try again.`,
-        { position: "top-right", autoClose: 5000 }
-      );
+    if (backendMessage && backendMessage.toLowerCase().includes("file too large")) {
+      const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
+      toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
+      return;
     }
-  };
+
+    if (backendMessage) {
+      toast.error(backendMessage, { position: "top-right", autoClose: 5000 });
+      return;
+    }
+
+    if (status === 413) {
+      const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
+      toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
+      return;
+    }
+
+    toast.error(
+      `Failed to ${isEditMode ? "update" : "save"} ${activeTab === "product" ? "product" : "service"}. Please try again.`,
+      { position: "top-right", autoClose: 5000 }
+    );
+  }
+};
+
 
 
   return (

@@ -131,21 +131,23 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
     fetchProducts();
   }, []);
 
-  const handleSelectProduct = (rowId, product) => {
-    setRows((prev) =>
-      prev.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              productId: product._id || product.id,
-              price: product.sales_price || 0,
-              unit: product.unit || "pcs",
-              tax: product.tax || 0,
-            }
-          : row
-      )
-    );
-  };
+const handleSelectProduct = (rowId, product) => {
+  setRows((prev) =>
+    prev.map((row) =>
+      row.id === rowId
+        ? {
+            ...row,
+            productId: product._id || product.id,
+            price: product.sales_price || 0,
+            unit: product.unit || "pcs",
+            tax: product.tax || 0,
+            price_type: product.price_type || "without", // ✅ use backend value
+          }
+        : row
+    )
+  );
+};
+
 
   const handleAddRow = () => {
     setRows([
@@ -359,44 +361,53 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
     }
   };
 
-  // ----------------- Row-level Calculation Function -----------------
-  const calculateTotal = (row) => {
-    const subtotal = (row.qty || 0) * (row.price || 0);
+const calculateTotal = (row) => {
+  const subtotal = (row.qty || 0) * (row.price || 0);
+
+  if (row.price_type === "fixed") {
+    // ✅ Price already includes tax → no extra calculation
+    return subtotal;
+  } else {
+    // ✅ Price without tax → add tax
     const taxAmount = (subtotal * (row.tax || 0)) / 100;
-    return subtotal + taxAmount;  // Returns row total including tax
-  };
+    return subtotal + taxAmount;
+  }
+};
+
 
   // ----------------- Main Invoice Summary Calculation -----------------
   const calculateInvoiceSummary = () => {
-    const subtotal = rows.reduce((sum, row) => sum + (row.qty * row.price), 0);
+  const subtotal = rows.reduce((sum, row) => sum + row.qty * row.price, 0);
 
-    const totalTax = rows.reduce((sum, row) => {
-      const rowSubtotal = row.qty * row.price;
-      return sum + (rowSubtotal * (row.tax || 0)) / 100;
-    }, 0);
+  const totalTax = rows.reduce((sum, row) => {
+    if (row.price_type === "fixed") return sum; // ✅ skip tax for inclusive products
+    const rowSubtotal = row.qty * row.price;
+    return sum + (rowSubtotal * (row.tax || 0)) / 100;
+  }, 0);
 
-    const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
-    const packingCharges = Number(additionalCharges.packingCharges) || 0;
-    const discount = Number(additionalCharges.discount) || 0;
-    const other = Number(additionalCharges.other) || 0;
+  const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
+  const packingCharges = Number(additionalCharges.packingCharges) || 0;
+  const discount = Number(additionalCharges.discount) || 0;
+  const other = Number(additionalCharges.other) || 0;
 
-    const total = subtotal + totalTax + deliveryFee + packingCharges - discount + other;
+  const total = subtotal + totalTax + deliveryFee + packingCharges - discount + other;
 
-    const totalReceived = Number(partialCashAmount) || 0;
-    const dueBalance = total - totalReceived;
+  const totalReceived = Number(partialCashAmount) || 0;
+  const dueBalance = total - totalReceived;
 
-    setInvoiceSummary({
-      subtotal,
-      totalTax,
-      total,
-      totalReceived,
-      dueBalance,
-      deliveryFee,
-      packingCharges,
-      discount,
-      other,
-    });
-  };
+  setInvoiceSummary({
+    subtotal,
+    totalTax,
+    total,
+    totalReceived,
+    dueBalance,
+    deliveryFee,
+    packingCharges,
+    discount,
+    other,
+  });
+};
+
 
   useEffect(() => {
     calculateInvoiceSummary();
@@ -608,50 +619,82 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
         {/* Product */}
         <div className="col-span-2">
           <label className="sm:hidden text-xs text-gray-600 font-robotoM">Product/Service</label>
-          <Select
-            className="text-sm"
-            placeholder="Select Product..."
-            isClearable
-            options={Array.isArray(products)
-              ? products.filter((p) => p && (p._id || p.id)).map((p) => ({
-                  value: p._id || p.id,
-                  label: p.name || p.product_name || "Unnamed",
-                }))
-              : []}
-            value={
-              row.productId
-                ? (() => {
-                    const selected = products?.find(
-                      (p) => p && (p._id === row.productId || p.id === row.productId)
-                    );
-                    return selected
-                      ? { value: row.productId, label: selected.name || selected.product_name || "Unnamed" }
-                      : null;
-                  })()
-                : null
-            }
-            onChange={(selectedOption) => {
-              if (selectedOption) {
-                const selectedProduct = products?.find(
-                  (p) => p && (p._id === selectedOption.value || p.id === selectedOption.value)
-                );
-                if (selectedProduct) handleSelectProduct(row.id, selectedProduct);
-              } else {
-                handleSelectProduct(row.id, null);
-              }
-            }}
-            menuPortalTarget={document.body}
-            styles={{
-              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              control: (base) => ({
-                ...base,
-                minHeight: "42px",
-                borderColor: "#d1d5db",
-                boxShadow: "none",
-                "&:hover": { borderColor: "#2563eb" },
-              }),
-            }}
-          />
+
+<Select
+  className="text-sm text-[#4B5563]" // neutral text
+  placeholder="Select Product..."
+  isClearable
+  filterOption={(option, inputValue) => {
+    // Custom filter: if no input → only show first 3
+    if (!inputValue) {
+      return option.data.index < 3; // only first 3
+    }
+    // If typing → match normally
+    return option.label.toLowerCase().includes(inputValue.toLowerCase());
+  }}
+  options={Array.isArray(products)
+    ? products
+        .filter((p) => p && (p._id || p.id))
+        .map((p, index) => ({
+          value: p._id || p.id,
+          label: p.name || p.product_name || "Unnamed",
+          index, // keep original index for top 3 logic
+        }))
+    : []}
+  value={
+    row.productId
+      ? (() => {
+          const selected = products?.find(
+            (p) => p && (p._id === row.productId || p.id === row.productId)
+          );
+          return selected
+            ? { value: row.productId, label: selected.name || selected.product_name || "Unnamed" }
+            : null;
+        })()
+      : null
+  }
+  onChange={(selectedOption) => {
+    if (selectedOption) {
+      const selectedProduct = products?.find(
+        (p) => p && (p._id === selectedOption.value || p.id === selectedOption.value)
+      );
+      if (selectedProduct) handleSelectProduct(row.id, selectedProduct);
+    } else {
+      handleSelectProduct(row.id, null);
+    }
+  }}
+  menuPortalTarget={document.body}
+  styles={{
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    control: (base, state) => ({
+      ...base,
+      minHeight: "42px",
+      borderColor: state.isFocused ? "#2563eb" : "#d1d5db",
+      boxShadow: "none",
+      "&:hover": { borderColor: "#2563eb" },
+    }),
+    option: (base, { isFocused }) => ({
+      ...base,
+      backgroundColor: isFocused ? "#f3f4f6" : "white", // subtle hover
+      color: "#111827", // dark gray text
+      fontSize: "14px",
+      cursor: "pointer",
+      padding: "8px 12px",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: "#111827", // always dark text
+    }),
+    menu: (base) => ({
+      ...base,
+      marginTop: 2,
+      borderRadius: "8px",
+      boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+      overflowX: "hidden", // no horizontal scroll
+    }),
+  }}
+/>
+
         </div>
 
         {/* Qty */}
@@ -1146,7 +1189,7 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
 
 
       {/* Sidebar */}
-      <div className="bg-white shadow-customCard rounded-lg p-4">
+      <div className="bg-white shadow-customCard  rounded-lg p-4">
         <h2 className="text-lg font-robotoSb mb-4">Invoice Summary</h2>
 <ul className="text-sm font-robotoR text-black space-y-3">
           <li className="flex justify-between">
