@@ -59,6 +59,7 @@ import ViewSubscription from "./admin/Pages/Subcriptions/ViewSubscription";
 import CreateSubcription from "./admin/Pages/Subcriptions/CreateSubcription";
 import SubscriptionCategory from "./admin/Pages/Subcriptions/SubscriptionCategory";
 import CustomDropdown from "./admin/Pages/Notification/ManageNotificationTypes.jsx";
+import ProfileCard from "./admin/Pages/profile/profile.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true); // adjust as per your logic
@@ -171,6 +172,7 @@ function App() {
           />
           <Route path="subscriptions/create/" element={<CreateSubcription />} />
           <Route path="subscriptions/view" element={<ViewSubscription />} />
+          <Route path="profile" element={<ProfileCard/>}/>
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />
