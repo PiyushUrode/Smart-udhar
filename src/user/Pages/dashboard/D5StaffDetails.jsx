@@ -93,6 +93,18 @@ const D5StaffDetails = () => {
       toast.error(err.response?.data?.message || "Failed to save staff");
     }
   };
+  const dummyPlaceholders = {
+  "First Name": "Amit",
+  "Last Name": "Sharma",
+  "Mobile Number": "9876543210",
+  "Email ID": "amit.sharma@example.com",
+  "Address": "221B, MG Road",
+  "Pin Number": "400001",
+  "City": "Mumbai",
+  "State": "Maharashtra",
+  "Roles": "Sales Executive",
+};
+
 
   return (
     <div className="max-w-4xl mx-auto my-5 p-4 sm:p-6 bg-white rounded-lg shadow-xl">
@@ -111,28 +123,52 @@ const D5StaffDetails = () => {
         <form className="mt-6 p-2 space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              "firstName",
-              "lastName",
-              "mobileNumber",
-              "emailId",
-              "address",
-              "pinNumber",
-              "city",
-              "state",
-              "roles"
+              "First Name",
+              "Last Name",
+              "Mobile Number",
+              "Email ID",
+              "Address",
+              "Pin Number",
+              "City",
+              "State",
+              "Roles"
             ].map((field) => (
               <div key={field}>
                 <label className="block text-sm font-medium text-[#374151] mb-1 capitalize">
                   {field}
                 </label>
-                <input
-                  id={field}
-                  type="text"
-                  placeholder={field}
-                  value={formData[field]}
-                  onChange={handleChange}
-                  className="p-2 border rounded-md focus:outline-none focus:ring w-full bg-[#F6F8FA]"
-                />
+               {field === "Mobile Number" ? (
+  <div className="flex">
+    <select
+      className="border rounded-l-md bg-gray-100 text-sm px-2 py-2"
+      value={formData.countryCode || "+91"}
+      onChange={(e) =>
+        setFormData((prev) => ({ ...prev, countryCode: e.target.value }))
+      }
+    >
+      <option value="+91">+91 (IN)</option>
+      <option value="+58">+58 (VE)</option>
+    </select>
+    <input
+      id={field}
+      type="text"
+      placeholder={dummyPlaceholders[field]}
+      value={formData[field]}
+      onChange={handleChange}
+      className="flex-1 border rounded-r-md px-4 py-2 text-sm bg-[#F6F8FA]"
+    />
+  </div>
+) : (
+  <input
+    id={field}
+    type="text"
+    placeholder={dummyPlaceholders[field]}
+    value={formData[field]}
+    onChange={handleChange}
+    className="p-2 border rounded-md focus:outline-none focus:ring w-full bg-[#F6F8FA]"
+  />
+)}
+
               </div>
             ))}
 

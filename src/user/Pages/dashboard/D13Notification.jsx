@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "../../../../src/index.css"; // Ensure Tailwind CSS is imported
 import {
   FaRupeeSign,
   FaWhatsapp,
@@ -169,25 +170,60 @@ const notifications = [
         <h2 className="text-lg font-semibold mb-4 flex items-center">
           <FaRupeeSign className="text-orange-600 mr-2" /> Pending Payment Reminders
         </h2>
-        {reminders.map((r) => (
-          <div key={r.id} className="bg-white shadow border border-[#E5E7EB] rounded-md p-4 mb-4">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">{r.name}</h3>
-                <span className="text-xs font-robotoR text-gray-500">{r.code}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${r.statusColor}`}>{r.status}</span>
-              </div>
-              <p className="text-[#DC2626] text-2xl font-robotoB mt-1">{r.amount}</p>
-              <p className="text-sm font-robotoR text-[#4B5563] mt-1">Last reminder: {r.lastReminder}</p>
-              <div className="flex gap-2 mt-4 flex-wrap">
-                <button onClick={() => sendReminder(r.id, "WhatsApp")} className="flex gap-2 items-center bg-[#22C55E] text-white text-sm px-3 py-1.5 rounded-md"><FaWhatsapp /> WhatsApp</button>
-                <button onClick={() => sendReminder(r.id, "SMS")} className="flex gap-2 items-center bg-[#3B82F6] text-white text-sm px-3 py-1 rounded-md"><FaSms /> SMS</button>
-                <button onClick={() => sendReminder(r.id, "Call")} className="flex gap-2 items-center bg-[#A855F7] text-white text-sm px-3 py-1 rounded-md"><IoCall /> Call</button>
-                {r.status !== "Paid" && <button onClick={() => markAsPaid(r.id)} className="flex gap-2 items-center bg-[#F3F4F6] text-[#374151] text-sm px-3 py-1 rounded-md">Mark as Paid</button>}
-              </div>
-            </div>
-          </div>
-        ))}
+ <div className="max-h-[500px] overflow-y-auto custom-scroll">
+  {reminders.map((r) => (
+    <div
+      key={r.id}
+      className="bg-white shadow border border-[#E5E7EB] rounded-md p-4 mb-4"
+    >
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-gray-900">{r.name}</h3>
+          <span className="text-xs font-robotoR text-gray-500">{r.code}</span>
+          <span
+            className={`text-xs px-2 py-1 rounded-full ${r.statusColor}`}
+          >
+            {r.status}
+          </span>
+        </div>
+        <p className="text-[#DC2626] text-2xl font-robotoB mt-1">{r.amount}</p>
+        <p className="text-sm font-robotoR text-[#4B5563] mt-1">
+          Last reminder: {r.lastReminder}
+        </p>
+
+        <div className="flex gap-2 mt-4 flex-wrap">
+          <button
+            onClick={() => sendReminder(r.id, "WhatsApp")}
+            className="flex gap-2 items-center bg-[#22C55E] text-white text-sm px-3 py-1.5 rounded-md"
+          >
+            <FaWhatsapp /> WhatsApp
+          </button>
+          <button
+            onClick={() => sendReminder(r.id, "SMS")}
+            className="flex gap-2 items-center bg-[#3B82F6] text-white text-sm px-3 py-1 rounded-md"
+          >
+            <FaSms /> SMS
+          </button>
+          <button
+            onClick={() => sendReminder(r.id, "Call")}
+            className="flex gap-2 items-center bg-[#A855F7] text-white text-sm px-3 py-1 rounded-md"
+          >
+            <IoCall /> Call
+          </button>
+          {r.status !== "Paid" && (
+            <button
+              onClick={() => markAsPaid(r.id)}
+              className="flex gap-2 items-center bg-[#F3F4F6] text-[#374151] text-sm px-3 py-1 rounded-md"
+            >
+              Mark as Paid
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
       </div>
 
       {/* ------------------ Low Stock Alerts ------------------ */}
@@ -257,22 +293,34 @@ const notifications = [
         </div>
       </div>
       {/* ------------------ Milestones ------------------ */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
-          <FaFlagCheckered className="text-purple-600 mr-2" /> Payment Milestone Updates
-        </h2>
-        {milestones.map((ms) => (
-          <div key={`${ms.invoiceId}-${ms.step}`} className="bg-white rounded-md shadow-sm border border-[#E5E7EB] p-4 flex justify-between items-start mb-3">
-            <div>
-              <h3 className="font-semibold text-[#111827]">{ms.company}</h3>
-              <p className="text-sm font-robotoR text-[#4B5563] mt-1">{ms.step}</p>
-              <p className="text-lg font-robotoB text-[#9333EA] mt-1">{ms.amount}</p>
-              <p className="text-sm font-robotoR text-[#4B5563]">Due on {ms.dueDate}</p>
-            </div>
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${ms.statusColor}`}>{ms.status}</span>
-          </div>
-        ))}
+     <div className="max-w-5xl">
+  <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
+    <FaFlagCheckered className="text-purple-600 mr-2" /> Payment Milestone Updates
+  </h2>
+
+  {/* Scrollable container */}
+  <div className="max-h-[500px] overflow-y-auto custom-scroll">
+    {milestones.map((ms) => (
+      <div
+        key={`${ms.invoiceId}-${ms.step}`}
+        className="bg-white rounded-md shadow-sm border border-[#E5E7EB] p-4 flex justify-between items-start mb-3"
+      >
+        <div>
+          <h3 className="font-semibold text-[#111827]">{ms.company}</h3>
+          <p className="text-sm font-robotoR text-[#4B5563] mt-1">{ms.step}</p>
+          <p className="text-lg font-robotoB text-[#9333EA] mt-1">{ms.amount}</p>
+          <p className="text-sm font-robotoR text-[#4B5563]">Due on {ms.dueDate}</p>
+        </div>
+        <span
+          className={`text-xs px-3 py-1 rounded-full font-medium ${ms.statusColor}`}
+        >
+          {ms.status}
+        </span>
       </div>
+    ))}
+  </div>
+</div>
+
 
       {/* ------------------ System Notifications ------------------ */}
         <div className="max-w-5xl">

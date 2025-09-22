@@ -9,6 +9,10 @@ import {
   FaSync, FaHeadphones, FaUsers, FaChartLine
 } from "react-icons/fa";
 
+import { useDispatch, useSelector } from "react-redux";
+import { setActiveBusiness } from "../../reactStore/businessSlice"; // सही path डालो
+
+
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const sections = [
   {
@@ -20,7 +24,7 @@ const sections = [
   {
     title: "Business Profile",
     items: [
-      { label: "Add Business", icon: <FaBuilding />, path: "/dashboard/information" },
+      // { label: "Add Business", icon: <FaBuilding />, path: "/dashboard/information" },
       { label: "Bussiness List", icon: <FaBuilding />, path: "/dashboard/bussinessList" },
     ],
   },
@@ -35,10 +39,10 @@ const sections = [
   {
     title: "People",
     items: [
-      { label: "Add Staff", icon: <FaUserFriends />, path: "/dashboard/staff-details" },
-      { label: "Staff Roles", icon: <FaUserFriends />, path: "/dashboard/staff-role" },
       { label: "Add Customer", icon: <FaPlusCircle />, path: "/dashboard/add-customer" },
       { label: "Customer Details", icon: <FaUsers />, path: "/dashboard/customer-details" },
+      { label: "Add Staff", icon: <FaUserFriends />, path: "/dashboard/staff-details" },
+      { label: "Staff Roles", icon: <FaUserFriends />, path: "/dashboard/staff-role" },
     ],
   },
   {
@@ -46,7 +50,7 @@ const sections = [
     items: [
       { label: "Create Invoice", icon: <FaFileInvoice />, path: "/dashboard/create-invoice" },
       // { label: "Payment Collection", icon: <FaMoneyBillWave />, path: "/dashboard/payment-collection" },
-      { label: "Payment Collection List", icon: <FaMoneyBillWave />, path: "/dashboard/payment-collectionList" },
+      { label: "Invoice List", icon: <FaMoneyBillWave />, path: "/dashboard/payment-collectionList" },
       { label: "Credit Score", icon: <FaStar />, path: "/dashboard/credit-score" },
       { label: "Expenses", icon: <FaFileAlt />, path: "/dashboard/expenses" },
       { label: "Expenses List", icon: <FaFileAlt />, path: "/dashboard/expenses-list" },
@@ -74,7 +78,7 @@ const sections = [
 
 const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
  const [businesses, setBusinesses] = useState([]);  
-  const [activeBusinessName, setActiveBusinessName] = useState("Select Business");  
+  // const [activeBusinessName, setActiveBusinessName] = useState("Select Business");  
   const [loading, setLoading] = useState(true);  
 
   const store_id = Cookies.get("store_id");  
@@ -82,40 +86,48 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 
   // Fetch businesses function (BusinessList से inspired)
   const fetchBusinesses = async () => {
-    if (!store_id || !token) {
-      setLoading(false);
-      return;
-    }
+  if (!store_id || !token) {
+    setLoading(false);
+    return;
+  }
 
-    try {
-      const res = await axios.get(
-        `${API_BASE}/store-business-profile/find-all/${store_id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  try {
+    const res = await axios.get(
+      `${API_BASE}/store-business-profile/find-all/${store_id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      console.log("📌 Sidebar API Response:", res.data);
+    let data = res.data?.businesses || res.data?.data || (Array.isArray(res.data) ? res.data : []);
+    setBusinesses(data);
 
-      let data = res.data?.businesses || res.data?.data || (Array.isArray(res.data) ? res.data : []);
-      setBusinesses(data);
+    const storeProfile_id = localStorage.getItem("storeProfile_id");
 
-      // Active ID से name set करें
-      const storeProfile_id = localStorage.getItem("storeProfile_id");
-      if (storeProfile_id && data.length > 0) {
-        const activeBusiness = data.find(b => String(b._id) === String(storeProfile_id));
-        if (activeBusiness) {
-          setActiveBusinessName(` ${activeBusiness.businessName || "Unnamed Business"}`);
-        } else {
-          setActiveBusinessName("No Active Business");
-          localStorage.removeItem("storeProfile_id");  // Invalid ID clear करें
-        }
+    if (storeProfile_id && data.length > 0) {
+      const activeBusiness = data.find((b) => String(b._id) === String(storeProfile_id));
+      if (activeBusiness) {
+        // Redux update karo
+        dispatch(setActiveBusiness({
+          id: activeBusiness._id,
+          name: activeBusiness.businessName || "Unnamed Business",
+        }));
+      } else {
+        localStorage.removeItem("storeProfile_id");
       }
-    } catch (err) {
-      console.error("❌ Sidebar: Error fetching businesses:", err);
-      setActiveBusinessName("Error Loading");
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    console.error("❌ Sidebar: Error fetching businesses:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
+const dispatch = useDispatch();
+const activeBusinessName = useSelector(
+  (state) => state.business.activeBusinessName
+);
 
   // useEffect: Load businesses on mount और store_id change पर
   useEffect(() => {
@@ -130,10 +142,16 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 
     if (isOpen && !isMobile) {  // Only show name when open and not mobile
       return (
-        <div className="text-white font-bold text-sm mb-1 flex gap-2 items-center">
-          <FaBuilding />
-          <span>{activeBusinessName}</span>  {/* ← यहाँ active name show होगा */}
-        </div>
+<div className="text-white font-bold text-sm mb-1 flex gap-2 items-center">
+  <FaBuilding />
+  <h1 className="text-white font-robotoSb activateanimation">
+    {activeBusinessName
+      ?.split(" ")               // break into words
+      .slice(0, 3)               // take only first 2–3 words
+      .join(" ")}                
+  </h1>
+</div>
+
       );
     } else {
       return <FaBuilding className="text-white text-xl mx-auto" />;
@@ -160,7 +178,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
         >
           ☰
         </button>
-                <div className="text-white font-interB sm:hidden"> <h1>{activeBusinessName}</h1></div>
+                <div className="text-white font-robotoB sm:hidden "> <span>{activeBusinessName}</span></div>
       </div>
 
       {/* Menu */}

@@ -1,0 +1,49 @@
+.container {
+  text-align: center;
+  position: relative;
+
+  width: 100%;
+}
+
+.container span {
+  text-transform: uppercase;
+  display: block; 
+}
+
+.text1 {
+  color: white;
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: 8px;
+  margin-bottom: 2px;
+  background: black;
+  position: relative;
+/*   shorthand animation property: name | duration | iteration count */
+/*   animation: text 4s 1; */
+  animation-name: text;
+  animation-duration: 4s;
+  animation-iteration-count: infinite;
+}
+
+.text2 {
+  font-size: 2px;
+  color: #FFE997;
+}
+
+@keyframes text {
+  0% {
+    color: black;
+    margin-bottom: -4px;
+  }
+  30% {
+    letter-spacing: 25px;
+    margin-bottom: -4px;
+  }
+  85% {
+    letter-spacing: 8px;
+    margin-bottom: -4px;
+  }
+  100% {
+    margin-bottom: 20px;
+  }
+}

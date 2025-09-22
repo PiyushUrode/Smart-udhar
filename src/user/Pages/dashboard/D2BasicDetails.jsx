@@ -44,86 +44,94 @@ const [formData, setFormData] = useState({
   store_id: ""  // ✅ not array
 });
 
-  const validateForm = () => {
-    const requiredFields = ["businessName", "address", "pincode", "mobile", "email"];
-    const newErrors = {};
+ const validateForm = () => {
+  const requiredFields = [
+    "businessName",
+    "address",
+    "pincode",
+    "mobile",
+    "email",
+    "industry",
+    "fbURL",
+    "twitterURL",
+    "linkedInURL",
+    "instagramURL",
+  ];
+  const newErrors = {};
+  
 
-    // Required fields
-    requiredFields.forEach((field) => {
-      if (!formData[field] || formData[field].trim() === "") {
-        newErrors[field] = `${field} is required`;
-      }
-    });
+  // Required fields
+  requiredFields.forEach((field) => {
+    if (!formData[field] || formData[field].trim() === "") {
+      newErrors[field] = `${field} is required`;
+    }
+  });
 
-    // Business Name → only letters, numbers, spaces, . - &
-    if (formData.businessName && !/^[a-zA-Z0-9\s&.-]{3,50}$/.test(formData.businessName)) {
-      newErrors.businessName = "Business name must be 3-50 chars (letters, numbers, . - & allowed)";
-    }
+  // Business Name
+  if (formData.businessName && !/^[a-zA-Z0-9\s&.-]{3,50}$/.test(formData.businessName)) {
+    newErrors.businessName = "Business name must be 3-50 chars (letters, numbers, . - & allowed)";
+  }
 
-    // GST → 15 char alphanumeric
-    if (formData.gstNumber && !/^[0-9A-Z]{15}$/.test(formData.gstNumber.toUpperCase())) {
-      newErrors.gstNumber = "Invalid GST number format (15 alphanumeric chars)";
-    }
+  // GST → 15 char alphanumeric
+  if (formData.gstNumber && !/^[0-9A-Z]{15}$/.test(formData.gstNumber.toUpperCase())) {
+    newErrors.gstNumber = "Invalid GST number format (15 digits, letters & numbers)";
+  }
 
-    // Pincode → 6 digits
-    if (formData.pincode && !/^[1-9][0-9]{5}$/.test(formData.pincode)) {
-      newErrors.pincode = "Pincode must be 6 digits";
-    }
+  // Pincode
+  if (formData.pincode && !/^[1-9][0-9]{5}$/.test(formData.pincode)) {
+    newErrors.pincode = "Pincode must be 6 digits";
+  }
 
-    // Mobile → 10 digits starting with 6-9
-    if (formData.mobile && !/^[6-9]\d{9}$/.test(formData.mobile)) {
-      newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
-    }
+  // Mobile
 
-    // Email → basic format check
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.toLowerCase())) {
-      newErrors.email = "Invalid email format";
-    }
 
-    // Short Bio → max 160 words
-    if (formData.shortBio && formData.shortBio.split(" ").length > 160) {
-      newErrors.shortBio = "Short bio cannot exceed 160 words";
-    }
+// Now validate
+if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
+  newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
+}
 
-    // Social Media Links → optional but if filled, must be valid URL
-    const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/\S*)?$/;
-    if (formData.fbURL && !urlPattern.test(formData.fbURL)) {
-      newErrors.fbURL = "Enter a valid Facebook URL";
-    }
-    if (formData.twitterURL && !urlPattern.test(formData.twitterURL)) {
-      newErrors.twitterURL = "Enter a valid Twitter URL";
-    }
-    if (formData.linkedInURL && !urlPattern.test(formData.linkedInURL)) {
-      newErrors.linkedInURL = "Enter a valid LinkedIn URL";
-    }
-    if (formData.instagramURL && !urlPattern.test(formData.instagramURL)) {
-      newErrors.instagramURL = "Enter a valid Instagram URL";
-    }
-    if (formData.websiteURL && formData.websiteURL.length > 0 && !urlPattern.test(formData.websiteURL)) {
-      newErrors.websiteURL = "Enter a valid Website URL";
-    }
 
-    // File Uploads → size & type check
-    if (signatureImage) {
-      if (!["image/jpeg", "image/png", "image/jpg"].includes(signatureImage.type)) {
-        newErrors.signatureImage = "Signature must be JPG/PNG only";
-      }
-      if (signatureImage.size > 2 * 1024 * 1024) {
-        newErrors.signatureImage = "Signature must be less than 2MB";
-      }
-    }
-    if (logoImage) {
-      if (!["image/jpeg", "image/png", "image/jpg"].includes(logoImage.type)) {
-        newErrors.logoImage = "Logo must be JPG/PNG only";
-      }
-      if (logoImage.size > 2 * 1024 * 1024) {
-        newErrors.logoImage = "Logo must be less than 2MB";
-      }
-    }
+  // Email
+  if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.toLowerCase())) {
+    newErrors.email = "Invalid Email format";
+  }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Validation for industry
+if (!formData.industry || formData.industry === "Select Industry") {
+  newErrors.industry = "Please select an Industry type";
+} else if (!/^[a-zA-Z\s]{2,30}$/.test(formData.industry)) {
+  newErrors.industry = "Industry must be 2-30 letters only";
+}
+
+
+  // Social Media Links → must be valid URLs now
+  const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/\S*)?$/;
+  ["fbURL", "twitterURL", "linkedInURL", "instagramURL"].forEach((field) => {
+    if (formData[field] && !urlPattern.test(formData[field])) {
+      newErrors[field] = `Enter a valid ${field} URL`;
+    }
+  });
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+
+// Clean mobile before validating
+let mobile = formData.mobile?.trim() || "";
+
+// Remove +91 or 91 from start
+mobile = mobile.replace(/^(\+91|91)/, "");
+
+// Remove leading 0 if present
+mobile = mobile.replace(/^0+/, "");
+
+
+
+const handleBlur = (e) => {
+  validateForm(); // validate on leaving field
+};
+
 
 
   const handleChange = (e) => {
@@ -230,10 +238,12 @@ useEffect(() => {
                   name="businessName"
                   value={formData.businessName}
                   onChange={handleChange}
+                                  autoComplete="off"
+                onBlur={handleBlur}
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
                  {errors.businessName && (
-    <p className="text-red-500 text-xs mt-1">{errors.businessName}</p>
+    <p className="text-red-500 text-xs mt-1 capitalize ">{errors.businessName}</p>
   )}
               </div>
 
@@ -247,10 +257,13 @@ useEffect(() => {
                   name="gstNumber"
                   value={formData.gstNumber}
                   onChange={handleChange}
+                                    autoComplete="off"
+                                  
+                onBlur={handleBlur}
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
                  {errors.gstNumber && (
-    <p className="text-red-500 text-xs mt-1">{errors.gstNumber}</p>
+    <p className="text-red-500 text-xs mt-1 capitalize">{errors.gstNumber}</p>
   )}
               </div>
             </div>
@@ -261,11 +274,13 @@ useEffect(() => {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
+                                  autoComplete="off"
+                onBlur={handleBlur}
                 rows="2"
                 className="w-full border rounded px-3 py-2 outline-none bg-[#FAFAFA]"
               />
                {errors.address && (
-    <p className="text-red-500 text-xs mt-1">{errors.address}</p>
+    <p className="text-red-500 text-xs mt-1 capitalize">{errors.address}</p>
   )}
             </div>
 
@@ -277,10 +292,12 @@ useEffect(() => {
                   name="pincode"
                   value={formData.pincode}
                   onChange={handleChange}
+                                    autoComplete="off"
+                onBlur={handleBlur}
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
                  {errors.pincode && (
-    <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>
+    <p className="text-red-500 text-xs mt-1 capitalize">{errors.pincode}</p>
   )}
               </div>
 
@@ -291,9 +308,11 @@ useEffect(() => {
                   name="mobile"
                   value={formData.mobile}
                   onChange={handleChange}
+                                    autoComplete="off"
+                onBlur={handleBlur}
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />  {errors.mobile && (
-    <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>
+    <p className="text-red-500 text-xs mt-1 capitalize">{errors.mobile}</p>
   )}
               </div>
             </div>
@@ -305,9 +324,11 @@ useEffect(() => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                  autoComplete="off"
+                onBlur={handleBlur}
                 className="w-full border rounded px-3 py-2 outline-none bg-white"
               />  {errors.email && (
-    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+    <p className="text-red-500 text-xs mt-1 capitalize">{errors.email}</p>
   )}
             </div>
 
@@ -320,10 +341,12 @@ useEffect(() => {
                 name="shortBio"
                 value={formData.shortBio}
                 onChange={handleChange}
+                                  autoComplete="off"
+                onBlur={handleBlur}
                 rows="3"
                 className="w-full border rounded px-3 py-2 outline-none bg-white"
               />  {errors.shortBio && (
-    <p className="text-red-500 text-xs mt-1">{errors.shortBio}</p>
+    <p className="text-red-500 text-xs mt-1 capitalize">{errors.shortBio}</p>
   )}
             </div>
           </section>
@@ -355,13 +378,16 @@ useEffect(() => {
                     name="industry"
                     value={formData.industry}
                     onChange={handleChange}
-                    className="input bg-white text-[#B9B9B9] w-full"
+                                      autoComplete="off"
+                onBlur={handleBlur}
+                    className="input bg-white text-black w-full"
                   >
                     <option>Select Industry</option>
                     <option value="Food">Food</option>
                     <option value="Retail">Retail</option>
                     <option value="IT">IT</option>
                   </select>
+                  {errors.industry && <p className="text-red-500 text-xs">{errors.industry}</p>}
 
                   <label className="text-sm mb-1 block">
                     Social Media Links
@@ -377,6 +403,8 @@ useEffect(() => {
                         name="fbURL"
                         value={formData.fbURL}
                         onChange={handleChange}
+                                          autoComplete="off"
+                onBlur={handleBlur}
                         placeholder="Facebook URL"
                         className="bg-transparent outline-none w-full"
                       />
@@ -391,6 +419,8 @@ useEffect(() => {
                         name="twitterURL"
                         value={formData.twitterURL}
                         onChange={handleChange}
+                                          autoComplete="off"
+                onBlur={handleBlur}
                         placeholder="Twitter URL"
                         className="bg-transparent outline-none w-full"
                       />
@@ -405,6 +435,8 @@ useEffect(() => {
                         name="linkedInURL"
                         value={formData.linkedInURL}
                         onChange={handleChange}
+                                          autoComplete="off"
+                onBlur={handleBlur}
                         placeholder="LinkedIn URL"
                         className="bg-transparent outline-none w-full"
                       />
@@ -419,6 +451,8 @@ useEffect(() => {
                         name="instagramURL"
                         value={formData.instagramURL}
                         onChange={handleChange}
+                                          autoComplete="off"
+                onBlur={handleBlur}
                         placeholder="Instagram URL"
                         className="bg-transparent outline-none w-full"
                       />
@@ -431,6 +465,8 @@ useEffect(() => {
                     name="websiteURL"
                     value={formData.websiteURL}
                     onChange={handleChange}
+                                      autoComplete="off"
+                onBlur={handleBlur}
                     placeholder="https://example.com"
                     className="input bg-white w-full"
                   />

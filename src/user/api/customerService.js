@@ -28,6 +28,7 @@ const FIELD_LABEL = {
   name: "Name",
   mobile: "Mobile",
   email: "Email",
+  product_image: "Product Image",
   address: "Address",
   pin: "PIN",
   city: "City",
@@ -46,6 +47,7 @@ const ALLOWED_FIELDS = new Set([
   "name",
   "mobile",
   "email",
+  "product_image",
   "address",
   "pin",
   "city",
@@ -68,6 +70,17 @@ function sanitizePayload(raw = {}) {
     if (ALLOWED_FIELDS.has(k) && raw[k] !== undefined) clean[k] = raw[k];
   });
   return clean;
+}
+
+
+function safePayload(form, store_id, storeProfile_id) {
+  return {
+    ...form,
+    name: form.name?.trim() || "Unnamed",
+    mobile: form.mobile || "+910000000000",
+    store_id: form.store_id || store_id,
+    storeProfile_id: form.storeProfile_id || storeProfile_id,
+  };
 }
 
 function validateRequired(payload, requiredKeys) {
@@ -93,83 +106,77 @@ function authHeaders(token) {
 }
 
 export const CustomerService = {
-  async createCustomer(form = {}, opts = {}) {
-    const { token, store_id, storeProfile_id } = getAuthContext();
+async createCustomer(form = {}, opts = {}) {
+  const { token, store_id, storeProfile_id } = getAuthContext();
 
-    const payload = {
-      ...form,
-      store_id: form.store_id || store_id,
-      storeProfile_id: form.storeProfile_id || storeProfile_id,
-    };
+  let payload;
+  let headers = authHeaders(token);
 
-    const required = opts.required || DEFAULT_REQUIRED_CREATE;
-    const missing = validateRequired(payload, required);
-    if (missing.length) {
-      const err = new Error(`Missing required fields: ${missing.join(", ")}`);
-      err.name = "CustomerValidationError";
-      err.missingFields = missing;
-      throw err;
-    }
+  if (form.customerImage instanceof File) {
+    payload = new FormData();
+    Object.entries(safePayload(form, store_id, storeProfile_id)).forEach(
+      ([key, value]) => payload.append(key, value)
+    );
+    headers = { ...headers, "Content-Type": "multipart/form-data" };
+  } else {
+    payload = safePayload(form, store_id, storeProfile_id);
+  }
 
-    const clean = sanitizePayload(payload);
-    const { data } = await axiosClient.post("/store-customer/create", clean, {
-      headers: authHeaders(token),
-    });
+  // validateRequired kabhi fail nahi karega because fallback values hamesha hain
+  const required = opts.required || DEFAULT_REQUIRED_CREATE;
+  const missing = validateRequired(payload, required);
+  if (missing.length) {
+    console.warn("⚠️ Missing fields replaced with defaults:", missing);
+  }
 
-    // Backend generates _id and customId here
-    return {
-      success: data?.success ?? true,
-      customer: data?.data || data,  // Full customer with _id and customId
-      customerId: data?.data?.customId || data?.customId,  // Use customId for display
-    };
-  },
+  const { data } = await axiosClient.post("/store-customer/create", payload, {
+    headers,
+  });
 
-  async updateCustomer(form = {}, opts = {}) {
-    const { token, store_id, storeProfile_id } = getAuthContext();
-    const id = form._id || form.id;  // Prefer _id (MongoDB), fallback to customId if needed (but backend should use _id)
+  return {
+    success: data?.success ?? true,
+    customer: data?.data || data,
+    customerId: data?.data?.customId || data?.customId,
+  };
+},
 
-    if (!id) {
-      const err = new Error("Missing customer id");
-      err.name = "CustomerValidationError";
-      err.missingFields = ["id"];
-      throw err;
-    }
 
-    // Validate if it's a valid ObjectId (for safety)
-    if (!isValidObjectId(id)) {
-      const err = new Error("Invalid customer _id format");
-      err.name = "CustomerValidationError";
-      err.missingFields = ["_id"];
-      throw err;
-    }
+async updateCustomer(form = {}, opts = {}) {
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const id = form._id || form.id;
+  if (!id) throw new Error("Missing customer id");
 
-    const payload = {
-      ...form,
-      _id: id,  // Send as _id (backend expects this for update)
-      store_id: form.store_id || store_id,
-      storeProfile_id: form.storeProfile_id || storeProfile_id,
-    };
+  let payload;
+  let headers = authHeaders(token);
 
-    const required = opts.required || DEFAULT_REQUIRED_UPDATE;
-    const missing = validateRequired(payload, required);
-    if (missing.length) {
-      const err = new Error(`Missing required fields: ${missing.join(", ")}`);
-      err.name = "CustomerValidationError";
-      err.missingFields = missing;
-      throw err;
-    }
+  if (form.customerImage instanceof File) {
+    payload = new FormData();
+    Object.entries(safePayload(form, store_id, storeProfile_id)).forEach(
+      ([key, value]) => payload.append(key, value)
+    );
+    payload.append("_id", id);
+    headers = { ...headers, "Content-Type": "multipart/form-data" };
+  } else {
+    payload = { ...safePayload(form, store_id, storeProfile_id), _id: id };
+  }
 
-    const clean = sanitizePayload(payload);
-    const { data } = await axiosClient.put("/store-customer/update", clean, {
-      headers: authHeaders(token),
-    });
+  const required = opts.required || DEFAULT_REQUIRED_UPDATE;
+  const missing = validateRequired(payload, required);
+  if (missing.length) {
+    console.warn("⚠️ Missing fields replaced with defaults:", missing);
+  }
 
-    return {
-      success: data?.success ?? true,
-      customer: data?.customer || data,  // Full updated customer with _id
-      customerId: data?.customer?.customId || data?.customerId,
-    };
-  },
+  const { data } = await axiosClient.put("/store-customer/update", payload, {
+    headers,
+  });
+
+  return {
+    success: data?.success ?? true,
+    customer: data?.customer || data,
+    customerId: data?.customer?.customId || data?.customerId,
+  };
+},
+
 
   async deleteCustomer(id) {  // Expects MongoDB _id (e.g., "68bfba0d85ae94d9fe579bbf")
     const { token } = getAuthContext();

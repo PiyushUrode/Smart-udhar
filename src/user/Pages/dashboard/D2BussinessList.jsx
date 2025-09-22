@@ -4,6 +4,10 @@ import { FaPlusCircle, FaEdit, FaTrash, FaCheckCircle } from "react-icons/fa";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setActiveBusiness } from "../../../reactStore/businessSlice.js"; 
+
+
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -14,6 +18,12 @@ const D2BusinessList = () => {
     localStorage.getItem("storeProfile_id") || ""
   );
 
+
+const { activeBusinessId } = useSelector((state) => state.business);
+
+
+
+
   const store_id = Cookies.get("store_id");
   const token = Cookies.get("authToken");
   const navigate = useNavigate();
@@ -21,42 +31,46 @@ const D2BusinessList = () => {
   // ✅ Fetch all businesses
  // ✅ Fetch all businesses
   const fetchBusinesses = async () => {
-    if (!store_id || !token) {
-      alert("⚠️ Store ID or Token missing. Please login again.");
-      setLoading(false);
-      return;
-    }
+  if (!store_id || !token) {
+    alert("⚠️ Store ID or Token missing. Please login again.");
+    setLoading(false);
+    return;
+  }
 
-    try {
-      const res = await axios.get(
-        `${API_BASE}/store-business-profile/find-all/${store_id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  try {
+    const res = await axios.get(
+      `${API_BASE}/store-business-profile/find-all/${store_id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      console.log("📌 API Response:", res.data);
+    let data =
+      res.data?.businesses ||
+      res.data?.data ||
+      (Array.isArray(res.data) ? res.data : []);
 
-      let data =
-        res.data?.businesses ||
-        res.data?.data ||
-        (Array.isArray(res.data) ? res.data : []);
+    setBusinesses(data);
 
-      setBusinesses(data);
+    // ✅ Persist last active business
+    const lastActiveId = localStorage.getItem("storeProfile_id");
+
+if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
+  // Last active exists in current data → use it
+  setstoreProfile_id(lastActiveId);
+} else if (!lastActiveId && data.length > 0) {
+  // Only set first business if there was no previous active business
+  setstoreProfile_id(data[0]._id);
+  localStorage.setItem("storeProfile_id", data[0]._id);
+}
 
 
-      if (data.length > 0 && storeProfile_id) {
-        const exists = data.some((b) => String(b._id) === String(storeProfile_id));
-        if (!exists) {
-          localStorage.removeItem("storeProfile_id");
-          setstoreProfile_id("");
-        }
-      }
-    } catch (err) {
-      console.error("❌ Error fetching businesses:", err);
-      setBusinesses([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error("❌ Error fetching businesses:", err);
+    setBusinesses([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchBusinesses();
@@ -89,7 +103,8 @@ const D2BusinessList = () => {
   const handleAdd = () => {
     navigate("/dashboard/information");
   };
-  
+  const dispatch = useDispatch();
+
 
   // ✅ Set Active Business
   // const handleSetActive = (id) => {
@@ -99,17 +114,21 @@ const D2BusinessList = () => {
   //   alert("✔️ Active business set successfully!");
   // };
 
-  // ✅ Set Active Business
-const handleSetActive = (id) => {
-  // localStorage me dono set karna
-  localStorage.setItem("storeProfile_id", id);         // agar kahi use ho raha hai to
-  localStorage.setItem("storeProfile_id", id);         // ye main key hai jo guard & APIs use karenge
+  const handleSetActive = (id, name) => {
+  // 1️⃣ Redux update
+  dispatch(setActiveBusiness({ id, name }));
 
+  // 2️⃣ Local state update
   setstoreProfile_id(id);
 
-  console.log("✅ Active Business ID:", id);
+  // 3️⃣ LocalStorage update
+  localStorage.setItem("storeProfile_id", id);
+
+  // 4️⃣ Notification
   alert("✔️ Active business set successfully!");
 };
+
+
 
 
   return (
@@ -142,24 +161,23 @@ const handleSetActive = (id) => {
                 <tr>
                   <th className="p-4">Business Name</th>
                   <th className="p-4">GST Number</th>
-                  <th className="p-4">Address</th>
+                  {/* <th className="p-4">Address</th> */}
                   <th className="p-4">Mobile</th>
                   <th className="p-4">Email</th>
-                  <th className="p-4">Industry</th>
-                  <th className="p-4">Created At</th>
+                  {/* <th className="p-4">Industry</th> */}
+                  {/* <th className="p-4">Created At</th> */}
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
 <tbody>
   {businesses.map((item) => {
-    // ✅ यहाँ define करो
-    const isActive = String(storeProfile_id) === String(item._id);
+ const isActive = String(activeBusinessId) === String(item._id);
 
     return (
       <tr
         key={item._id}
-        className={`border-b border-gray-200 hover:bg-gray-50 text-nowrap transition-colors ${
-          isActive ? "bg-green-50" : ""
+        className={`border-b border-gray-200 hover:bg-gray-50 text-nowrap transition-colors
+           ${isActive ? "bg-green-50" : ""
         }`}
       >
         <td className="p-4 font-medium">
@@ -171,32 +189,34 @@ const handleSetActive = (id) => {
           )}
         </td>
         <td className="p-4">{item.gstNumber || "-"}</td>
-        <td className="p-4">{item.address || "-"}</td>
+        {/* <td className="p-4">{item.address || "-"}</td> */}
         <td className="p-4">{item.mobile || "-"}</td>
         <td className="p-4">{item.email || "-"}</td>
-        <td className="p-4">{item.industry || "-"}</td>
-        <td className="p-4">
+        {/* <td className="p-4">{item.industry || "-"}</td> */}
+        {/* <td className="p-4">
           {item.created_at
             ? new Date(item.created_at).toLocaleDateString()
             : "-"}
-        </td>
-        <td className="p-4 flex gap-3">
-          <button
-            onClick={() => handleSetActive(item._id)}
+        </td> */}
+
+ <td className="p-4 flex gap-3">
+   <button
+            onClick={() => handleSetActive(item._id, item.businessName)}
             className={`flex items-center gap-1 ${
-              isActive
-                ? "text-green-600"
-                : "text-gray-600 hover:text-green-600"
+              isActive ? "text-green-600" : "text-gray-600 hover:text-green-600"
             }`}
           >
             <FaCheckCircle /> {isActive ? "Active" : "Set Active"}
           </button>
+
           <button
             onClick={() => handleEdit(item)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <FaEdit /> Edit
           </button>
+
+
           <button
             onClick={() => handleDelete(item._id)}
             className="flex items-center gap-1 text-red-600 hover:text-red-800"
@@ -204,6 +224,7 @@ const handleSetActive = (id) => {
             <FaTrash /> Delete
           </button>
         </td>
+
       </tr>
     );
   })}

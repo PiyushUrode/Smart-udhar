@@ -8,103 +8,81 @@ import { RiBankCardFill } from "react-icons/ri";
 import { FaChartPie } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { FaRegChartBar } from "react-icons/fa6";
-import { FiEdit, FiTrash2 } from "react-icons/fi"; // ✅ Added
-import { Invoice } from "../../api/Invoice.js"; // ✅ ad
+import { FiEdit, FiTrash2 } from "react-icons/fi"; 
+import { Invoice } from "../../api/Invoice.js"; 
+import jsPDF from "jspdf";
+
+import autoTable from "jspdf-autotable"; // ✅ import as a function
+import * as XLSX from "xlsx";
+
 
 import React, { useState, useEffect } from "react";
 
 
 
 const D8PaymentCollectionList = () => {
-  const [invoices, setInvoices] = useState([]);
+
+    const [invoices, setInvoices] = useState([]);
   const [search, setSearch] = useState("");
-  const navigate = useNavigate();
-  
   const [summary, setSummary] = useState({
-  today: 0,
-  subtotal: 0,
-  topCollections: {
-    week: 0,
-    month: 0,
-    year: 0,
-  }
-});
-
-const calculateSummary = (data) => {
-  let today = 0;
-  let total = 0;
-  let week = 0;
-  let month = 0;
-  let year = 0;
-
-  const todayDate = new Date().toDateString();
-  const now = new Date();
-
-  // Week start (Monday) & end (Sunday)
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay());
-  weekStart.setHours(0, 0, 0, 0);
-
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-
-  data.forEach((inv) => {
-    // 👉 तुम यहां collection किससे log करना चाहते हो?
-    // फिलहाल inv.total लिया है
-    const collected = Number(inv.total || 0);
-    const createdAt = new Date(inv.createdAt);
-
-    total += collected;
-
-    // Today's collection
-    if (createdAt.toDateString() === todayDate) {
-      today += collected;
-    }
-
-    // This week
-    if (createdAt >= weekStart && createdAt <= weekEnd) {
-      week += collected;
-    }
-
-    // This month
-    if (
-      createdAt.getMonth() === now.getMonth() &&
-      createdAt.getFullYear() === now.getFullYear()
-    ) {
-      month += collected;
-    }
-
-    // This year
-    if (createdAt.getFullYear() === now.getFullYear()) {
-      year += collected;
-    }
+    today: 0,
+    total: 0,
+    topCollections: { week: 0, month: 0, year: 0 },
   });
 
-  setSummary({
-    today,
-    total,
-    topCollections: { week, month, year }
-  });
-};
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  const navigate = useNavigate();
 
+  const calculateSummary = (data) => {
+    let today = 0;
+    let total = 0;
+    let week = 0;
+    let month = 0;
+    let year = 0;
 
-useEffect(() => {
-  const fetchInvoices = async () => {
-    const res = await Invoice.getAllInvoices();
-    if (res.success) {
-      setInvoices(res.invoices);
-      calculateSummary(res.invoices); // ✅ summary calculate
-    }
+    const todayDate = new Date().toDateString();
+    const now = new Date();
+
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    data.forEach((inv) => {
+      const collected = Number(inv.total || 0);
+      const createdAt = new Date(inv.createdAt);
+
+      total += collected;
+      if (createdAt.toDateString() === todayDate) today += collected;
+      if (createdAt >= weekStart && createdAt <= weekEnd) week += collected;
+      if (
+        createdAt.getMonth() === now.getMonth() &&
+        createdAt.getFullYear() === now.getFullYear()
+      )
+        month += collected;
+      if (createdAt.getFullYear() === now.getFullYear()) year += collected;
+    });
+
+    setSummary({ today, total, topCollections: { week, month, year } });
   };
-  fetchInvoices();
-}, []);
 
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      const res = await Invoice.getAllInvoices();
+      if (res.success) {
+        setInvoices(res.invoices);
+        calculateSummary(res.invoices);
+      }
+    };
+    fetchInvoices();
+  }, []);
 
-  
-
-    const handleDelete = async (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this invoice?")) return;
     try {
       const res = await Invoice.deleteInvoice(id);
@@ -116,35 +94,68 @@ useEffect(() => {
     }
   };
 
-  // ✅ Edit → go to add-invoice page with data
   const handleEdit = (invoice) => {
     navigate("/dashboard/payment-collection", { state: { invoice } });
   };
-  
 
-  // fetch invoices on mount
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      const res = await Invoice.getAllInvoices();
-      if (res.success) {
-        setInvoices(res.invoices);
-      }
-    };
-    fetchInvoices();
-  }, []);
-
-  // filter based on search
+  // ✅ Search filter (name + phone)
   const filteredData = invoices.filter((entry) => {
     const query = search.toLowerCase();
     return (
-      entry?.customerName?.toLowerCase().includes(query) ||
-      entry?.phone?.toLowerCase().includes(query) ||
-      entry?._id?.toLowerCase().includes(query)
+      entry?.name?.toLowerCase().includes(query) ||
+      entry?.phone?.toLowerCase().includes(query)
     );
   });
 
+  // ✅ Pagination logic
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentData = filteredData.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
-  
+  // ✅ Export PDF
+  // ✅ Export PDF
+const exportPDF = () => {
+  const doc = new jsPDF();
+  doc.text("Payment Collection List", 14, 10);
+
+  autoTable(doc, {
+    head: [["Customer Name", "Mobile", "Amount", "Due Date", "Promise", "Status"]],
+    body: filteredData.map((entry) => [
+      entry.name || "-",
+      entry.phone || "-",
+      entry.dueBalance ?? entry.balance ?? 0,
+      entry.milestones?.[0]?.dueDate
+        ? new Date(entry.milestones[0].dueDate).toLocaleDateString("en-IN")
+        : "-",
+      entry.milestones?.[0]?.amount || "-",
+      entry.paymentStatus || "Pending",
+    ]),
+  });
+
+  doc.save("PaymentCollectionList.pdf");
+};
+
+
+  // ✅ Export Excel
+  const exportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      filteredData.map((entry) => ({
+        Name: entry.name || "-",
+        Phone: entry.phone || "-",
+        Amount: entry.dueBalance ?? entry.balance ?? 0,
+        DueDate: entry.milestones?.[0]?.dueDate
+          ? new Date(entry.milestones[0].dueDate).toLocaleDateString("en-IN")
+          : "-",
+        Promise: entry.milestones?.[0]?.amount || "-",
+        Status: entry.paymentStatus || "Pending",
+      }))
+    );
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+    XLSX.writeFile(workbook, "PaymentCollectionList.xlsx");
+  };
+
   return (
     <div className="p-6 md:p-6 mt-5 bg-white min-h-screen">
       <h1 className="text-xl md:text-2xl font-robotoB mb-6">
@@ -176,9 +187,9 @@ useEffect(() => {
                 <tr>
                   <th className="p-3">Customer Name</th>
                   <th className="p-3">Mobile Number</th>
-                  <th className="p-3">Pending Amount</th>
+                  <th className="p-3">Total Amount</th>
                   <th className="p-3">Due Date</th>
-                  <th className="p-3">Next Milestone</th>
+                  <th className="p-3">Promise Amount</th>
                   <th className="p-3">Status</th>
                   <th className="p-3">Edit</th>
                 </tr>
@@ -221,7 +232,7 @@ useEffect(() => {
           {/* Next Milestone */}
           <td className="p-3 whitespace-nowrap">
             <div className="flex items-center gap-2">
-              {nextMilestone?.milestoneName || "-"}
+              {nextMilestone?.amount || "-"}
               {/* <FaEdit color="#EB2525" /> */}
             </div>
           </td>
@@ -263,7 +274,36 @@ useEffect(() => {
 
 
             </table>
+
+             <div className="flex justify-between items-center mt-4">
+        <p className="text-sm text-gray-600">
+          Page {currentPage} of {totalPages || 1}
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
           </div>
+
+          
+
+
+
+
+
         </div>
 
         {/* Right side - Collection Summary */}
@@ -332,10 +372,10 @@ useEffect(() => {
               <h1 className="text-sm font-interM text-[#374151] py-5 leading-tight tracking-tight"> Downloadable Reports</h1>
             </div>
             <div className="flex gap-3">
-              <button className="flex-1 flex items-center justify-center gap-2 bg-[#FEF2F2] text-[#DC2626] font-interM px-3 py-2 rounded-md shadow hover:bg-red-600">
+              <button  onClick={exportPDF}  className="flex-1 flex items-center justify-center gap-2 bg-[#FEF2F2] text-[#DC2626] font-interM px-3 py-2 rounded-md shadow hover:bg-red-200  hover:text-white">
                 <FaFilePdf color="#DC2626" /> PDF
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 bg-[#F0FDF4] text-[#16A34A] font-interM px-3 py-2 rounded-md shadow hover:bg-green-600">
+              <button   onClick={exportExcel} className="flex-1 flex items-center justify-center gap-2 bg-[#F0FDF4] text-[#16A34A] font-interM px-3 py-2 rounded-md shadow hover:bg-green-600 hover:text-white ">
                 <FaFileExcel /> Excel
               </button>
             </div>
