@@ -1,550 +1,439 @@
-// src/components/D13Notification.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
-  FaRupeeSign,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import {
+  FaArrowUp,
+  FaArrowDown,
+  FaPlus,
+  FaClock,
+  FaPhoneAlt,
   FaWhatsapp,
-  FaSms,
-  FaBox,
-  FaBullhorn,
-  FaCheckCircle,
-  FaGift,
-  FaSearch,
+  FaEnvelope,
 } from "react-icons/fa";
-import { IoCall } from "react-icons/io5";
-import { IoMdMail } from "react-icons/io";
-import { FaFlagCheckered, FaBullseye } from "react-icons/fa6";
-import { MdCancel } from "react-icons/md";
-import { IoIosWarning } from "react-icons/io";
-import { Invoice, getAuthContext } from "../../api/Invoice"; // adjust path if needed
-import axiosClient from "../../api/axiosClient"; // adjust path if needed
+import { Phone, ShoppingCart, CreditCard, Wallet } from "lucide-react";
+import { GoGraph } from "react-icons/go";
+import { AuthService } from "../../api/authservice.js";
+import ExpenseService from "../../api/expenseservice.js";
 
-function formatCurrency(value = 0) {
-  try {
-    // show with INR formatting
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    return `₹${value}`;
+const API_URL = import.meta.env.VITE_API_URL;
+
+// 🔹 Last 6 months
+const last6Months = (() => {
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      label: d.toLocaleString("default", { month: "short", year: "numeric" }),
+      year: d.getFullYear(),
+      month: d.getMonth() + 1,
+    });
   }
+  return months;
+})();
+
+// ----------------- Helpers -----------------
+function getAuthContext() {
+  const token = AuthService.getToken?.();
+  const store_id =
+    typeof AuthService.getStoreId === "function" && AuthService.getStoreId();
+  const storeProfile_id =
+    typeof AuthService.getstoreProfile_id === "function" &&
+    AuthService.getstoreProfile_id();
+
+  const finalStoreProfileId =
+    storeProfile_id || localStorage.getItem("storeProfile_id");
+
+  if (!token) throw new Error("❌ Missing auth token");
+  if (!store_id) throw new Error("❌ Missing store_id");
+  if (!finalStoreProfileId) throw new Error("❌ Missing storeProfile_id");
+
+  return { token, store_id, storeProfile_id: finalStoreProfileId };
 }
 
-function authHeader(token) {
-  return { Authorization: `Bearer ${token}` };
-}
-
-export default function D13Notification() {
-const [reminders, setReminders] = useState([]);
-  const [items, setItems] = useState([]);
-  const [milestones, setMilestones] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState({});
-
-  useEffect(() => {
-    fetchAll();
-  }, []);
-
-  async function fetchAll() {
-    setLoading(true);
-    try {
-      const auth = getAuthContext();
-      const headers = authHeader(auth.token);
-
-      // 1) Invoices
-      const allRes = await Invoice.getAllInvoices();
-      const invoices = allRes?.data || [];
-
-      // --- Reminders ---
-      const remindersBuilt = (invoices || [])
-        .filter((inv) => Number(inv.dueBalance ?? 0) > 0)
-        .map((inv) => ({
-          invoiceId: inv._id || inv.invoiceId,
-          customerId: inv.customerId,
-          name:
-            inv.customerName ||
-            inv.customer?.name ||
-            inv.customer?.businessName ||
-            inv.billingName ||
-            "Unknown Customer",
-          code:
-            inv.invoiceCode ||
-            inv.invoiceNumber ||
-            (inv._id ? `#${String(inv._id).slice(0, 6)}` : "—"),
-          status: inv.paymentStatus || "Pending",
-          dueAmount: Number(inv.dueBalance ?? 0),
-          amountLabel: formatCurrency(Number(inv.dueBalance ?? 0)),
-          lastReminder:
-            inv.lastReminder ||
-            inv.reminderLogs?.[0]?.time ||
-            (inv.updatedAt
-              ? new Date(inv.updatedAt).toLocaleString()
-              : "No reminder"),
-        }));
-      setReminders(remindersBuilt);
-
-      // --- Products: low stock ---
-      const prodRes = await Invoice.getProducts().catch(() => []);
-      const products = prodRes?.products || prodRes || [];
-      const getStockQty = (p) =>
-        Number(
-          p?.stockQty ??
-            p?.stock ??
-            p?.leftQty ??
-            p?.availableQty ??
-            p?.quantity ??
-            p?.qty ??
-            0
-        );
-      const lowStock = (products || [])
-        .filter((p) => getStockQty(p) <= 5)
-        .map((p) => {
-          const stock = getStockQty(p);
-          return {
-            productId: p._id || p.id,
-            name: p.name || p.title || "Unnamed Product",
-            stock,
-            level: stock <= 2 ? "Critical" : "Low Stock",
-            levelColor:
-              stock <= 2
-                ? "bg-red-100 text-red-600"
-                : "bg-orange-100 text-orange-600",
-            message:
-              stock <= 2 ? "Critical - Reorder immediately" : "Reorder soon",
-            messageColor: stock <= 2 ? "text-red-600" : "text-orange-600",
-          };
-        });
-      setItems(lowStock);
-
-      // --- Milestones ---
-      const milestonesBuilt = [];
-      (invoices || []).forEach((inv) => {
-        (inv.milestones || []).forEach((m, idx) => {
-          const status = m.status || "Upcoming";
-          if (["Upcoming", "Overdue", "Pending"].includes(status)) {
-            milestonesBuilt.push({
-              invoiceId: inv._id || inv.invoiceId,
-              milestoneId: m._id || idx,
-              company:
-                inv.customerName || inv.customer?.name || "Unknown Customer",
-              step: m.milestoneName || `Milestone ${idx + 1}`,
-              amount: Number(m.amount ?? 0),
-              amountLabel: formatCurrency(Number(m.amount ?? 0)),
-              dueDate: m.dueDate
-                ? new Date(m.dueDate).toLocaleDateString()
-                : "—",
-              status,
-              raw: m,
-            });
-          }
-        });
-      });
-      setMilestones(milestonesBuilt);
-
-      // --- Reminder Logs ---
-      let logsData = [];
-      const logEndpoints = [
-        `/reminder/logs/${auth.store_id}/${auth.storeProfile_id}`,
-        `/reminder/logs`,
-      ];
-      for (const ep of logEndpoints) {
-        try {
-          const res = await axiosClient.get(ep, { headers });
-          if (res?.data) {
-            logsData = Array.isArray(res.data)
-              ? res.data
-              : res.data?.data || res.data?.logs || [];
-            break;
-          }
-        } catch {}
-      }
-      if (!logsData || logsData.length === 0) {
-        logsData = [
-          {
-            id: "local-1",
-            message: "WhatsApp sent to Sharma Traders",
-            time: "2 hours ago",
-            status: "Delivered",
-            statusColor: "bg-green-100 text-green-700",
-          },
-          {
-            id: "local-2",
-            message: "SMS failed to Patel & Sons",
-            time: "1 day ago",
-            status: "Retry",
-            statusColor: "bg-blue-100 text-blue-700",
-          },
-        ];
-      }
-      setLogs(logsData);
-
-      // --- System Notifications ---
-      let notifsData = [];
-      const notifEndpoints = [
-        `/system-notifications/${auth.store_id}/${auth.storeProfile_id}`,
-        `/notifications`,
-      ];
-      for (const ep of notifEndpoints) {
-        try {
-          const res = await axiosClient.get(ep, { headers });
-          if (res?.data) {
-            notifsData = Array.isArray(res.data)
-              ? res.data
-              : res.data?.data || res.data?.notifications || [];
-            break;
-          }
-        } catch {}
-      }
-      if (!notifsData || notifsData.length === 0) {
-        notifsData = [
-          {
-            id: "sys-1",
-            iconName: "gift",
-            title: "New Reward Feature Available!",
-            message:
-              "Earn points for every invoice sent. Redeem for premium features.",
-            time: "2 hours ago",
-            iconColor: "bg-blue-100 text-blue-600",
-          },
-          {
-            id: "sys-2",
-            iconName: "warning",
-            title: "GST Rate Update",
-            message:
-              "New GST rates effective from June 1, 2024. Update your tax settings.",
-            time: "1 day ago",
-            iconColor: "bg-orange-100 text-orange-600",
-          },
-        ];
-      }
-      setNotifications(notifsData);
-    } catch (err) {
-      console.error("Error fetching notifications data:", err);
-    } finally {
-      setLoading(false);
-    }
+// 🔹 Format helpers
+const formatCurrencyCompact = (amount) => {
+  if (amount == null) return "₹0";
+  const a = Number(amount);
+  if (Math.abs(a) >= 100000) {
+    const lakhs = a / 100000;
+    return `₹${lakhs >= 10 ? Math.round(lakhs) : lakhs.toFixed(1)}L`;
   }
+  return `₹${new Intl.NumberFormat("en-IN").format(Math.round(a))}`;
+};
 
-  // ----------------- Actions (unchanged) -----------------
-  async function handleSendReminder(invoiceId, channel = "whatsapp") {
-    const auth = getAuthContext();
-    const headers = authHeader(auth.token);
-    setActionLoading((s) => ({
-      ...s,
-      [`send-${invoiceId}-${channel}`]: true,
-    }));
-    try {
-      await axiosClient.post(
-        `/reminder/send`,
-        { invoiceId, channel },
-        { headers }
-      );
-      alert(`Reminder queued via ${channel}`);
-      await fetchAll();
-    } catch {
-      alert("Send reminder failed. Please check backend.");
-    } finally {
-      setActionLoading((s) => ({
-        ...s,
-        [`send-${invoiceId}-${channel}`]: false,
-      }));
-    }
+const computePercentChange = (current, previous) => {
+  current = Number(current || 0);
+  previous = Number(previous || 0);
+  if (previous === 0) {
+    if (current === 0) return 0;
+    return null; // new, no base
   }
+  const pct = ((current - previous) / previous) * 100;
+  return Number(pct.toFixed(1));
+};
 
-  async function handleMarkAsPaid(reminder) {
-    if (
-      !window.confirm(
-        `Mark invoice ${reminder.code} as paid for ${reminder.amountLabel}?`
-      )
-    )
-      return;
-    setActionLoading((s) => ({ ...s, [`pay-${reminder.invoiceId}`]: true }));
-    try {
-      const payRes = await Invoice.createPayment({
-        invoiceId: reminder.invoiceId,
-        amount: reminder.dueAmount,
-        mode: "cash",
-        customerId: reminder.customerId,
-      });
-      if (!payRes?.success) {
-        await Invoice.updateInvoice(reminder.invoiceId, { status: "Paid" });
-      }
-      await fetchAll();
-    } catch (err) {
-      console.error("mark as paid failed:", err);
-    } finally {
-      setActionLoading((s) => ({ ...s, [`pay-${reminder.invoiceId}`]: false }));
-    }
-  }
+const formatPercentForUI = (pct) => {
+  if (pct === null) return "New";
+  const sign = pct >= 0 ? "+" : "";
+  return `${sign}${pct}%`;
+};
 
-  async function handleMarkLowStockRead(item) {
-    setActionLoading((s) => ({ ...s, [`lowread-${item.productId}`]: true }));
-    try {
-      await Invoice.updateLowStock({
-        productId: item.productId,
-        leftProductQty: item.stock,
-        markAsRead: true,
-      });
-      await fetchAll();
-    } catch (err) {
-      console.error("updateLowStock failed:", err);
-    } finally {
-      setActionLoading((s) => ({
-        ...s,
-        [`lowread-${item.productId}`]: false,
-      }));
-    }
-  }
+// ----------------- Config -----------------
+const TRANSACTION_TYPE_MAP = {
+  Purchase: {
+    bg: "bg-[#FEE2E2]",
+    icon: <ShoppingCart color="#DC2626" />,
+    cardBg: "bg-red-50",
+    text: "text-red-600",
+    percentText: "text-red-500",
+  },
+  Expense: {
+    bg: "bg-[#FFEDD5]",
+    icon: <CreditCard color="#EA580C" />,
+    cardBg: "bg-orange-50",
+    text: "text-orange-500",
+    percentText: "text-red-500",
+  },
+  Collection: {
+    bg: "bg-[#DCFCE7]",
+    icon: <Phone color="#16A34A" />,
+    cardBg: "bg-green-50",
+    text: "text-green-600",
+    percentText: "text-green-600",
+  },
+};
 
-  async function handleMarkMilestonePaid(ms) {
-    if (!window.confirm(`Mark milestone ${ms.step} as Paid?`)) return;
-    setActionLoading((s) => ({
-      ...s,
-      [`ms-${ms.invoiceId}-${ms.milestoneId}`]: true,
-    }));
-    try {
-      const payload = [{ id: ms.milestoneId, status: "Paid" }];
-      await Invoice.updateMilestones(ms.invoiceId, payload);
-      await fetchAll();
-    } catch (err) {
-      console.error("update milestone failed:", err);
-    } finally {
-      setActionLoading((s) => ({
-        ...s,
-        [`ms-${ms.invoiceId}-${ms.milestoneId}`]: false,
-      }));
-    }
-  }
+const STAT_CARD_TYPE_MAP = {
+  sale: { icon: <GoGraph color="#16A34A" size={20} />, bg: "bg-[#DCFCE7]" },
+  paid: { icon: <Wallet color="#2563EB" size={20} />, bg: "bg-[#DBEAFE]" },
+  pending: { icon: <FaClock color="#EA580C" size={20} />, bg: "bg-[#FFEDD5]" },
+};
 
-  async function handleRetryLog(logItem) {
-    const auth = getAuthContext();
-    const headers = authHeader(auth.token);
-    setActionLoading((s) => ({ ...s, [`retry-${logItem.id}`]: true }));
-    try {
-      await axiosClient.post(
-        `/reminder/retry`,
-        { logId: logItem.id },
-        { headers }
-      );
-      await fetchAll();
-    } catch (err) {
-      console.error("retry log failed:", err);
-    } finally {
-      setActionLoading((s) => ({ ...s, [`retry-${logItem.id}`]: false }));
-    }
-  }
-  
-
-  // ----------------- Render -----------------
-  if (loading) {
-    return (
-      <div className="text-center py-10 text-gray-600">
-        Loading notifications...
-      </div>
-    );
-  }
+// ----------------- Components -----------------
+const StatCard = ({ title, value, change, isPositive, type }) => {
+  const config = STAT_CARD_TYPE_MAP[type] || {};
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 mt-5 flex flex-col gap-6">
-      <h1 className="text-2xl text-[#1F2937] font-robotoB">Notifications</h1>
-
-      {/* Pending Payment Reminders */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold mb-4 flex items-center">
-          <span className="text-orange-600 font-bold mr-2"><FaRupeeSign /></span>
-          Pending Payment Reminders
-        </h2>
-
-        {reminders.length === 0 ? (
-          <p className="text-sm text-gray-500">No pending payments 🎉</p>
-        ) : (
-          reminders.map((rem) => (
-            <div key={rem.invoiceId} className="bg-white shadow border border-[#E5E7EB] rounded-md p-4 mb-4">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-gray-900">{rem.name}</h3>
-                  <span className="text-xs font-robotoR text-gray-500">{rem.code}</span>
-                  <span className="text-xs px-2 py-1 rounded-full bg-[#FEE2E2] text-[#991B1B]">{rem.status}</span>
-                </div>
-                <p className="text-[#DC2626] text-2xl font-robotoB mt-1">{rem.amountLabel}</p>
-                <p className="text-sm font-robotoR text-[#4B5563] mt-1">Last reminder: {rem.lastReminder}</p>
-
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <button
-                    onClick={() => handleSendReminder(rem.invoiceId, "whatsapp")}
-                    disabled={actionLoading[`send-${rem.invoiceId}-whatsapp`]}
-                    className="flex gap-2 items-center bg-[#22C55E] text-white text-sm px-3 py-1.5 rounded-md"
-                  >
-                    <FaWhatsapp /> WhatsApp
-                  </button>
-
-                  <button
-                    onClick={() => handleSendReminder(rem.invoiceId, "sms")}
-                    disabled={actionLoading[`send-${rem.invoiceId}-sms`]}
-                    className="flex gap-2 items-center bg-[#3B82F6] text-white text-sm px-3 py-1 rounded-md"
-                  >
-                    <FaSms /> SMS
-                  </button>
-
-                  <button
-                    onClick={() => handleSendReminder(rem.invoiceId, "call")}
-                    disabled={actionLoading[`send-${rem.invoiceId}-call`]}
-                    className="flex gap-2 items-center bg-[#A855F7] text-white text-sm px-3 py-1 rounded-md"
-                  >
-                    <IoCall /> Call
-                  </button>
-
-                  <button
-                    onClick={() => handleMarkAsPaid(rem)}
-                    disabled={actionLoading[`pay-${rem.invoiceId}`]}
-                    className="flex gap-2 items-center bg-[#F3F4F6] text-[#374151] text-sm px-3 py-1 rounded-md"
-                  >
-                    Mark as Paid
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Low Stock Alerts */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold mb-4 flex items-center">
-          <span className="text-orange-600 font-bold mr-2"><FaBox /></span>
-          Low Stock Alerts
-        </h2>
-
-        {items.length === 0 ? (
-          <p className="text-sm text-gray-500">All products have enough stock ✅</p>
-        ) : (
-          items.map((item) => (
-            <div key={item.productId} className="flex justify-between items-start bg-white shadow-sm rounded-md p-4 mb-3 border border-[#E5E7EB]">
-              <div>
-                <h3 className="font-semibold text-[#111827]">{item.name}</h3>
-                <p className="text-sm font-robotoR text-[#4B5563] mt-1">Only {item.stock} left in stock</p>
-                <p className={`text-xs font-robotoM mt-1 ${item.messageColor}`}>{item.message}</p>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className={`text-xs px-2 py-1 rounded-full ${item.levelColor} font-medium`}>{item.level}</span>
-                <button
-                  onClick={() => handleMarkLowStockRead(item)}
-                  disabled={actionLoading[`lowread-${item.productId}`]}
-                  className="mt-2 text-sm px-3 py-1 rounded-md bg-gray-100"
-                >
-                  Mark read
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Reminder Success Logs */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold mb-4 text-[#111827] flex items-center">
-          <span className="text-blue-600 mr-2"><IoMdMail /></span>
-          Reminder Success Logs
-        </h2>
-
-        <div className="bg-white rounded-md shadow-sm p-4 border border-[#E5E7EB]">
-          {logs.length === 0 ? (
-            <p className="text-sm text-gray-500">No logs available.</p>
-          ) : (
-            logs.map((log) => (
-              <div key={log.id || log._id} className="flex justify-between items-start py-2 border-b last:border-b-0">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl mt-0.5">
-                    {log.status?.toLowerCase?.().includes("deliv") ? <FaCheckCircle color="#22C55E" /> : <MdCancel color="#EF4444" />}
-                  </span>
-                  <div>
-                    <p className="font-robotoM text-md text-[#111827]">{log.message || log.msg || "—"}</p>
-                    <p className="text-sm font-robotoR text-[#4B5563]">{log.time || log.createdAt || ""}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${log.statusColor || "bg-[#E5E7EB] text-[#374151]"}`}>
-                    {log.status || "—"}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleRetryLog(log)}
-                      disabled={actionLoading[`retry-${log.id}`]}
-                      className="text-sm px-2 py-1 rounded-md bg-gray-100"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+    <div className="bg-white shadow-customSoft rounded-lg p-4 flex justify-between items-center w-full mt-5">
+      <div className="flex flex-col gap-1">
+        <div className="text-sm text-[#4B5563] font-robotoM">{title}</div>
+        <div className="text-2xl text-black font-robotoB font-bold">{value}</div>
+        <div
+          className={`text-sm flex items-center font-robotB font-bold gap-1 ${
+            isPositive ? "text-green-500" : "text-red-500"
+          }`}
+        >
+          {isPositive ? <FaArrowUp /> : <FaArrowDown />} {change}
+          <span className="text-[#4B5563] font-robotB font-medium">
+            vs last month
+          </span>
         </div>
       </div>
-
-      {/* Payment Milestone Updates */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
-          <span className="text-purple-600 mr-2"><FaFlagCheckered /></span>
-          Payment Milestone Updates
-        </h2>
-
-        {milestones.length === 0 ? (
-          <p className="text-sm text-gray-500">No upcoming milestones.</p>
-        ) : (
-          milestones.map((m) => (
-            <div key={`${m.invoiceId}-${m.milestoneId}`} className="bg-white rounded-md shadow-sm border border-[#E5E7EB] p-4 flex justify-between items-start mb-3">
-              <div>
-                <h3 className="font-semibold text-[#111827]">{m.company}</h3>
-                <p className="text-sm font-robotoR text-[#4B5563] mt-1">{m.step}</p>
-                <p className="text-lg font-robotoB text-[#9333EA] mt-1">{m.amountLabel}</p>
-                <p className="text-sm font-robotoR text-[#4B5563]">Due on {m.dueDate}</p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${m.status === "Overdue" ? "bg-red-100 text-red-600" : "bg-[#FEF9C3] text-[#854D0E]"}`}>
-                  {m.status}
-                </span>
-                <button
-                  onClick={() => handleMarkMilestonePaid(m)}
-                  disabled={actionLoading[`ms-${m.invoiceId}-${m.milestoneId}`]}
-                  className="text-sm px-3 py-1 rounded-md bg-gray-100"
-                >
-                  Mark as Paid
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* System Notifications */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
-          <span className="text-indigo-600 mr-2"><FaBullhorn /></span>
-          System Notifications
-        </h2>
-
-        {notifications.length === 0 ? (
-          <p className="text-sm text-gray-500">No system notifications.</p>
-        ) : (
-          notifications.map((note) => (
-            <div key={note.id || note._id} className="flex items-start gap-3 bg-white border border-[#E5E7EB] rounded-md p-4 mb-3 shadow-sm">
-              <div className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl ${note.iconColor || "bg-gray-100 text-gray-700"}`}>
-                {/* icon fallback */}
-                {note.iconName === "gift" ? <FaGift /> : note.iconName === "warning" ? <IoIosWarning /> : <FaBullseye />}
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">{note.title}</h3>
-                <p className="text-sm font-robotoR text-[#4B5563]">{note.message}</p>
-                <p className="text-xs font-robotoR text-[#6B7280] mt-1">{note.time}</p>
-              </div>
-            </div>
-          ))
-        )}
+      <div className={`p-2 rounded-full shadow ${config.bg}`}>
+        {config.icon}
       </div>
     </div>
   );
-}
+};
+
+const TransactionItem = ({ date, type, description, amount, status }) => (
+  <tr className="border-t text-sm bg-white">
+    <td className="p-5 text-gray-700">{date}</td>
+    <td className="p-5">
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${
+          type === "Purchase"
+            ? "bg-[#DCFCE7] text-[#166534]"
+            : type === "Expense"
+            ? "bg-[#FEE2E2] text-[#991B1B]"
+            : "bg-[#FFEDD5] text-[#9A3412]"
+        }`}
+      >
+        {type}
+      </span>
+    </td>
+    <td className="p-5 text-gray-700">{description}</td>
+    <td className="p-5 font-medium text-gray-800">₹{amount}</td>
+    <td className="p-5">
+      <span className="text-xs px-2 py-1 rounded-full font-semibold bg-green-100 text-green-700">
+        {status}
+      </span>
+    </td>
+  </tr>
+);
+
+// ----------------- Main -----------------
+const D1DashboardHome = () => {
+  const [selectedType, setSelectedType] = useState("All");
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [graphData, setGraphData] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [loadingExpenses, setLoadingExpenses] = useState(true);
+  const [transactionStats, setTransactionStats] = useState({});
+
+  // 🔹 Fetch Expenses
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        setLoadingExpenses(true);
+        const res = await ExpenseService.getAllExpenses();
+        setExpenses(res?.data || res?.expenses || []);
+      } catch (err) {
+        console.error("Error fetching expenses:", err);
+      } finally {
+        setLoadingExpenses(false);
+      }
+    };
+    fetchExpenses();
+  }, []);
+
+  // 🔹 Fetch last 6 months dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const { token, store_id, storeProfile_id } = getAuthContext();
+
+        const results = await Promise.all(
+          last6Months.map(({ year, month }) =>
+            axios.get(
+              `${API_URL}/store-invoice/dashboard-export/${store_id}/${storeProfile_id}?year=${year}&month=${month}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            )
+          )
+        );
+
+        // Build graph data
+        const combinedGraph = last6Months.map((m, idx) => {
+          const res = results[idx].data;
+          let sales = 0;
+          let collection = 0;
+          res.purchaseArr?.forEach((p) => (sales += p.purchaseTotalAmount || 0));
+          res.collectionArr?.forEach(
+            (c) => (collection += c.collectionTotalAmount || 0)
+          );
+          return { month: m.label, sales, collection };
+        });
+        setGraphData(combinedGraph);
+
+        // Latest month for table
+        setDashboardData(results[results.length - 1].data);
+
+        // 🔹 Aggregation for percent change
+        const aggregated = results.map((r) => {
+          const d = r.data || {};
+          const purchaseTotal = (d.purchaseArr || []).reduce(
+            (s, p) => s + (p.purchaseTotalAmount || 0),
+            0
+          );
+          const expenseTotal = (d.expenseArr || []).reduce(
+            (s, e) => s + (e.expenseTotalAmount || 0),
+            0
+          );
+          const collectionCount = (d.collectionArr || []).length;
+          return { purchaseTotal, expenseTotal, collectionCount };
+        });
+
+        const curr = aggregated[aggregated.length - 1] || {
+          purchaseTotal: 0,
+          expenseTotal: 0,
+          collectionCount: 0,
+        };
+        const prev = aggregated[aggregated.length - 2] || {
+          purchaseTotal: 0,
+          expenseTotal: 0,
+          collectionCount: 0,
+        };
+
+        setTransactionStats({
+          purchaseAmount: curr.purchaseTotal,
+          purchasePct: formatPercentForUI(
+            computePercentChange(curr.purchaseTotal, prev.purchaseTotal)
+          ),
+          expenseAmount: curr.expenseTotal,
+          expensePct: formatPercentForUI(
+            computePercentChange(curr.expenseTotal, prev.expenseTotal)
+          ),
+          collectionCount: curr.collectionCount,
+          collectionPct: formatPercentForUI(
+            computePercentChange(curr.collectionCount, prev.collectionCount)
+          ),
+        });
+      } catch (err) {
+        console.error("API Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // ✅ Combined Transactions
+  const allTransactions = [
+    ...(dashboardData?.purchaseArr?.map((item) => ({
+      date: item.purchaseDate,
+      type: "Purchase",
+      description: `Invoice - ${item.purchaseInvoiceNumber}`,
+      amount: item.purchaseTotalAmount,
+      status: item.purchaseStatus,
+    })) || []),
+    ...(dashboardData?.expenseArr?.map((item) => ({
+      date: item.expenseDate,
+      type: "Expense",
+      description: `Expense - ${item.expenseInvoiceNumber || item.note || ""}`,
+      amount: item.expenseTotalAmount,
+      status: item.expenseStatus,
+    })) || []),
+  ];
+
+  const collectionData =
+    dashboardData?.collectionArr?.map((item) => ({
+      name: item.ClientName,
+      dueAmount: `₹${item.collectionTotalAmount}`,
+      dueDate: item.collectionDueDate || "N/A",
+      contact: item.clientPhone,
+      status: item.status || "N/A",
+    })) || [];
+
+  const filteredTransactions =
+    selectedType === "Collection"
+      ? collectionData
+      : selectedType === "Expense"
+      ? expenses.map((exp) => ({
+          date: exp.date,
+          type: "Expense",
+          description: exp.itemName || exp.expenseCategory,
+          amount: exp.amount,
+          status: exp.paymentMode || "—",
+        }))
+      : allTransactions;
+
+  const renderTransactionCard = (type, title, amount, percent) => {
+    const config = TRANSACTION_TYPE_MAP[type];
+    return (
+      <div
+        className={`flex items-center justify-between p-5  shadow-customSoft rounded-lg ${config.cardBg} cursor-pointer`}
+        onClick={() => setSelectedType(type)}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-full shadow ${config.bg}`}>
+            {config.icon}
+          </div>
+          <div>
+            <div className="text-sm font-medium text-gray-800">{title}</div>
+            <div className="text-xs text-gray-500">Monthly Total</div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className={`font-semibold ${config.text}`}>{amount}</div>
+          <div className={`text-xs ${config.percentText}`}>{percent}</div>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) return <div className="p-6">Loading...</div>;
+
+  return (
+    <div className="p-2 md:p-6 space-y-6 overflow-hidden">
+      {/* ✅ Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <StatCard
+          title="Monthly Sale"
+          value={`₹${dashboardData?.totalSum || 0}`}
+          change="12.9%"
+          isPositive
+          type="sale"
+        />
+        <StatCard
+          title="Monthly Paid"
+          value={`₹${dashboardData?.paidSum || 0}`}
+          change="2.3%"
+          isPositive
+          type="paid"
+        />
+        <StatCard
+          title="Monthly Pending"
+          value={`₹${dashboardData?.pendingSum || 0}`}
+          change="4.3%"
+          isPositive={false}
+          type="pending"
+        />
+      </div>
+
+      {/* ✅ Chart */}
+      <div className="grid grid-cols-1">
+        <div className="bg-white p-4 shadow-customSoft rounded-lg">
+          <div className="flex justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Sales & Collection Overview
+            </h2>
+            <span className="text-sm border rounded px-2 py-1">
+              Last 6 Months
+            </span>
+          </div>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={graphData}>
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="sales" fill="#0f9afe" radius={[10, 10, 0, 0]} />
+              <Bar dataKey="collection" fill="#00e0a3" radius={[14, 14, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* ✅ Transaction Cards */}
+      <div className="w-full">
+        <div className="bg-white p-4 shadow-customSoft rounded-lg">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            Cashbook Transactions
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full">
+            <div>
+              {renderTransactionCard(
+                "Purchase",
+                "Purchase",
+                formatCurrencyCompact(transactionStats.purchaseAmount || 0),
+                transactionStats.purchasePct || "—"
+              )}
+            </div>
+            <div>
+              {renderTransactionCard(
+                "Expense",
+                "Expense",
+                formatCurrencyCompact(transactionStats.expenseAmount || 0),
+                transactionStats.expensePct || "—"
+              )}
+            </div>
+            <div>
+              {renderTransactionCard(
+                "Collection",
+                "Collection Calls",
+                String(transactionStats.collectionCount || 0),
+                transactionStats.collectionPct || "—"
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ Transactions Table */}
+      {/* ... keep your same table code here ... */}
+    </div>
+  );
+};
+
+export default D1DashboardHome;

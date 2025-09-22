@@ -44,7 +44,10 @@ const [formData, setFormData] = useState({
   store_id: ""  // ✅ not array
 });
 
- const validateForm = () => {
+const validateForm = () => {
+  const newErrors = {};
+
+  // Minimal required fields
   const requiredFields = [
     "businessName",
     "address",
@@ -52,61 +55,57 @@ const [formData, setFormData] = useState({
     "mobile",
     "email",
     "industry",
-    "fbURL",
-    "twitterURL",
-    "linkedInURL",
-    "instagramURL",
   ];
-  const newErrors = {};
-  
 
-  // Required fields
-  requiredFields.forEach((field) => {
-    if (!formData[field] || formData[field].trim() === "") {
-      newErrors[field] = `${field} is required`;
-    }
-  });
+  // Optional fields
+  const optionalFields = ["gstNumber", "fbURL", "twitterURL", "linkedInURL", "instagramURL", "websiteURL"];
 
-  // Business Name
+  // Check if user has filled anything (optional or required)
+  const hasAnyInput = [...requiredFields, ...optionalFields].some(
+    (field) => formData[field] && formData[field].toString().trim() !== ""
+  );
+
+  if (hasAnyInput) {
+    // Run required fields check
+    requiredFields.forEach((field) => {
+      if (!formData[field] || formData[field].toString().trim() === "") {
+        newErrors[field] = `${field} is required`;
+      }
+    });
+  }
+
+  // Business Name: 3-50 chars, letters, numbers, &.- allowed
   if (formData.businessName && !/^[a-zA-Z0-9\s&.-]{3,50}$/.test(formData.businessName)) {
     newErrors.businessName = "Business name must be 3-50 chars (letters, numbers, . - & allowed)";
   }
 
-  // GST → 15 char alphanumeric
-  if (formData.gstNumber && !/^[0-9A-Z]{15}$/.test(formData.gstNumber.toUpperCase())) {
-    newErrors.gstNumber = "Invalid GST number format (15 digits, letters & numbers)";
-  }
-
-  // Pincode
+  // Pincode: 6 digits, first not 0
   if (formData.pincode && !/^[1-9][0-9]{5}$/.test(formData.pincode)) {
     newErrors.pincode = "Pincode must be 6 digits";
   }
 
-  // Mobile
-
-
-// Now validate
-if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
-  newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
-}
-
+  // Mobile: 10 digits, starting with 6-9
+  if (formData.mobile && !/^[6-9]\d{9}$/.test(formData.mobile)) {
+    newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
+  }
 
   // Email
   if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.toLowerCase())) {
     newErrors.email = "Invalid Email format";
   }
 
-  // Validation for industry
-if (!formData.industry || formData.industry === "Select Industry") {
-  newErrors.industry = "Please select an Industry type";
-} else if (!/^[a-zA-Z\s]{2,30}$/.test(formData.industry)) {
-  newErrors.industry = "Industry must be 2-30 letters only";
-}
+  // Industry
+  if (formData.industry && formData.industry !== "Select Industry" && !/^[a-zA-Z\s]{2,30}$/.test(formData.industry)) {
+    newErrors.industry = "Industry must be 2-30 letters only";
+  }
 
+  // Optional fields validation if user typed something
+  if (formData.gstNumber && !/^[0-9A-Z]{15}$/.test(formData.gstNumber.toUpperCase())) {
+    newErrors.gstNumber = "Invalid GST number format (15 letters & numbers)";
+  }
 
-  // Social Media Links → must be valid URLs now
   const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/\S*)?$/;
-  ["fbURL", "twitterURL", "linkedInURL", "instagramURL"].forEach((field) => {
+  optionalFields.forEach((field) => {
     if (formData[field] && !urlPattern.test(formData[field])) {
       newErrors[field] = `Enter a valid ${field} URL`;
     }
@@ -115,6 +114,7 @@ if (!formData.industry || formData.industry === "Select Industry") {
   setErrors(newErrors);
   return Object.keys(newErrors).length === 0;
 };
+
 
 
 // Clean mobile before validating
@@ -369,150 +369,60 @@ useEffect(() => {
             </div>
           </section>
 
-          {isOpen && (
-            <section>
-              <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-6">
-                <div className="space-y-4">
-                  <label className="text-sm mb-1 block">Industries Type</label>
-                  <select
-                    name="industry"
-                    value={formData.industry}
-                    onChange={handleChange}
-                                      autoComplete="off"
-                onBlur={handleBlur}
-                    className="input bg-white text-black w-full"
-                  >
-                    <option>Select Industry</option>
-                    <option value="Food">Food</option>
-                    <option value="Retail">Retail</option>
-                    <option value="IT">IT</option>
-                  </select>
-                  {errors.industry && <p className="text-red-500 text-xs">{errors.industry}</p>}
+{/* Industry */}
+<label className="text-sm mb-1 block">Industries Type</label>
+<select
+  name="industry"
+  value={formData.industry}
+  onChange={handleChange}
+  onBlur={handleBlur}
+  autoComplete="off"
+  className="input bg-white text-black w-full"
+>
+  <option>Select Industry</option>
+  <option value="Food">Food</option>
+  <option value="Retail">Retail</option>
+  <option value="IT">IT</option>
+</select>
+{errors.industry && <p className="text-red-500 text-xs">{errors.industry}</p>}
 
-                  <label className="text-sm mb-1 block">
-                    Social Media Links
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center bg-white border p-2 rounded-md px-3">
-                      <FaFacebookF
-                        className="text-gray-500 mr-3"
-                        color="#2563EB"
-                      />
-                      <input
-                        type="text"
-                        name="fbURL"
-                        value={formData.fbURL}
-                        onChange={handleChange}
-                                          autoComplete="off"
-                onBlur={handleBlur}
-                        placeholder="Facebook URL"
-                        className="bg-transparent outline-none w-full"
-                      />
-                    </div>
-                    <div className="flex items-center bg-white border p-2 rounded-md px-3">
-                      <FaTwitter
-                        className="text-gray-500 mr-3"
-                        color="#2563EB"
-                      />
-                      <input
-                        type="text"
-                        name="twitterURL"
-                        value={formData.twitterURL}
-                        onChange={handleChange}
-                                          autoComplete="off"
-                onBlur={handleBlur}
-                        placeholder="Twitter URL"
-                        className="bg-transparent outline-none w-full"
-                      />
-                    </div>
-                    <div className="flex items-center bg-white border p-2 rounded-md px-3">
-                      <FaLinkedinIn
-                        className="text-gray-500 mr-3"
-                        color="#2563EB"
-                      />
-                      <input
-                        type="text"
-                        name="linkedInURL"
-                        value={formData.linkedInURL}
-                        onChange={handleChange}
-                                          autoComplete="off"
-                onBlur={handleBlur}
-                        placeholder="LinkedIn URL"
-                        className="bg-transparent outline-none w-full"
-                      />
-                    </div>
-                    <div className="flex items-center bg-white border p-2 rounded-md px-3">
-                      <FaInstagram
-                        className="text-gray-500 mr-3"
-                        color="#DB2777"
-                      />
-                      <input
-                        type="text"
-                        name="instagramURL"
-                        value={formData.instagramURL}
-                        onChange={handleChange}
-                                          autoComplete="off"
-                onBlur={handleBlur}
-                        placeholder="Instagram URL"
-                        className="bg-transparent outline-none w-full"
-                      />
-                    </div>
-                  </div>
 
-                  <label className="text-sm mb-1 block">Website</label>
-                  <input
-                    type="text"
-                    name="websiteURL"
-                    value={formData.websiteURL}
-                    onChange={handleChange}
-                                      autoComplete="off"
-                onBlur={handleBlur}
-                    placeholder="https://example.com"
-                    className="input bg-white w-full"
-                  />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm mb-1 block">
-                        Signature Upload
-                      </label>
-                      <div className="border border-dashed p-6 rounded-md text-center text-gray-500 bg-white">
-                        <div className="w-full justify-center flex">
-                          <FaUpload color="#6B7280" className="w-5 h-5" />
-                        </div>
-                        <p>
-                          Drag and drop your <br /> signature image here or
-                        </p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleFileChange(e, "signature")}
-                          className="mt-2 px-4 py-2 text-xs md:text-sm"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm mb-1 block">
-                        Business Logo Upload
-                      </label>
-                      <div className="border border-dashed p-6 rounded-md text-center text-gray-500 bg-white">
-                        <div className="w-full justify-center flex">
-                          <FaUpload color="#6B7280" className="w-5 h-5" />
-                        </div>
-                        <p>Drag and drop your <br /> logo here or</p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleFileChange(e, "logo")}
-                          className="mt-2 px-4 py-2 text-xs md:text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
+{/* Social Media URLs */}
+<label className="text-sm mb-1 block">Social Media Links</label>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {["fbURL", "twitterURL", "linkedInURL", "instagramURL"].map((field) => (
+    <div key={field} className="flex items-center bg-white border p-2 rounded-md px-3">
+      {/* You can conditionally render different icons based on field */}
+      <input
+        type="text"
+        name={field}
+        value={formData[field]}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        autoComplete="off"
+        placeholder={`${field} URL`}
+        className="bg-transparent outline-none w-full"
+      />
+      {errors[field] && <p className="text-red-500 text-xs w-full mt-1">{errors[field]}</p>}
+    </div>
+  ))}
+</div>
+
+{/* Website */}
+<label className="text-sm mb-1 block">Website</label>
+<input
+  type="text"
+  name="websiteURL"
+  value={formData.websiteURL}
+  onChange={handleChange}
+  onBlur={handleBlur}
+  autoComplete="off"
+  placeholder="https://example.com"
+  className="input bg-white w-full"
+/>
+{errors.websiteURL && <p className="text-red-500 text-xs">{errors.websiteURL}</p>}
+
 
           <div className="flex justify-end gap-4">
             <button

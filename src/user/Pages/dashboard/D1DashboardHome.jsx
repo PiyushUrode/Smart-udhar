@@ -100,14 +100,11 @@ const StatCard = ({ title, value, change, isPositive, type }) => {
         >
           {isPositive ? <FaArrowUp /> : <FaArrowDown />} {change}
           <span className="text-[#4B5563] font-robotB font-medium">
-            {" "}
             vs last month
           </span>
         </div>
       </div>
-      <div className={`p-2 rounded-full shadow ${config.bg}`}>
-        {config.icon}
-      </div>
+      <div className={`p-2 rounded-full shadow ${config.bg}`}>{config.icon}</div>
     </div>
   );
 };
@@ -157,6 +154,33 @@ function getAuthContext() {
   return { token, store_id, storeProfile_id: finalStoreProfileId };
 }
 
+
+const formatCurrencyCompact = (amount) => {
+  if (amount == null) return "₹0";
+  const a = Number(amount);
+  if (Math.abs(a) >= 100000) {
+    const lakhs = a / 100000;
+    return `₹${lakhs >= 10 ? Math.round(lakhs) : lakhs.toFixed(1)}L`;
+  }
+  return `₹${new Intl.NumberFormat("en-IN").format(Math.round(a))}`;
+};
+
+const computePercentChange = (current, previous) => {
+  current = Number(current || 0);
+  previous = Number(previous || 0);
+  if (previous === 0) {
+    if (current === 0) return 0;
+    return null;
+  }
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+};
+
+const formatPercentForUI = (pct) => {
+  if (pct === null) return "New";
+  const sign = pct >= 0 ? "+" : "";
+  return `${sign}${pct}%`;
+};
+
 const D1DashboardHome = () => {
   const [selectedType, setSelectedType] = useState("All");
   const [dashboardData, setDashboardData] = useState(null);
@@ -164,6 +188,12 @@ const D1DashboardHome = () => {
   const [graphData, setGraphData] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loadingExpenses, setLoadingExpenses] = useState(true);
+   const [statValues, setStatValues] = useState({
+    sale: { value: 0, pct: "—", isPositive: true },
+    paid: { value: 0, pct: "—", isPositive: true },
+    pending: { value: 0, pct: "—", isPositive: true },
+  });
+    const [transactionStats, setTransactionStats] = useState({});
 
   // 🔹 Fetch Expenses
   useEffect(() => {
@@ -202,23 +232,96 @@ const D1DashboardHome = () => {
           const res = results[idx].data;
           let sales = 0;
           let collection = 0;
-
-          res.purchaseArr?.forEach(
-            (p) => (sales += p.purchaseTotalAmount || 0)
-          );
+          res.purchaseArr?.forEach((p) => (sales += p.purchaseTotalAmount || 0));
           res.collectionArr?.forEach(
             (c) => (collection += c.collectionTotalAmount || 0)
           );
-
-          return {
-            month: m.label,
-            sales,
-            collection,
-          };
+          return { month: m.label, sales, collection };
         });
+
+        
 
         setGraphData(combinedGraph);
         setDashboardData(results[results.length - 1].data); // latest month for stat cards + transactions
+
+
+ const curr = results[results.length - 1].data || {};
+        const prev = results[results.length - 2]?.data || {};
+
+        const saleCurr = curr.totalSum || 0;
+        const salePrev = prev.totalSum || 0;
+        const paidCurr = curr.paidSum || 0;
+        const paidPrev = prev.paidSum || 0;
+        const pendingCurr = curr.pendingSum || 0;
+        const pendingPrev = prev.pendingSum || 0;
+
+        const salePct = computePercentChange(saleCurr, salePrev);
+        const paidPct = computePercentChange(paidCurr, paidPrev);
+        const pendingPct = computePercentChange(pendingCurr, pendingPrev);
+
+        setDashboardData(curr);
+        setStatValues({
+          sale: {
+            value: `₹${saleCurr}`,
+            pct: formatPercentForUI(salePct),
+            isPositive: salePct === null ? true : salePct >= 0,
+          },
+          paid: {
+            value: `₹${paidCurr}`,
+            pct: formatPercentForUI(paidPct),
+            isPositive: paidPct === null ? true : paidPct >= 0,
+          },
+          pending: {
+            value: `₹${pendingCurr}`,
+            pct: formatPercentForUI(pendingPct),
+            isPositive: pendingPct === null ? false : pendingPct <= 0, // pending decrease is good
+          }, });
+
+
+
+
+           const aggregated = results.map((r) => {
+          const d = r.data || {};
+          const purchaseTotal = (d.purchaseArr || []).reduce(
+            (s, p) => s + (p.purchaseTotalAmount || 0),
+            0
+          );
+          const expenseTotal = (d.expenseArr || []).reduce(
+            (s, e) => s + (e.expenseTotalAmount || 0),
+            0
+          );
+          const collectionCount = (d.collectionArr || []).length;
+          return { purchaseTotal, expenseTotal, collectionCount };
+        });
+
+const curr1 = aggregated[aggregated.length - 1] || {
+  purchaseTotal: 0,
+  expenseTotal: 0,
+  collectionTotal: 0,
+};
+const prev1 = aggregated[aggregated.length - 2] || {
+  purchaseTotal: 0,
+  expenseTotal: 0,
+  collectionTotal: 0,
+};
+
+setTransactionStats({
+  purchaseAmount: curr1.purchaseTotal,
+  purchasePct: formatPercentForUI(
+    computePercentChange(curr1.purchaseTotal, prev1.purchaseTotal)
+  ),
+  expenseAmount: curr1.expenseTotal,
+  expensePct: formatPercentForUI(
+    computePercentChange(curr1.expenseTotal, prev1.expenseTotal)
+  ),
+  collectionAmount: curr1.collectionTotal,
+  collectionPct: formatPercentForUI(
+    computePercentChange(curr1.collectionTotal, prev1.collectionTotal)
+  ),
+});
+
+
+
       } catch (err) {
         console.error("API Error:", err);
       } finally {
@@ -298,26 +401,26 @@ const D1DashboardHome = () => {
   return (
     <div className="p-2 md:p-6 space-y-6 overflow-hidden">
       {/* ✅ Stat Cards with API values */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard
           title="Monthly Sale"
-          value={`₹${dashboardData?.totalSum || 0}`}
-          change="12.9%"
-          isPositive
+          value={statValues.sale.value}
+          change={statValues.sale.pct}
+          isPositive={statValues.sale.isPositive}
           type="sale"
         />
         <StatCard
           title="Monthly Paid"
-          value={`₹${dashboardData?.paidSum || 0}`}
-          change="2.3%"
-          isPositive
+          value={statValues.paid.value}
+          change={statValues.paid.pct}
+          isPositive={statValues.paid.isPositive}
           type="paid"
         />
         <StatCard
           title="Monthly Pending"
-          value={`₹${dashboardData?.pendingSum || 0}`}
-          change="4.3%"
-          isPositive={false}
+          value={statValues.pending.value}
+          change={statValues.pending.pct}
+          isPositive={statValues.pending.isPositive}
           type="pending"
         />
       </div>
@@ -354,17 +457,27 @@ const D1DashboardHome = () => {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full">
             <div>
-              {renderTransactionCard("Purchase", "Purchase", "₹8.5L", "+5.2%")}
+              {renderTransactionCard(
+                "Purchase",
+                "Purchase",
+                formatCurrencyCompact(transactionStats.purchaseAmount || 0),
+                transactionStats.purchasePct || "—"
+              )}
             </div>
             <div>
-              {renderTransactionCard("Expense", "Expense", "₹3.2L", "-2.1%")}
+              {renderTransactionCard(
+                "Expense",
+                "Expense",
+                formatCurrencyCompact(transactionStats.expenseAmount || 0),
+                transactionStats.expensePct || "—"
+              )}
             </div>
             <div>
               {renderTransactionCard(
                 "Collection",
                 "Collection Calls",
-                "156",
-                "+18.3%"
+                String(transactionStats.collectionCount || 0),
+                transactionStats.collectionPct || "—"
               )}
             </div>
           </div>
