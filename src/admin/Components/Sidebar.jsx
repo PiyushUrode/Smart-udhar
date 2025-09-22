@@ -41,6 +41,7 @@ const sections = [
   {
     title: "Notifications",
     items: [
+      { label: "Custome Dropdown", icon: <FaBell />, path: "/admin/dashboard/cust-dropdown" },
       { label: "Send Notification", icon: <FaBell />, path: "/admin/dashboard/send-notification" },
       { label: "Notification List", icon: <FaBell />, path: "/admin/dashboard/show-notification" },
     ],

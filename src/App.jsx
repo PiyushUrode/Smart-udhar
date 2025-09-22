@@ -58,6 +58,7 @@ import ShowNotificationList from "./admin/Pages/Notification/ShowNotification";
 import ViewSubscription from "./admin/Pages/Subcriptions/ViewSubscription";
 import CreateSubcription from "./admin/Pages/Subcriptions/CreateSubcription";
 import SubscriptionCategory from "./admin/Pages/Subcriptions/SubscriptionCategory";
+import CustomDropdown from "./admin/Pages/Notification/ManageNotificationTypes.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true); // adjust as per your logic
@@ -155,6 +156,7 @@ function App() {
           <Route path="invoice-list" element={<BusinessInvoiceViewer />} />
           <Route path="expense-list" element={<BusinessExpenseViewer />} />
           {/* NOtification */}
+          <Route path="cust-dropdown" element={<CustomDropdown />} />
           <Route path="send-notification" element={<SendNotification />} />
           <Route path="show-notification" element={<ShowNotificationList />} />
 
