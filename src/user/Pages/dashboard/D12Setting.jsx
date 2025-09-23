@@ -159,7 +159,7 @@ const handleSave = async () => {
 
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6 text-sm">
+    <div className=" p-3 py-10 md:py-10  md:p-6 max-w-6xl mx-auto space-y-6 text-sm">
       {/* Page Heading */}
       <h1 className="text-2xl font-semibold text-gray-800 mb-2">Settings</h1>
 
@@ -482,10 +482,10 @@ const handleSave = async () => {
       </div>
 
       {/* Save Button */}
-      <div className="text-right pt-2 w-full justify-end align-middle items-end flex">
-      <div className="text-right pt-2 w-full justify-end align-middle items-end flex">
+      <div className="text-right pt-2 w-full justify-center md:justify-end align-middle items-center  md:items-end flex">
+
   <button
-    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium flex justify-end items-end align-middle gap-2 flex-row"
+    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-medium flex  justify-end items-end align-middle gap-2 flex-row"
     onClick={handleSave}
   >
     <FaRegSave /> 
@@ -493,7 +493,6 @@ const handleSave = async () => {
   </button>
 </div>
 
-      </div>
     </div>
   );
 };

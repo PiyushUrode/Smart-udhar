@@ -241,10 +241,15 @@ const [expenses, setExpenses] = useState([]);
               </div>
             </div>
 
-            {/* GST Checkbox */}
+         <div className="flex items-center gap-3">
+             {/* GST Checkbox */}
 <input
   type="checkbox"
-  className="h-5 w-5"
+className="appearance-none h-5 w-5 border border-gray-300 rounded-sm 
+             checked:bg-white  checked:ring-2 checked:ring-blue-500 
+             checked:after:content-['✔'] checked:after:text-blue-500 
+             checked:after:block checked:after:text-center"
+            
   id="gst"
   checked={formData.gstApplicable}   // direct boolean bind
   onChange={(e) =>
@@ -254,6 +259,7 @@ const [expenses, setExpenses] = useState([]);
 <label htmlFor="gst" className="text-sm font-medium">
   GST Applicable
 </label>
+         </div>
 
             {/* Payment Mode */}
             <div>

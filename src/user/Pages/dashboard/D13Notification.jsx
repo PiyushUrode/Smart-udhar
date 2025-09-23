@@ -311,7 +311,7 @@ export default function D13Notification() {
 
       {/* ------------------ System Notifications ------------------ */}
        {/* ------------------ System Notifications ------------------ */}
-<div className="max-w-5xl">
+<div className="max-w-5xl max-h-[500px] overflow-y-auto custom-scroll">
   <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
     <span className="text-indigo-600 mr-2">
       <FaBullhorn />
