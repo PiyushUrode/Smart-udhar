@@ -83,32 +83,33 @@ export const ProductService = {
   /**
    * Fetch all products/services
    */
-  async fetchProducts({ page, limit } = {}) {
-    try {
-      const { token, store_id, storeProfile_id } = getAuthContext();
+// productservice.js
+async fetchProducts({ page = 1, limit = 5, search = "" } = {}) {
+  try {
+    const { token, store_id, storeProfile_id } = getAuthContext();
 
-      const qs = page || limit
-        ? `?${new URLSearchParams({ ...(page && { page }), ...(limit && { limit }) })}`
-        : "";
+    const qs = `?${new URLSearchParams({ page, limit, ...(search && { search }) })}`;
 
-      const { data } = await axiosClient.get(
-        `/store-product/find-all/${store_id}/${storeProfile_id}${qs}`,
-        { headers: authHeaders(token) }
-      );
+    const { data } = await axiosClient.get(
+      `/store-product/find-all/${store_id}/${storeProfile_id}${qs}`,
+      { headers: authHeaders(token) }
+    );
 
-      const products =
-        data?.data?.products ||
-        data?.products ||
-        data?.data ||
-        (Array.isArray(data) ? data : []);
+    const products =
+      data?.data?.products ||
+      data?.products ||
+      data?.data ||
+      (Array.isArray(data) ? data : []);
 
-      return { success: data?.success ?? true, products };
-    } catch (err) {
-      console.error("❌ fetchProducts error:", err);
-      return { success: false, products: [] };
-    }
-  },
+    const total = data?.total || products.length; // ✅ total products
 
+    return { success: data?.success ?? true, products, total };
+  } catch (err) {
+    console.error("❌ fetchProducts error:", err);
+    return { success: false, products: [], total: 0 };
+  }
+}
+,
   /**
    * Fetch product by ID
    */
@@ -339,6 +340,8 @@ async uploadExcel(file) {
       return { success: false, error: err.message };
     }
   },
+
+  
 
 };
 

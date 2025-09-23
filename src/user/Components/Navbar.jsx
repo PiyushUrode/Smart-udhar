@@ -110,7 +110,7 @@ const Navbar = ({ toggleSidebar }) => {
           title={t("calculator")}
         />
 
-        <div className="relative">
+        {/* <div className="relative">
           <FaBell
             onClick={() => navigate("/dashboard/notification")}
             className="hover:text-bluecol cursor-pointer"
@@ -121,7 +121,7 @@ const Navbar = ({ toggleSidebar }) => {
               {notifications.length}
             </span>
           )}
-        </div>
+        </div> */}
 
         {/* Last Update Time */}
         {lastUpdate && (

@@ -40,7 +40,7 @@ useEffect(() => {
 }, []);
 
 
-const getCustomerStats = (customerId) => {  // customerId here will be c._id (MongoDB ID)
+const  getCustomerStats = (customerId) => {  // customerId here will be c._id (MongoDB ID)
   const invoices = customerInvoices[customerId] || [];
   let totalPurchase = 0;
   let onTimePayments = 0;
@@ -81,6 +81,9 @@ const getCustomerStats = (customerId) => {  // customerId here will be c._id (Mo
   const bestPerformers = customers.filter((c) => c.creditScore >= 75);
   const lowPerformers = customers.filter((c) => c.creditScore < 50);
   const legalCases = customers.filter((c) => c.status === "Legal Action");
+
+
+  
 
   
 
@@ -162,6 +165,7 @@ const getCustomerStats = (customerId) => {  // customerId here will be c._id (Mo
 
       {/* Best Performers */}
       <TableSection
+
         title="Best Performers (Score: 75-100)"
         headers={["Customer", "Credit Score", "On-Time Payments", "Total Purchase", "Status"]}
       >
@@ -176,6 +180,7 @@ const getCustomerStats = (customerId) => {  // customerId here will be c._id (Mo
       onTime={stats.onTimePayments}
       purchase={`₹${stats.totalPurchase}`}
       status="Excellent"
+      
     />
   );
 })}
@@ -183,6 +188,7 @@ const getCustomerStats = (customerId) => {  // customerId here will be c._id (Mo
 
       {/* Low Performers */}
       <TableSection
+
         title="Low Performers (Score: 0-50)"
         headers={["Customer", "Credit Score", "Delay Days", "Penalties", "Action"]}
       >
@@ -252,24 +258,35 @@ const SummaryCard = ({ icon, label, value, color }) => {
 
 const TableSection = ({ title, headers, children }) => (
   <div className="bg-white rounded shadow-sm mb-6 px-3 md:px-10">
+    {/* Section Title */}
     <h2 className="text-lg font-medium text-[#1F2937] p-4 border-b">{title}</h2>
+
+    {/* Table Wrapper */}
     <div className="overflow-x-auto">
-      <table className="min-w-full text-sm">
-        <thead className="bg-gray-100 text-left">
-          <tr>
-            {headers.map((h, i) => (
-              <th key={i} className="p-3 font-robotoM text-[16px] text-[#4B5563]">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{children}</tbody>
-      </table>
+      <div className="max-h-[320px] overflow-y-auto"> {/* 👈 scroll only tbody */}
+        <table className="min-w-full text-sm border-collapse">
+          <thead className="bg-gray-100 sticky top-0 z-10">
+            <tr>
+              {headers.map((h, i) => (
+                <th
+                  key={i}
+                  className="p-3 font-robotoM text-[16px] text-[#4B5563] border-b bg-gray-100"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>{children}</tbody>
+        </table>
+      </div>
     </div>
   </div>
 );
 
+
 const BestPerformerRow = ({ id, name, score, onTime, purchase, status }) => (
-  <tr className="border-t">
+  <tr className="border-t max-h-[600px] overflow-y-auto">
     <td className="p-3">
       <div>
         <p className="font-robotoM text-[16px] text-[#1F2937]">{name}</p>
@@ -288,7 +305,7 @@ const BestPerformerRow = ({ id, name, score, onTime, purchase, status }) => (
 );
 
 const LowPerformerRow = ({ id, name, score, delay, penalties, action }) => (
-  <tr className="border-t ">
+  <tr className="border-t  ">
     <td className="p-3">
       <div>
         <p className="font-robotoM text-[16px] text-[#1F2937]">{name}</p>

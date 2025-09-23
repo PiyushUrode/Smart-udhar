@@ -232,7 +232,7 @@ useEffect(() => {
           <section>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm mb-1 block">Business Name</label>
+                <label className="text-sm mb-1 block"> <span className="text-red-500"> *</span> Business Name</label>
                 <input
                   type="text"
                   name="businessName"
@@ -269,7 +269,7 @@ useEffect(() => {
             </div>
 
             <div className="mt-4">
-              <label className="text-sm mb-1 block">Address</label>
+              <label className="text-sm mb-1 block"> <span className="text-red-500"> *</span> Address</label>
               <textarea
                 name="address"
                 value={formData.address}
@@ -286,7 +286,7 @@ useEffect(() => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
-                <label className="text-sm mb-1 block">Pincode</label>
+                <label className="text-sm mb-1 block"> <span className="text-red-500"> *</span> Pincode</label>
                 <input
                   type="text"
                   name="pincode"
@@ -302,7 +302,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className="text-sm mb-1 block">Mobile</label>
+                <label className="text-sm mb-1 block"> <span className="text-red-500"> *</span> Mobile</label>
                 <input
                   type="text"
                   name="mobile"

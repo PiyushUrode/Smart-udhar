@@ -15,32 +15,16 @@ import { FaFlagCheckered } from "react-icons/fa6";
 import { MdCancel } from "react-icons/md";
 import { IoIosWarning } from "react-icons/io";
 import { Invoice } from "../../api/Invoice.js"; // your Invoice service
+import { NotificationService } from "../../api/notification.js";
+
 
 export default function D13Notification() {
   const [reminders, setReminders] = useState([]);
-  // const [items, setItems] = useState([]);
-  // const [logs, setLogs] = useState([]);
   const [milestones, setMilestones] = useState([]);
-  // const [notifications, setNotifications] = useState([]);
+  const [systemNotifications, setSystemNotifications] = useState([]);
+  const [items, setItems] = useState([]); // ✅ dynamic low stock items
 
 
-const notifications = [
-  {
-    icon: <FaGift />,
-    title: "New Reward Feature Available!",
-    message: "Earn points for every invoice sent. Redeem for premium features.",
-    time: "2 hours ago",
-    iconColor: "bg-blue-100 text-blue-600",
-  },
-  {
-    icon: <IoIosWarning color="#EA580C" />,
-    title: "GST Rate Update",
-    message:
-      "New GST rates effective from June 1, 2024. Update your tax settings.",
-    time: "1 day ago",
-    iconColor: "bg-orange-100 text-orange-600",
-  },
-];
 
   const logs = [
   {
@@ -59,31 +43,38 @@ const notifications = [
   },
 ];
 
-  const items = [
-  {
-    name: "A4 Paper",
-    stock: 3,
-    level: "Low Stock",
-    levelColor: "bg-[#FFEDD5] text-[#9A3412]",
-    message: "Reorder soon",
-    messageColor: "text-orange-600",
-  },
-  {
-    name: "Printer Ink Cartridge",
-    stock: 1,
-    level: "Critical",
-    levelColor: "bg-red-100 text-red-600",
-    message: "Critical - Reorder immediately",
-    messageColor: "text-red-600",
-  },
-];
-  // Fetch all data
- useEffect(() => {
+  // ------------------ System Notifications ------------------
+  useEffect(() => {
+    const fetchSystemNotifications = async () => {
+      try {
+        const { success, notifications } =
+          await NotificationService.fetchNotifications();
+        if (success) {
+          setSystemNotifications(
+            notifications.map((n) => ({
+              id: n._id,
+              title: n.title,
+              message: n.message,
+              time: n.created_at,
+              icon: <FaBullhorn />, // default icon
+              iconColor: "bg-indigo-100 text-indigo-600",
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch system notifications:", err);
+      }
+    };
+    fetchSystemNotifications();
+  }, []);
+
+  // ------------------ Fetch All Data ------------------
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const { invoices } = await Invoice.getAllInvoices();
 
-        // Pending Payment Reminders
+        // ✅ Pending Payment Reminders
         const pendingReminders = invoices
           .filter((inv) => inv.paymentStatus !== "Paid")
           .map((inv) => ({
@@ -100,8 +91,10 @@ const notifications = [
           }));
         setReminders(pendingReminders);
 
-        // Milestones
-        const milestoneInvoices = invoices.filter((inv) => inv.milestones?.length);
+        // ✅ Milestones
+        const milestoneInvoices = invoices.filter(
+          (inv) => inv.milestones?.length
+        );
         const allMilestones = milestoneInvoices.flatMap((inv) =>
           inv.milestones.map((ms, idx) => ({
             id: `${inv._id}-${idx}`,
@@ -118,41 +111,27 @@ const notifications = [
         );
         setMilestones(allMilestones);
 
-        // Low Stock Items
+        // ✅ Low Stock Products
         const { products } = await Invoice.getProducts();
         const lowStockItems = products
-          .filter((p) => p.stock <= 5)
+          .filter((p) => p.quantity <= p.min_quantity) // <-- FIXED
           .map((p) => ({
             id: p._id,
             name: p.name,
-            stock: p.stock,
-            level: p.stock <= 2 ? "Critical" : "Low Stock",
+            stock: p.quantity, // ✅ available stock
+            level: p.quantity <= 2 ? "Critical" : "Low Stock",
             levelColor:
-              p.stock <= 2 ? "bg-red-100 text-red-600" : "bg-[#FFEDD5] text-[#9A3412]",
-            message: p.stock <= 2 ? "Critical - Reorder immediately" : "Reorder soon",
-            messageColor: p.stock <= 2 ? "text-red-600" : "text-orange-600",
+              p.quantity <= 2
+                ? "bg-red-100 text-red-600"
+                : "bg-[#FFEDD5] text-[#9A3412]",
+            message:
+              p.quantity <= 2
+                ? "Critical - Reorder immediately"
+                : "Reorder soon",
+            messageColor:
+              p.quantity <= 2 ? "text-red-600" : "text-orange-600",
           }));
         setItems(lowStockItems);
-
-        // System Notifications (example static)
-        setNotifications([
-          {
-            id: 1,
-            icon: <FaGift />,
-            title: "New Reward Feature Available!",
-            message: "Earn points for every invoice sent. Redeem for premium features.",
-            time: "2 hours ago",
-            iconColor: "bg-blue-100 text-blue-600",
-          },
-          {
-            id: 2,
-            icon: <IoIosWarning color="#EA580C" />,
-            title: "GST Rate Update",
-            message: "New GST rates effective from June 1, 2024.",
-            time: "1 day ago",
-            iconColor: "bg-orange-100 text-orange-600",
-          },
-        ]);
       } catch (err) {
         console.error("❌ Failed to fetch notification data:", err);
       }
@@ -160,6 +139,8 @@ const notifications = [
 
     fetchData();
   }, []);
+
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 mt-5 flex flex-col gap-4">
@@ -227,7 +208,7 @@ const notifications = [
       </div>
 
       {/* ------------------ Low Stock Alerts ------------------ */}
-            <div className="max-w-5xl">
+              <div className="max-w-5xl">
         <h2 className="text-lg font-semibold mb-4 flex items-center">
           <span className="text-orange-600 font-bold mr-2">
             <FaBox />
@@ -235,27 +216,33 @@ const notifications = [
           Low Stock Alerts
         </h2>
 
-        {items.map((item, index) => (
-          <div
-            key={index}
-            className="flex justify-between items-start bg-white shadow-sm rounded-md p-4 mb-3 border border-[#E5E7EB]"
-          >
-            <div>
-              <h3 className="font-semibold text-[#111827]">{item.name}</h3>
-              <p className="text-sm font-robotoR text-[#4B5563] mt-1">
-                Only {item.stock} left in stock
-              </p>
-              <p className={`text-xs font-robotoM mt-1 ${item.messageColor}`}>
-                {item.message}
-              </p>
-            </div>
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${item.levelColor} font-medium self-center`}
+        {items.length === 0 ? (
+          <p className="text-sm text-gray-500">No low stock products 🎉</p>
+        ) : (
+          items.map((item) => (
+            <div
+              key={item.id}
+              className="flex justify-between items-start bg-white shadow-sm rounded-md p-4 mb-3 border border-[#E5E7EB]"
             >
-              {item.level}
-            </span>
-          </div>
-        ))}
+              <div>
+                <h3 className="font-semibold text-[#111827]">{item.name}</h3>
+                <p className="text-sm font-robotoR text-[#4B5563] mt-1">
+                  Only {item.stock} left in stock
+                </p>
+                <p
+                  className={`text-xs font-robotoM mt-1 ${item.messageColor}`}
+                >
+                  {item.message}
+                </p>
+              </div>
+              <span
+                className={`text-xs px-2 py-1 rounded-full ${item.levelColor} font-medium self-center`}
+              >
+                {item.level}
+              </span>
+            </div>
+          ))
+        )}
       </div>
 
       <div className="max-w-5xl">
@@ -323,36 +310,39 @@ const notifications = [
 
 
       {/* ------------------ System Notifications ------------------ */}
-        <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
-          <span className="text-indigo-600 mr-2">
-            <FaBullhorn />
-          </span>{" "}
-          System Notifications
-        </h2>
+       {/* ------------------ System Notifications ------------------ */}
+<div className="max-w-5xl">
+  <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
+    <span className="text-indigo-600 mr-2">
+      <FaBullhorn />
+    </span>{" "}
+    System Notifications
+  </h2>
 
-        {notifications.map((note, index) => (
-          <div
-            key={index}
-            className="flex items-start gap-3 bg-white border border-[#E5E7EB] rounded-md p-4 mb-3 shadow-sm"
-          >
-            <div
-              className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl ${note.iconColor}`}
-            >
-              {note.icon}
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">{note.title}</h3>
-              <p className="text-sm font-robotoR text-[#4B5563]">
-                {note.message}
-              </p>
-              <p className="text-xs font-robotoR text-[#6B7280] mt-1">
-                {note.time}
-              </p>
-            </div>
-          </div>
-        ))}
+  {systemNotifications.length === 0 ? (
+    <p className="text-sm text-gray-500">No system notifications</p>
+  ) : (
+    systemNotifications.map((note) => (
+      <div
+        key={note.id}
+        className="flex items-start gap-3 bg-white border border-[#E5E7EB] rounded-md p-4 mb-3 shadow-sm"
+      >
+        <div
+          className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl ${note.iconColor}`}
+        >
+          {note.icon}
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-900">{note.title}</h3>
+          <p className="text-sm font-robotoR text-[#4B5563]">{note.message}</p>
+          <p className="text-xs font-robotoR text-[#6B7280] mt-1">
+            {note.time}
+          </p>
+        </div>
       </div>
+    ))
+  )}
+</div>
 
       {/* ------------------ Reminder Logs ------------------ */}
       

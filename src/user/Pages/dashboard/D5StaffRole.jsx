@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import product1 from "../../assets/dummyimage/product1.png";
 import { useParams, useNavigate } from "react-router-dom";
 
+
 // ----------------- STAT CONFIG -----------------
 const STAT_TYPE_MAP = {
   staff: {
@@ -48,7 +49,7 @@ const StatCard = ({ label, value, type }) => {
 };
 
 const roles = [
-  { name: "Admin", description: "Full access to all modules", count: 2, tags: [{ name: "All Access", color: "bg-blue-100 text-bluecol" }] },
+  { name: "name", description: "Full access to all modules", count: 2, tags: [{ name: "All Access", color: "bg-blue-100 text-bluecol" }] },
   { name: "Accountant", description: "View/edit expenses, create invoices", count: 3, tags: [{ name: "Expense", color: "bg-purple-100 text-purple-600" }, { name: "Invoice", color: "bg-purple-100 text-purple-600" }] },
   { name: "Sales Staff", description: "View customers, send reminders", count: 5, tags: [{ name: "Customer", color: "bg-green-100 text-green-600" }, { name: "Reminder", color: "bg-green-100 text-green-600" }] },
   { name: "Viewer", description: "Read-only access to reports", count: 2, tags: [{ name: "Reports", color: "bg-gray-100 text-gray-600" }, { name: "Dashboard", color: "bg-gray-100 text-gray-600" }] },
@@ -63,8 +64,38 @@ const D5StaffRole = () => {
   const [loading, setLoading] = useState(false);
   const [recentActivity, setRecentActivity] = useState([]);
   const [staffImage, setStaffImage] = useState(null);
+  const [dynamicRoles, setDynamicRoles] = useState([]);
+
 
   const API_URL = import.meta.env.VITE_API_URL;
+
+
+  // Inside D5StaffRole component, after fetching staff
+useEffect(() => {
+  if (members.length > 0) {
+    const sorted = [...members].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    setRecentActivity(sorted.slice(0, 5));
+
+    // ✅ Generate dynamic roles overview
+    const roleMap = {};
+    sorted.forEach((staff) => {
+      const roleName = staff.role || "Staff";
+      if (!roleMap[roleName]) {
+        roleMap[roleName] = {
+          name: roleName,
+          count: 1,
+          tags: [], // optionally you can fill tags based on role type
+        };
+      } else {
+        roleMap[roleName].count += 1;
+      }
+    });
+    setDynamicRoles(Object.values(roleMap));
+  }
+}, [members]);
+
 
   // ✅ Handle image change with validation
   const handleChange = (e) => {
@@ -275,7 +306,7 @@ const D5StaffRole = () => {
             Role Overview
           </h2>
           <div className="space-y-4 p-4">
-            {roles.map((role, index) => (
+            {dynamicRoles.map((role, index) => (
               <div
                 key={index}
                 className="border p-4 gap-3 flex justify-start flex-col rounded-md"
