@@ -1,550 +1,213 @@
-// src/components/D13Notification.jsx
-import React, { useEffect, useState } from "react";
-import {
-  FaRupeeSign,
-  FaWhatsapp,
-  FaSms,
-  FaBox,
-  FaBullhorn,
-  FaCheckCircle,
-  FaGift,
-  FaSearch,
-} from "react-icons/fa";
-import { IoCall } from "react-icons/io5";
-import { IoMdMail } from "react-icons/io";
-import { FaFlagCheckered, FaBullseye } from "react-icons/fa6";
-import { MdCancel } from "react-icons/md";
-import { IoIosWarning } from "react-icons/io";
-import { Invoice, getAuthContext } from "../../api/Invoice"; // adjust path if needed
-import axiosClient from "../../api/axiosClient"; // adjust path if needed
+import { FaChevronDown, FaChevronUp, FaCloudUploadAlt } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { StaffService } from "../../api/staffDetails.js";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
-function formatCurrency(value = 0) {
-  try {
-    // show with INR formatting
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    return `₹${value}`;
-  }
-}
+const D5StaffDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-function authHeader(token) {
-  return { Authorization: `Bearer ${token}` };
-}
+  const [isOpen, setIsOpen] = useState(true);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    mobileNumber: "",
+    emailId: "",
+    address: "",
+    pinNumber: "",
+    city: "",
+    state: "",
+    roles: ""
+  });
+  const [staffImage, setStaffImage] = useState(null);
+  const [error, setError] = useState("");
 
-export default function D13Notification() {
-const [reminders, setReminders] = useState([]);
-  const [items, setItems] = useState([]);
-  const [milestones, setMilestones] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState({});
-
+  // 🔹 Fetch staff if editing
   useEffect(() => {
-    fetchAll();
-  }, []);
+    const fetchStaff = async () => {
+      if (!id) return; // add mode
 
-  async function fetchAll() {
-    setLoading(true);
-    try {
-      const auth = getAuthContext();
-      const headers = authHeader(auth.token);
+      try {
+        const res = await StaffService.findStaffById(id);
+        console.log("Fetched Staff:", res);
 
-      // 1) Invoices
-      const allRes = await Invoice.getAllInvoices();
-      const invoices = allRes?.data || [];
+        // ⚠️ adjust if API response is wrapped
+        const staff = res?.staff || res?.data || res;
 
-      // --- Reminders ---
-      const remindersBuilt = (invoices || [])
-        .filter((inv) => Number(inv.dueBalance ?? 0) > 0)
-        .map((inv) => ({
-          invoiceId: inv._id || inv.invoiceId,
-          customerId: inv.customerId,
-          name:
-            inv.customerName ||
-            inv.customer?.name ||
-            inv.customer?.businessName ||
-            inv.billingName ||
-            "Unknown Customer",
-          code:
-            inv.invoiceCode ||
-            inv.invoiceNumber ||
-            (inv._id ? `#${String(inv._id).slice(0, 6)}` : "—"),
-          status: inv.paymentStatus || "Pending",
-          dueAmount: Number(inv.dueBalance ?? 0),
-          amountLabel: formatCurrency(Number(inv.dueBalance ?? 0)),
-          lastReminder:
-            inv.lastReminder ||
-            inv.reminderLogs?.[0]?.time ||
-            (inv.updatedAt
-              ? new Date(inv.updatedAt).toLocaleString()
-              : "No reminder"),
-        }));
-      setReminders(remindersBuilt);
-
-      // --- Products: low stock ---
-      const prodRes = await Invoice.getProducts().catch(() => []);
-      const products = prodRes?.products || prodRes || [];
-      const getStockQty = (p) =>
-        Number(
-          p?.stockQty ??
-            p?.stock ??
-            p?.leftQty ??
-            p?.availableQty ??
-            p?.quantity ??
-            p?.qty ??
-            0
-        );
-      const lowStock = (products || [])
-        .filter((p) => getStockQty(p) <= 5)
-        .map((p) => {
-          const stock = getStockQty(p);
-          return {
-            productId: p._id || p.id,
-            name: p.name || p.title || "Unnamed Product",
-            stock,
-            level: stock <= 2 ? "Critical" : "Low Stock",
-            levelColor:
-              stock <= 2
-                ? "bg-red-100 text-red-600"
-                : "bg-orange-100 text-orange-600",
-            message:
-              stock <= 2 ? "Critical - Reorder immediately" : "Reorder soon",
-            messageColor: stock <= 2 ? "text-red-600" : "text-orange-600",
-          };
+        setFormData({
+          firstName: staff.firstName || "",
+          lastName: staff.lastName || "",
+          mobileNumber: staff.mobileNumber || "",
+          emailId: staff.emailId || "",
+          address: staff.address || "",
+          pinNumber: staff.pinNumber || "",
+          city: staff.city || "",
+          state: staff.state || "",
+          roles: staff.roles || ""
         });
-      setItems(lowStock);
-
-      // --- Milestones ---
-      const milestonesBuilt = [];
-      (invoices || []).forEach((inv) => {
-        (inv.milestones || []).forEach((m, idx) => {
-          const status = m.status || "Upcoming";
-          if (["Upcoming", "Overdue", "Pending"].includes(status)) {
-            milestonesBuilt.push({
-              invoiceId: inv._id || inv.invoiceId,
-              milestoneId: m._id || idx,
-              company:
-                inv.customerName || inv.customer?.name || "Unknown Customer",
-              step: m.milestoneName || `Milestone ${idx + 1}`,
-              amount: Number(m.amount ?? 0),
-              amountLabel: formatCurrency(Number(m.amount ?? 0)),
-              dueDate: m.dueDate
-                ? new Date(m.dueDate).toLocaleDateString()
-                : "—",
-              status,
-              raw: m,
-            });
-          }
-        });
-      });
-      setMilestones(milestonesBuilt);
-
-      // --- Reminder Logs ---
-      let logsData = [];
-      const logEndpoints = [
-        `/reminder/logs/${auth.store_id}/${auth.storeProfile_id}`,
-        `/reminder/logs`,
-      ];
-      for (const ep of logEndpoints) {
-        try {
-          const res = await axiosClient.get(ep, { headers });
-          if (res?.data) {
-            logsData = Array.isArray(res.data)
-              ? res.data
-              : res.data?.data || res.data?.logs || [];
-            break;
-          }
-        } catch {}
+      } catch (err) {
+        console.error("❌ Failed to fetch staff:", err);
+        toast.error("Failed to load staff details");
       }
-      if (!logsData || logsData.length === 0) {
-        logsData = [
-          {
-            id: "local-1",
-            message: "WhatsApp sent to Sharma Traders",
-            time: "2 hours ago",
-            status: "Delivered",
-            statusColor: "bg-green-100 text-green-700",
-          },
-          {
-            id: "local-2",
-            message: "SMS failed to Patel & Sons",
-            time: "1 day ago",
-            status: "Retry",
-            statusColor: "bg-blue-100 text-blue-700",
-          },
-        ];
+    };
+
+    fetchStaff();
+  }, [id]);
+
+  const handleChange = (e) => {
+    const { id, value, files } = e.target;
+
+    if (files) {
+      const file = files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        setError("Image size must be less than 2MB");
+        setStaffImage(null);
+        return;
       }
-      setLogs(logsData);
+      setError("");
+      setStaffImage(file);
+    } else {
+      setFormData((prev) => ({ ...prev, [id]: value }));
+    }
+  };
 
-      // --- System Notifications ---
-      let notifsData = [];
-      const notifEndpoints = [
-        `/system-notifications/${auth.store_id}/${auth.storeProfile_id}`,
-        `/notifications`,
-      ];
-      for (const ep of notifEndpoints) {
-        try {
-          const res = await axiosClient.get(ep, { headers });
-          if (res?.data) {
-            notifsData = Array.isArray(res.data)
-              ? res.data
-              : res.data?.data || res.data?.notifications || [];
-            break;
-          }
-        } catch {}
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let res;
+      if (id) {
+        // 🔹 Edit staff
+        res = await StaffService.updateStaff(id, formData, staffImage);
+        toast.success("✅ Staff updated successfully!");
+      } else {
+        // 🔹 Add staff
+        res = await StaffService.createStaff(formData, staffImage);
+        toast.success("✅ Staff member added successfully!");
       }
-      if (!notifsData || notifsData.length === 0) {
-        notifsData = [
-          {
-            id: "sys-1",
-            iconName: "gift",
-            title: "New Reward Feature Available!",
-            message:
-              "Earn points for every invoice sent. Redeem for premium features.",
-            time: "2 hours ago",
-            iconColor: "bg-blue-100 text-blue-600",
-          },
-          {
-            id: "sys-2",
-            iconName: "warning",
-            title: "GST Rate Update",
-            message:
-              "New GST rates effective from June 1, 2024. Update your tax settings.",
-            time: "1 day ago",
-            iconColor: "bg-orange-100 text-orange-600",
-          },
-        ];
-      }
-      setNotifications(notifsData);
+
+      console.log("API Response:", res);
+      navigate("/dashboard/staff-list"); // redirect if needed
     } catch (err) {
-      console.error("Error fetching notifications data:", err);
-    } finally {
-      setLoading(false);
+      console.error("❌ Error saving staff:", err);
+      toast.error(err.response?.data?.message || "Failed to save staff");
     }
-  }
+  };
+  const dummyPlaceholders = {
+  "First Name": "Amit",
+  "Last Name": "Sharma",
+  "Mobile Number": "9876543210",
+  "Email ID": "amit.sharma@example.com",
+  "Address": "221B, MG Road",
+  "Pin Number": "400001",
+  "City": "Mumbai",
+  "State": "Maharashtra",
+  "Roles": "Sales Executive",
+};
 
-  // ----------------- Actions (unchanged) -----------------
-  async function handleSendReminder(invoiceId, channel = "whatsapp") {
-    const auth = getAuthContext();
-    const headers = authHeader(auth.token);
-    setActionLoading((s) => ({
-      ...s,
-      [`send-${invoiceId}-${channel}`]: true,
-    }));
-    try {
-      await axiosClient.post(
-        `/reminder/send`,
-        { invoiceId, channel },
-        { headers }
-      );
-      alert(`Reminder queued via ${channel}`);
-      await fetchAll();
-    } catch {
-      alert("Send reminder failed. Please check backend.");
-    } finally {
-      setActionLoading((s) => ({
-        ...s,
-        [`send-${invoiceId}-${channel}`]: false,
-      }));
-    }
-  }
 
-  async function handleMarkAsPaid(reminder) {
-    if (
-      !window.confirm(
-        `Mark invoice ${reminder.code} as paid for ${reminder.amountLabel}?`
-      )
-    )
-      return;
-    setActionLoading((s) => ({ ...s, [`pay-${reminder.invoiceId}`]: true }));
-    try {
-      const payRes = await Invoice.createPayment({
-        invoiceId: reminder.invoiceId,
-        amount: reminder.dueAmount,
-        mode: "cash",
-        customerId: reminder.customerId,
-      });
-      if (!payRes?.success) {
-        await Invoice.updateInvoice(reminder.invoiceId, { status: "Paid" });
-      }
-      await fetchAll();
-    } catch (err) {
-      console.error("mark as paid failed:", err);
-    } finally {
-      setActionLoading((s) => ({ ...s, [`pay-${reminder.invoiceId}`]: false }));
-    }
-  }
-
-  async function handleMarkLowStockRead(item) {
-    setActionLoading((s) => ({ ...s, [`lowread-${item.productId}`]: true }));
-    try {
-      await Invoice.updateLowStock({
-        productId: item.productId,
-        leftProductQty: item.stock,
-        markAsRead: true,
-      });
-      await fetchAll();
-    } catch (err) {
-      console.error("updateLowStock failed:", err);
-    } finally {
-      setActionLoading((s) => ({
-        ...s,
-        [`lowread-${item.productId}`]: false,
-      }));
-    }
-  }
-
-  async function handleMarkMilestonePaid(ms) {
-    if (!window.confirm(`Mark milestone ${ms.step} as Paid?`)) return;
-    setActionLoading((s) => ({
-      ...s,
-      [`ms-${ms.invoiceId}-${ms.milestoneId}`]: true,
-    }));
-    try {
-      const payload = [{ id: ms.milestoneId, status: "Paid" }];
-      await Invoice.updateMilestones(ms.invoiceId, payload);
-      await fetchAll();
-    } catch (err) {
-      console.error("update milestone failed:", err);
-    } finally {
-      setActionLoading((s) => ({
-        ...s,
-        [`ms-${ms.invoiceId}-${ms.milestoneId}`]: false,
-      }));
-    }
-  }
-
-  async function handleRetryLog(logItem) {
-    const auth = getAuthContext();
-    const headers = authHeader(auth.token);
-    setActionLoading((s) => ({ ...s, [`retry-${logItem.id}`]: true }));
-    try {
-      await axiosClient.post(
-        `/reminder/retry`,
-        { logId: logItem.id },
-        { headers }
-      );
-      await fetchAll();
-    } catch (err) {
-      console.error("retry log failed:", err);
-    } finally {
-      setActionLoading((s) => ({ ...s, [`retry-${logItem.id}`]: false }));
-    }
-  }
-  
-
-  // ----------------- Render -----------------
-  if (loading) {
-    return (
-      <div className="text-center py-10 text-gray-600">
-        Loading notifications...
-      </div>
-    );
-  }
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 mt-5 flex flex-col gap-6">
-      <h1 className="text-2xl text-[#1F2937] font-robotoB">Notifications</h1>
-
-      {/* Pending Payment Reminders */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold mb-4 flex items-center">
-          <span className="text-orange-600 font-bold mr-2"><FaRupeeSign /></span>
-          Pending Payment Reminders
+    <div className="max-w-4xl mx-auto my-5 p-4 sm:p-6 bg-white rounded-lg shadow-xl">
+      {/* Header */}
+      <div
+        className="flex justify-between items-center bg-[#3B82F6] text-white p-4 rounded-md cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <h2 className="text-lg font-robotoM">
+          {id ? "Edit Staff Details" : "Add Staff Details"}
         </h2>
+        <span>{isOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+      </div>
 
-        {reminders.length === 0 ? (
-          <p className="text-sm text-gray-500">No pending payments 🎉</p>
-        ) : (
-          reminders.map((rem) => (
-            <div key={rem.invoiceId} className="bg-white shadow border border-[#E5E7EB] rounded-md p-4 mb-4">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-gray-900">{rem.name}</h3>
-                  <span className="text-xs font-robotoR text-gray-500">{rem.code}</span>
-                  <span className="text-xs px-2 py-1 rounded-full bg-[#FEE2E2] text-[#991B1B]">{rem.status}</span>
+      {isOpen && (
+        <form className="mt-6 p-2 space-y-4" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              "First Name",
+              "Last Name",
+              "Mobile Number",
+              "Email ID",
+              "Address",
+              "Pin Number",
+              "City",
+              "State",
+              "Roles"
+            ].map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-[#374151] mb-1 capitalize">
+                  {field}
+                </label>
+               {field === "Mobile Number" ? (
+  <div className="flex">
+    <select
+      className="border rounded-l-md bg-gray-100 text-sm px-2 py-2"
+      value={formData.countryCode || "+91"}
+      onChange={(e) =>
+        setFormData((prev) => ({ ...prev, countryCode: e.target.value }))
+      }
+    >
+      <option value="+91">+91 (IN)</option>
+      <option value="+58">+58 (VE)</option>
+    </select>
+    <input
+      id={field}
+      type="text"
+      placeholder={dummyPlaceholders[field]}
+      value={formData[field]}
+      onChange={handleChange}
+      className="flex-1 border rounded-r-md px-4 py-2 text-sm bg-[#F6F8FA]"
+    />
+  </div>
+) : (
+  <input
+    id={field}
+    type="text"
+    placeholder={dummyPlaceholders[field]}
+    value={formData[field]}
+    onChange={handleChange}
+    className="p-2 border rounded-md focus:outline-none focus:ring w-full bg-[#F6F8FA]"
+  />
+)}
+
+              </div>
+            ))}
+
+            {/* Upload */}
+            <div className="border border-dashed border-gray-400 p-6 mt-4 flex flex-col items-center text-center rounded-md">
+              <FaCloudUploadAlt size={30} color="#9CA3AF" />
+              <label htmlFor="upload" className="cursor-pointer">
+                <div className="text-[#4B5563] text-sm">
+                  Drop files here or click to upload
                 </div>
-                <p className="text-[#DC2626] text-2xl font-robotoB mt-1">{rem.amountLabel}</p>
-                <p className="text-sm font-robotoR text-[#4B5563] mt-1">Last reminder: {rem.lastReminder}</p>
-
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <button
-                    onClick={() => handleSendReminder(rem.invoiceId, "whatsapp")}
-                    disabled={actionLoading[`send-${rem.invoiceId}-whatsapp`]}
-                    className="flex gap-2 items-center bg-[#22C55E] text-white text-sm px-3 py-1.5 rounded-md"
-                  >
-                    <FaWhatsapp /> WhatsApp
-                  </button>
-
-                  <button
-                    onClick={() => handleSendReminder(rem.invoiceId, "sms")}
-                    disabled={actionLoading[`send-${rem.invoiceId}-sms`]}
-                    className="flex gap-2 items-center bg-[#3B82F6] text-white text-sm px-3 py-1 rounded-md"
-                  >
-                    <FaSms /> SMS
-                  </button>
-
-                  <button
-                    onClick={() => handleSendReminder(rem.invoiceId, "call")}
-                    disabled={actionLoading[`send-${rem.invoiceId}-call`]}
-                    className="flex gap-2 items-center bg-[#A855F7] text-white text-sm px-3 py-1 rounded-md"
-                  >
-                    <IoCall /> Call
-                  </button>
-
-                  <button
-                    onClick={() => handleMarkAsPaid(rem)}
-                    disabled={actionLoading[`pay-${rem.invoiceId}`]}
-                    className="flex gap-2 items-center bg-[#F3F4F6] text-[#374151] text-sm px-3 py-1 rounded-md"
-                  >
-                    Mark as Paid
-                  </button>
-                </div>
-              </div>
+                <input
+                  id="upload"
+                  type="file"
+                  className="hidden"
+                  onChange={handleChange}
+                />
+              </label>
+              <p className="mt-2 text-sm font-semibold">
+                {staffImage ? staffImage.name : "Upload Image Here"}
+              </p>
             </div>
-          ))
-        )}
-      </div>
+          </div>
 
-      {/* Low Stock Alerts */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold mb-4 flex items-center">
-          <span className="text-orange-600 font-bold mr-2"><FaBox /></span>
-          Low Stock Alerts
-        </h2>
+          {/* Error */}
+          {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
 
-        {items.length === 0 ? (
-          <p className="text-sm text-gray-500">All products have enough stock ✅</p>
-        ) : (
-          items.map((item) => (
-            <div key={item.productId} className="flex justify-between items-start bg-white shadow-sm rounded-md p-4 mb-3 border border-[#E5E7EB]">
-              <div>
-                <h3 className="font-semibold text-[#111827]">{item.name}</h3>
-                <p className="text-sm font-robotoR text-[#4B5563] mt-1">Only {item.stock} left in stock</p>
-                <p className={`text-xs font-robotoM mt-1 ${item.messageColor}`}>{item.message}</p>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className={`text-xs px-2 py-1 rounded-full ${item.levelColor} font-medium`}>{item.level}</span>
-                <button
-                  onClick={() => handleMarkLowStockRead(item)}
-                  disabled={actionLoading[`lowread-${item.productId}`]}
-                  className="mt-2 text-sm px-3 py-1 rounded-md bg-gray-100"
-                >
-                  Mark read
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Reminder Success Logs */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold mb-4 text-[#111827] flex items-center">
-          <span className="text-blue-600 mr-2"><IoMdMail /></span>
-          Reminder Success Logs
-        </h2>
-
-        <div className="bg-white rounded-md shadow-sm p-4 border border-[#E5E7EB]">
-          {logs.length === 0 ? (
-            <p className="text-sm text-gray-500">No logs available.</p>
-          ) : (
-            logs.map((log) => (
-              <div key={log.id || log._id} className="flex justify-between items-start py-2 border-b last:border-b-0">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl mt-0.5">
-                    {log.status?.toLowerCase?.().includes("deliv") ? <FaCheckCircle color="#22C55E" /> : <MdCancel color="#EF4444" />}
-                  </span>
-                  <div>
-                    <p className="font-robotoM text-md text-[#111827]">{log.message || log.msg || "—"}</p>
-                    <p className="text-sm font-robotoR text-[#4B5563]">{log.time || log.createdAt || ""}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${log.statusColor || "bg-[#E5E7EB] text-[#374151]"}`}>
-                    {log.status || "—"}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleRetryLog(log)}
-                      disabled={actionLoading[`retry-${log.id}`]}
-                      className="text-sm px-2 py-1 rounded-md bg-gray-100"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Payment Milestone Updates */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
-          <span className="text-purple-600 mr-2"><FaFlagCheckered /></span>
-          Payment Milestone Updates
-        </h2>
-
-        {milestones.length === 0 ? (
-          <p className="text-sm text-gray-500">No upcoming milestones.</p>
-        ) : (
-          milestones.map((m) => (
-            <div key={`${m.invoiceId}-${m.milestoneId}`} className="bg-white rounded-md shadow-sm border border-[#E5E7EB] p-4 flex justify-between items-start mb-3">
-              <div>
-                <h3 className="font-semibold text-[#111827]">{m.company}</h3>
-                <p className="text-sm font-robotoR text-[#4B5563] mt-1">{m.step}</p>
-                <p className="text-lg font-robotoB text-[#9333EA] mt-1">{m.amountLabel}</p>
-                <p className="text-sm font-robotoR text-[#4B5563]">Due on {m.dueDate}</p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${m.status === "Overdue" ? "bg-red-100 text-red-600" : "bg-[#FEF9C3] text-[#854D0E]"}`}>
-                  {m.status}
-                </span>
-                <button
-                  onClick={() => handleMarkMilestonePaid(m)}
-                  disabled={actionLoading[`ms-${m.invoiceId}-${m.milestoneId}`]}
-                  className="text-sm px-3 py-1 rounded-md bg-gray-100"
-                >
-                  Mark as Paid
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* System Notifications */}
-      <div className="max-w-5xl">
-        <h2 className="text-lg font-semibold text-[#111827] mb-4 flex items-center">
-          <span className="text-indigo-600 mr-2"><FaBullhorn /></span>
-          System Notifications
-        </h2>
-
-        {notifications.length === 0 ? (
-          <p className="text-sm text-gray-500">No system notifications.</p>
-        ) : (
-          notifications.map((note) => (
-            <div key={note.id || note._id} className="flex items-start gap-3 bg-white border border-[#E5E7EB] rounded-md p-4 mb-3 shadow-sm">
-              <div className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl ${note.iconColor || "bg-gray-100 text-gray-700"}`}>
-                {/* icon fallback */}
-                {note.iconName === "gift" ? <FaGift /> : note.iconName === "warning" ? <IoIosWarning /> : <FaBullseye />}
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">{note.title}</h3>
-                <p className="text-sm font-robotoR text-[#4B5563]">{note.message}</p>
-                <p className="text-xs font-robotoR text-[#6B7280] mt-1">{note.time}</p>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+          {/* Submit */}
+          <div className="text-right">
+            <button
+              type="submit"
+              className="bg-[#2176FF] hover:bg-blue-600 text-white font-robotoSb px-6 py-2 rounded-md"
+            >
+              {id ? "Update Member" : "Add Member"}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
-}
+};
+
+export default D5StaffDetails;

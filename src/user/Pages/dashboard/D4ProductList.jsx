@@ -13,9 +13,12 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ProductService } from "../../api/productservice.js"; // ✅ ProductService
 import product1 from "../../assets/dummyimage/product1.png";
+import * as XLSX from "xlsx";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const D4ProductList = () => {
+  const [file, setFile] = useState(null);
   const [activeTab, setActiveTab] = useState("product");
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -31,29 +34,44 @@ const D4ProductList = () => {
   const navigate = useNavigate();
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
 const [productHistory, setProductHistory] = useState([]);
+const [totalItems, setTotalItems] = useState(0);
+const [suggestions, setSuggestions] = useState([]);
+const [showSuggestions, setShowSuggestions] = useState(false);
+const [excelFile, setExcelFile] = useState(null);
+
+const handleFileChange = (e) => {
+  const file = e.target.files[0];
+  setExcelFile(file);
+};
+
 
 
   // ✅ Fetch Products
-  const fetchItems = async () => {
+   const fetchItems = async () => {
     setLoading(true);
     setError(null);
     try {
-      const { success, products } = await ProductService.fetchProducts({
+      const { success, products, total } = await ProductService.fetchProducts({
         page,
         limit,
+        search: searchQuery,
       });
       if (!success) throw new Error("Failed to fetch products");
 
-      // ✅ Add full URL for product images
+setItems(products);
+setTotalItems(total); // ✅ total products from backend
+setTotalPages(Math.ceil(total / limit) || 1);
+
+      // Add full URL for product images
       const processedProducts = products.map((p) => ({
         ...p,
         product_image: p.product_image
-          ?`${API_URL}/assets/uploadsProduct/${p.product_image}`
+          ? `${API_URL}/assets/uploadsProduct/${p.product_image}`
           : null,
       }));
 
       setItems(processedProducts);
-      setTotalPages(Math.ceil(products.length / limit) || 1);
+      setTotalPages(Math.ceil(total / limit) || 1); // ✅ pagination
     } catch (err) {
       setError(err.message);
       toast.error(err.message, { position: "top-right" });
@@ -66,31 +84,10 @@ const [productHistory, setProductHistory] = useState([]);
   };
 
   // ✅ Stock Update
-  const handleUpdateStock = async () => {
-    try {
-      if (!selectedProduct) return toast.error("No product selected");
-      const updatedQty =
-        parseInt(selectedProduct.quantity || 0, 10) +
-        parseInt(newStock || 0, 10);
 
-      const payload = { quantity: updatedQty };
-      const { success } = await ProductService.updateProduct(
-        selectedProduct._id,
-        payload
-      );
-      if (!success) throw new Error("Failed to update stock");
-
-      toast.success("Stock updated successfully");
-      setShowStockPopup(false);
-      fetchItems();
-    } catch (err) {
-      toast.error(err.message || "Stock update failed");
-    }
-  };
-
-  useEffect(() => {
+ useEffect(() => {
     fetchItems();
-  }, [activeTab, page]);
+  }, [activeTab, page, limit, searchQuery]);
 
   // ✅ Local Filter
   useEffect(() => {
@@ -103,15 +100,30 @@ const [productHistory, setProductHistory] = useState([]);
   }, [items, searchQuery]);
 
   // ✅ Search API
-  const handleSearch = async (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    if (!query.trim()) {
-      fetchItems();
-      return;
+   const handleSearch = async (e) => {
+  const query = e.target.value;
+  setSearchQuery(query);
+  setPage(1); // reset pagination
+
+  if (!query) {
+    setSuggestions([]);
+    setShowSuggestions(false);
+    return;
+  }
+
+  try {
+    const { success, products } = await ProductService.searchProductsByName(query);
+    if (success) {
+      setSuggestions(products.slice(0, 3)); // top 3 results only
+      setShowSuggestions(true);
     }
-    setLoading(true);
-  };
+  } catch (err) {
+    console.error(err);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }
+};
+
 
   // ✅ Edit
   const handleEdit = (product) => {
@@ -312,20 +324,66 @@ const [productHistory, setProductHistory] = useState([]);
       </table>
     );
   };
+ const handleUpdateStock = async () => {
+    try {
+      if (!selectedProduct) return toast.error("No product selected");
+      const updatedQty =
+        parseInt(selectedProduct.quantity || 0, 10) +
+        parseInt(newStock || 0, 10);
+
+      const payload = { quantity: updatedQty };
+      const { success } = await ProductService.updateProduct(
+        selectedProduct._id,
+        payload
+      );
+      if (!success) throw new Error("Failed to update stock");
+
+      toast.success("Stock updated successfully");
+      setShowStockPopup(false);
+      setNewStock(""); // reset
+      fetchItems();
+    } catch (err) {
+      toast.error(err.message || "Stock update failed");
+    }
+  };
+
+  // ✅ Fetch product history
   const handleFetchHistory = async (product) => {
+    try {
+      const { success, history, error } =
+        await ProductService.getProductHistory(product._id);
+      if (success) {
+        setSelectedProduct(product);
+        setProductHistory(history);
+        setShowHistoryPopup(true);
+      } else {
+        toast.error(error || "Failed to fetch product history");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching product history");
+    }
+  };
+
+const handleImportExcel = async () => {
+  if (!excelFile) return toast.error("Please select an Excel file");
+
   try {
-    const { success, history, error } = await ProductService.getProductHistory(product._id);
+    const { success, message, count } = await ProductService.uploadExcel(excelFile);
+
     if (success) {
-      setProductHistory(history);
-      setShowHistoryPopup(true);
+      toast.success(`Imported ${count} products successfully!`);
+      setExcelFile(null); // reset input
+      fetchItems(); // refresh product list
     } else {
-      toast.error(error || "Failed to fetch product history");
+      toast.error(message || "Import failed");
     }
   } catch (err) {
-    console.error(err);
-    toast.error("Error fetching product history");
+    toast.error(err.message || "Import failed");
   }
 };
+
+
 
 
   return (
@@ -361,18 +419,39 @@ const [productHistory, setProductHistory] = useState([]);
 
       {/* Search */}
       <div className="flex gap-5 flex-wrap text-nowrap px-6 py-3 items-center mb-4">
-        <div className="w-full md:w-60 relative">
-          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
-            <CiSearch size={18} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search by name or category"
-            className="w-full pl-8 pr-2 py-2 border rounded bg-gray-100 text-sm"
-            value={searchQuery}
-            onChange={handleSearch}
-          />
-        </div>
+       <div className="w-full md:w-60 relative">
+  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
+    <CiSearch size={18} />
+  </span>
+  <input
+    type="text"
+    placeholder="Search by name or category"
+    className="w-full pl-8 pr-2 py-2 border rounded bg-gray-100 text-sm"
+    value={searchQuery}
+    onChange={handleSearch}
+    onFocus={() => setShowSuggestions(suggestions.length > 0)}
+    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+  />
+  {showSuggestions && suggestions.length > 0 && (
+    <ul className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg max-h-60 overflow-y-auto">
+      {suggestions.map((item) => (
+        <li
+          key={item._id}
+          onClick={() => {
+            setSearchQuery(item.name);
+            setShowSuggestions(false);
+            setPage(1);
+            fetchItems(); // fetch full table based on selection
+          }}
+          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+        >
+          {item.name}
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
       </div>
 
       {/* Table */}
@@ -381,28 +460,29 @@ const [productHistory, setProductHistory] = useState([]);
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-4">
-        <div>
-          Showing {(page - 1) * limit + 1} to{" "}
-          {Math.min(page * limit, filteredItems.length)} of {items.length} items
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            disabled={page === 1}
-            className="px-4 py-2 border rounded"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-            disabled={page === totalPages}
-            className="px-4 py-2 border rounded"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+<div className="flex justify-between items-center mt-4">
+  <div>
+    Showing {(page - 1) * limit + 1} to{" "}
+    {Math.min(page * limit, totalItems)} of {totalItems} items
+  </div>
+  <div className="flex gap-2">
+    <button
+      onClick={() => setPage((p) => Math.max(p - 1, 1))}
+      disabled={page === 1}
+      className="px-4 py-2 border rounded"
+    >
+      Previous
+    </button>
+    <button
+      onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+      disabled={page === totalPages}
+      className="px-4 py-2 border rounded"
+    >
+      Next
+    </button>
+  </div>
+</div>
+
 
       {/* Export */}
       <div className="flex gap-3 align-middle mt-6 p-5 border rounded-md shadow">
@@ -418,6 +498,46 @@ const [productHistory, setProductHistory] = useState([]);
         >
           <FaFilePdf /> Download PDF
         </button>
+
+
+<div className="flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
+  {/* File Input */}
+  <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
+    <svg
+      className="w-5 h-5 mr-2 text-gray-500"
+      fill="currentColor"
+      viewBox="0 0 20 20"
+    >
+      <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
+    </svg>
+    <span className="text-gray-700 text-sm">
+      {file ? file.name : "Choose Excel/CSV file"}
+    </span>
+    <input
+      type="file"
+      accept=".xlsx, .xls, .csv"
+      onChange={handleFileChange}
+      className="hidden"
+    />
+  </label>
+
+  {/* Import Button */}
+  <button
+    onClick={handleImportExcel}
+    className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
+  >
+    <svg
+      className="w-4 h-4"
+      fill="currentColor"
+      viewBox="0 0 20 20"
+    >
+      <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
+    </svg>
+    Import Excel
+  </button>
+</div>
+
+     
       </div>
 
       {/* Stock Popup */}

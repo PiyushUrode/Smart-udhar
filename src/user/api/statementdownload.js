@@ -2,6 +2,8 @@
 import { AuthService } from "./authservice.js";
 import { api } from "./api.js";
 import axiosClient from "./axiosclient.js";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 // 🔹 Common Auth Context
 function getstoreProfile_id() {
@@ -133,24 +135,37 @@ async function exportCustomersToExcel() {
 async function exportCustomersToPDF() {
   try {
     const { token, store_id, storeProfile_id } = getAuthContext();
-    const res = await axiosClient.get(
-      `/store-customer/export-pdf/${store_id}/${storeProfile_id}`,
-      { headers: authHeaders(token), responseType: "blob" }
+
+    // 🔹 Pehle customers list API call karo
+    const { data } = await axiosClient.get(
+      `/store-customer/list/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token) }
     );
 
-    if (!res.data || res.data.size === 0) {
-      throw new Error("Empty PDF received — check backend export logic");
+    const customers = data?.data || [];
+
+    if (!customers.length) {
+      throw new Error("No customers found to export");
     }
 
-    const url = window.URL.createObjectURL(
-      new Blob([res.data], { type: "application/pdf" })
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `customers_${Date.now()}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    // 🔹 PDF generate with jsPDF
+    const doc = new jsPDF();
+    doc.text("Customer List", 14, 10);
+
+    const tableData = customers.map((c, i) => [
+      i + 1,
+      c.name,
+      c.phone,
+      c.email,
+    ]);
+
+    doc.autoTable({
+      head: [["#", "Name", "Phone", "Email"]],
+      body: tableData,
+      startY: 20,
+    });
+
+    doc.save(`customers_${Date.now()}.pdf`);
 
     return { success: true };
   } catch (err) {
@@ -158,6 +173,7 @@ async function exportCustomersToPDF() {
     return { success: false, error: err.message };
   }
 }
+
 
 
 

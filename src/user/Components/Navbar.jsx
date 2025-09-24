@@ -93,11 +93,11 @@ const Navbar = ({ toggleSidebar }) => {
         </ul>
       </div>
 
-      <div className="flex items-center gap-4 text-blue-500 text-xl relative">
+      <div className="flex items-center gap-4 text-blue-500 text-xl relative ">
         {/* Language Dropdown */}
         <select
           onChange={handleLanguageChange}
-          className="w-40 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition"
+          className="w-40 px-3 py-2 text-sm hidden md:block text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition"
         >
           <option value="en">English (EN)</option>
           <option value="hi">हिंदी (HI)</option>
@@ -110,7 +110,7 @@ const Navbar = ({ toggleSidebar }) => {
           title={t("calculator")}
         />
 
-        <div className="relative">
+        {/* <div className="relative">
           <FaBell
             onClick={() => navigate("/dashboard/notification")}
             className="hover:text-bluecol cursor-pointer"
@@ -121,7 +121,7 @@ const Navbar = ({ toggleSidebar }) => {
               {notifications.length}
             </span>
           )}
-        </div>
+        </div> */}
 
         {/* Last Update Time */}
         {lastUpdate && (

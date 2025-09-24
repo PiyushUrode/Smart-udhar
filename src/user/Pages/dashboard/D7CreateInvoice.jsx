@@ -994,9 +994,13 @@ const calculateTotal = (row) => {
         setMilestones(newMilestones);
       }}
       dateFormat="dd/MM/yyyy"
-      minDate={new Date()}
+      // minDate={new Date()}
       placeholderText="Select due date"
     />
+
+
+
+
 <div className="relative flex flex-row gap-2">  
     <input
       className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"

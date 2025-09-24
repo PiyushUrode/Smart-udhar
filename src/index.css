@@ -89,6 +89,8 @@ html, body {
   scroll-behavior: smooth;
 }
 
+
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
@@ -107,12 +109,21 @@ html, body {
 
 .input {
   @apply w-full px-3 py-2 rounded border outline-none text-sm shadow-[0px_4px_6px_0px_#0000001A];
+  user-select: none;
 }
 
 @layer base {
   label {
     @apply text-[#374151];
   }
+}
+
+input, textarea  {
+  user-select: text; /* editable text allow kare */
+}
+
+img {
+  user-select: auto; /* images pe weird cursor nahi aayega */
 }
 
 

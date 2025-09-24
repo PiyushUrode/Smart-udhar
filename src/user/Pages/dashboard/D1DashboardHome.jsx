@@ -41,11 +41,11 @@ const last6Months = (() => {
   return months;
 })();
 
-function formatMonth(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return d.toLocaleString("default", { month: "short", year: "numeric" });
-}
+// function formatMonth(dateStr) {
+//   if (!dateStr) return "";
+//   const d = new Date(dateStr);
+//   return d.toLocaleString("default", { month: "short", year: "numeric" });
+// }
 
 const TRANSACTION_TYPE_MAP = {
   Purchase: {
@@ -100,14 +100,11 @@ const StatCard = ({ title, value, change, isPositive, type }) => {
         >
           {isPositive ? <FaArrowUp /> : <FaArrowDown />} {change}
           <span className="text-[#4B5563] font-robotB font-medium">
-            {" "}
             vs last month
           </span>
         </div>
       </div>
-      <div className={`p-2 rounded-full shadow ${config.bg}`}>
-        {config.icon}
-      </div>
+      <div className={`p-2 rounded-full shadow ${config.bg}`}>{config.icon}</div>
     </div>
   );
 };
@@ -157,6 +154,33 @@ function getAuthContext() {
   return { token, store_id, storeProfile_id: finalStoreProfileId };
 }
 
+
+const formatCurrencyCompact = (amount) => {
+  if (amount == null) return "₹0";
+  const a = Number(amount);
+  if (Math.abs(a) >= 100000) {
+    const lakhs = a / 100000;
+    return `₹${lakhs >= 10 ? Math.round(lakhs) : lakhs.toFixed(1)}L`;
+  }
+  return `₹${new Intl.NumberFormat("en-IN").format(Math.round(a))}`;
+};
+
+const computePercentChange = (current, previous) => {
+  current = Number(current || 0);
+  previous = Number(previous || 0);
+  if (previous === 0) {
+    if (current === 0) return 0;
+    return null;
+  }
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+};
+
+const formatPercentForUI = (pct) => {
+  if (pct === null) return "New";
+  const sign = pct >= 0 ? "+" : "";
+  return `${sign}${pct}%`;
+};
+
 const D1DashboardHome = () => {
   const [selectedType, setSelectedType] = useState("All");
   const [dashboardData, setDashboardData] = useState(null);
@@ -164,6 +188,12 @@ const D1DashboardHome = () => {
   const [graphData, setGraphData] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loadingExpenses, setLoadingExpenses] = useState(true);
+   const [statValues, setStatValues] = useState({
+    sale: { value: 0, pct: "—", isPositive: true },
+    paid: { value: 0, pct: "—", isPositive: true },
+    pending: { value: 0, pct: "—", isPositive: true },
+  });
+    const [transactionStats, setTransactionStats] = useState({});
 
   // 🔹 Fetch Expenses
   useEffect(() => {
@@ -181,53 +211,157 @@ const D1DashboardHome = () => {
     fetchExpenses();
   }, []);
 
-  // 🔹 Fetch last 6 months dashboard data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const { token, store_id, storeProfile_id } = getAuthContext();
+// 🔹 Fetch last 6 months dashboard data
+useEffect(() => {
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const { token, store_id, storeProfile_id } = getAuthContext();
 
-        const results = await Promise.all(
-          last6Months.map(({ year, month }) =>
-            axios.get(
-              `${API_URL}/store-invoice/dashboard-export/${store_id}/${storeProfile_id}?year=${year}&month=${month}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            )
+      // Fetch dashboard data month by month
+      const results = await Promise.all(
+        last6Months.map(({ year, month }) =>
+          axios.get(
+            `${API_URL}/store-invoice/dashboard-export/${store_id}/${storeProfile_id}?year=${year}&month=${month}`,
+            { headers: { Authorization: `Bearer ${token}` } }
           )
+        )
+      );
+
+      // Combine data for graph
+      const combinedGraph = last6Months.map((m, idx) => {
+        const res = results[idx].data;
+        let sales = 0;
+        let collection = 0;
+        res.purchaseArr?.forEach((p) => (sales += p.purchaseTotalAmount || 0));
+        res.collectionArr?.forEach(
+          (c) => (collection += c.collectionTotalAmount || 0)
+        );
+        return { month: m.label, sales, collection };
+      });
+      setGraphData(combinedGraph);
+
+      // Latest and previous month for stat cards
+      const curr = results[results.length - 1].data || {};
+      const prev = results[results.length - 2]?.data || {};
+
+      const saleCurr = curr.totalSum || 0;
+      const salePrev = prev.totalSum || 0;
+      const paidCurr = curr.paidSum || 0;
+      const paidPrev = prev.paidSum || 0;
+
+      // 🔹 Pending calculation (invoice pending + same month expenses only)
+      const currMonthObj = last6Months[last6Months.length - 1];
+      const prevMonthObj = last6Months[last6Months.length - 2];
+
+      const currMonthExpenses = expenses
+        .filter(
+          (e) =>
+            new Date(e.date).getMonth() + 1 === currMonthObj.month &&
+            new Date(e.date).getFullYear() === currMonthObj.year
+        )
+        .reduce((s, e) => s + (e.amount || 0), 0);
+
+      const prevMonthExpenses = expenses
+        .filter(
+          (e) =>
+            new Date(e.date).getMonth() + 1 === prevMonthObj.month &&
+            new Date(e.date).getFullYear() === prevMonthObj.year
+        )
+        .reduce((s, e) => s + (e.amount || 0), 0);
+
+      const pendingCurr = (saleCurr - paidCurr) + currMonthExpenses;
+      const pendingPrev = (salePrev - paidPrev) + prevMonthExpenses;
+
+      // Percentage changes
+      const salePct = computePercentChange(saleCurr, salePrev);
+      const paidPct = computePercentChange(paidCurr, paidPrev);
+      const pendingPct = computePercentChange(pendingCurr, pendingPrev);
+
+      setStatValues({
+        sale: {
+          value: `₹${saleCurr}`,
+          pct: formatPercentForUI(salePct),
+          isPositive: salePct === null ? true : salePct >= 0,
+        },
+        paid: {
+          value: `₹${paidCurr}`,
+          pct: formatPercentForUI(paidPct),
+          isPositive: paidPct === null ? true : paidPct >= 0,
+        },
+        pending: {
+          value: `₹${pendingCurr}`,
+          pct: formatPercentForUI(pendingPct),
+          isPositive: pendingPct === null ? false : pendingPct <= 0,
+        },
+      });
+
+      // 🔹 Aggregated totals for transaction cards
+      const aggregated = results.map((r, idx) => {
+        const d = r.data || {};
+        const monthObj = last6Months[idx];
+
+        const purchaseTotal = (d.purchaseArr || []).reduce(
+          (s, p) => s + (p.purchaseTotalAmount || 0),
+          0
         );
 
-        // Combine data month by month
-        const combinedGraph = last6Months.map((m, idx) => {
-          const res = results[idx].data;
-          let sales = 0;
-          let collection = 0;
+        const expenseTotal = expenses
+          .filter(
+            (e) =>
+              new Date(e.date).getMonth() + 1 === monthObj.month &&
+              new Date(e.date).getFullYear() === monthObj.year
+          )
+          .reduce((s, e) => s + (e.amount || 0), 0);
 
-          res.purchaseArr?.forEach(
-            (p) => (sales += p.purchaseTotalAmount || 0)
-          );
-          res.collectionArr?.forEach(
-            (c) => (collection += c.collectionTotalAmount || 0)
-          );
+        const collectionTotal = (d.collectionArr || []).reduce(
+          (s, c) => s + (c.collectionTotalAmount || 0),
+          0
+        );
 
-          return {
-            month: m.label,
-            sales,
-            collection,
-          };
-        });
+        return { purchaseTotal, expenseTotal, collectionTotal };
+      });
 
-        setGraphData(combinedGraph);
-        setDashboardData(results[results.length - 1].data); // latest month for stat cards + transactions
-      } catch (err) {
-        console.error("API Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const curr1 = aggregated[aggregated.length - 1] || {
+        purchaseTotal: 0,
+        expenseTotal: 0,
+        collectionTotal: 0,
+      };
+      const prev1 = aggregated[aggregated.length - 2] || {
+        purchaseTotal: 0,
+        expenseTotal: 0,
+        collectionTotal: 0,
+      };
 
-    fetchDashboardData();
-  }, []);
+      setTransactionStats({
+        purchaseAmount: curr1.purchaseTotal,
+        purchasePct: formatPercentForUI(
+          computePercentChange(curr1.purchaseTotal, prev1.purchaseTotal)
+        ),
+        expenseAmount: curr1.expenseTotal,
+        expensePct: formatPercentForUI(
+          computePercentChange(curr1.expenseTotal, prev1.expenseTotal)
+        ),
+        collectionAmount: curr1.collectionTotal,
+        collectionPct: formatPercentForUI(
+          computePercentChange(curr1.collectionTotal, prev1.collectionTotal)
+        ),
+      });
+
+      // Set latest dashboard data
+      setDashboardData(curr);
+    } catch (err) {
+      console.error("API Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDashboardData();
+}, [expenses]); // 🔹 expenses included as dependency
+
+
+
 
   // ✅ Purchase + Expense combined
   const allTransactions = [
@@ -298,26 +432,26 @@ const D1DashboardHome = () => {
   return (
     <div className="p-2 md:p-6 space-y-6 overflow-hidden">
       {/* ✅ Stat Cards with API values */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard
           title="Monthly Sale"
-          value={`₹${dashboardData?.totalSum || 0}`}
-          change="12.9%"
-          isPositive
+          value={statValues.sale.value}
+          change={statValues.sale.pct}
+          isPositive={statValues.sale.isPositive}
           type="sale"
         />
         <StatCard
           title="Monthly Paid"
-          value={`₹${dashboardData?.paidSum || 0}`}
-          change="2.3%"
-          isPositive
+          value={statValues.paid.value}
+          change={statValues.paid.pct}
+          isPositive={statValues.paid.isPositive}
           type="paid"
         />
         <StatCard
           title="Monthly Pending"
-          value={`₹${dashboardData?.pendingSum || 0}`}
-          change="4.3%"
-          isPositive={false}
+          value={statValues.pending.value}
+          change={statValues.pending.pct}
+          isPositive={statValues.pending.isPositive}
           type="pending"
         />
       </div>
@@ -354,17 +488,27 @@ const D1DashboardHome = () => {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full">
             <div>
-              {renderTransactionCard("Purchase", "Purchase", "₹8.5L", "+5.2%")}
+              {renderTransactionCard(
+                "Purchase",
+                "Purchase",
+                formatCurrencyCompact(transactionStats.purchaseAmount || 0),
+                transactionStats.purchasePct || "—"
+              )}
             </div>
             <div>
-              {renderTransactionCard("Expense", "Expense", "₹3.2L", "-2.1%")}
+              {renderTransactionCard(
+                "Expense",
+                "Expense",
+                formatCurrencyCompact(transactionStats.expenseAmount || 0),
+                transactionStats.expensePct || "—"
+              )}
             </div>
             <div>
               {renderTransactionCard(
                 "Collection",
                 "Collection Calls",
-                "156",
-                "+18.3%"
+                String(transactionStats.collectionCount || 0),
+                transactionStats.collectionPct || "—"
               )}
             </div>
           </div>
@@ -441,9 +585,27 @@ const D1DashboardHome = () => {
                         </span>
                       </td>
                       <td className="p-5 flex gap-3 text-[20px] text-gray-600">
-                        <FaPhoneAlt className="cursor-pointer hover:text-green-600 text-[#2563EB]" />
-                        <FaWhatsapp className="cursor-pointer hover:text-green-500 text-[#60D669]" />
-                        <FaEnvelope className="cursor-pointer hover:text-blue-500 text-[#2563EB]" />
+<td className="p-5 flex gap-3 text-[20px] text-gray-600">
+  {/* 📞 Phone */}
+  <a href={`tel:${txn.contact}`}>
+    <FaPhoneAlt className="cursor-pointer hover:text-green-600 text-[#2563EB]" />
+  </a>
+
+  {/* 💬 WhatsApp */}
+  <a
+    href={`https://wa.me/${txn.contact}`}
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <FaWhatsapp className="cursor-pointer hover:text-green-500 text-[#60D669]" />
+  </a>
+
+  {/* 📧 Email */}
+  <a href={`mailto:${txn.email || "demo@example.com"}`}>
+    <FaEnvelope className="cursor-pointer hover:text-blue-500 text-[#2563EB]" />
+  </a>
+</td>
+
                       </td>
                     </tr>
                   ))
