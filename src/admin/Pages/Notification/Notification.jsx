@@ -1,128 +1,84 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import { useNotification } from "../../controller/Notification/NotificationCTR.jsx";
 
-function SendNotification() {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const token = localStorage.getItem("authToken") || "";
+// 🔹 Component for adding multiple children
+function ChildInput({ onChange }) {
+  const [child, setChild] = useState("");
+  const [children, setChildren] = useState([]);
 
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [notificationType, setNotificationType] = useState("");
-  const [types, setTypes] = useState([]);
-  const [intypes, setInTypes] = useState([]);
-  const [newType, setNewType] = useState("");
-  const [newChildren, setNewChildren] = useState([]); // 👈 children state
-  const [loading, setLoading] = useState(false);
-
-  // ✅ Fetch types on mount
-  useEffect(() => {
-    fetchTypes();
-    fetchAllTypes();
-  }, []);
-
-   const fetchAllTypes = async () => {
-    try {
-      const res = await axios.get(
-        `${API_URL}/notification-type/list`,
-        {
-          headers: { Authorization: token },
-        }
-      );
-      if (res.data.success) {
-        setTypes(res.data.data);        
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load notification types");
+  const addChild = () => {
+    if (child.trim() && !children.includes(child.trim())) {
+      const updated = [...children, child.trim()];
+      setChildren(updated);
+      onChange(updated); // send back to parent
+      setChild("");
     }
   };
 
-
-
-  const fetchTypes = async () => {
-    try {
-      const res = await axios.get(
-        `${API_URL}/notification-type/list?name=admin`,
-        {
-          headers: { Authorization: token },
-        }
-      );
-      if (res.data.success) {
-        setInTypes(res.data.data[0].children || []);
-        if (res.data.data.length > 0) {
-          setNotificationType(res.data.data[0].name);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load notification types");
-    }
+  const removeChild = (c) => {
+    const updated = children.filter((ch) => ch !== c);
+    setChildren(updated);
+    onChange(updated);
   };
 
-  // ✅ Add new type with children
-  const handleAddType = async () => {
-    if (!newType.trim()) return;
-    try {
-      const res = await axios.post(
-        `${API_URL}/notification-type/add`,
-        { name: newType, children: newChildren },
-        { headers: { Authorization: token } }
-      );
-      if (res.data.success) {
-        fetchTypes(); // refresh
-        fetchAllTypes(); // refresh
-        setNewType("");
-        setNewChildren([]);
-      }
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to add type");
-    }
-  };
+  return (
+    <div>
+      <div className="flex gap-2 mb-2">
+        <input
+          type="text"
+          value={child}
+          onChange={(e) => setChild(e.target.value)}
+          className="flex-1 p-2 border rounded bg-white text-black"
+          placeholder="e.g. Discount"
+        />
+        <button
+          type="button"
+          onClick={addChild}
+          className="bg-blue-500 text-white px-3 py-1 rounded"
+        >
+          Add
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {children.map((c, idx) => (
+          <span
+            key={idx}
+            className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
+          >
+            {c}
+            <button
+              type="button"
+              className="text-red-500"
+              onClick={() => removeChild(c)}
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-  // ✅ Delete type from backend
-  const handleRemoveType = async (id) => {
-    if (!window.confirm("Remove this notification type?")) return;
-    try {
-      const res = await axios.delete(
-        `${API_URL}/notification-type/delete/${id}`,
-        { headers: { Authorization: token } }
-      );
-      if (res.data.success) {
-        fetchTypes();
-         fetchAllTypes(); // refresh
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete type");
-    }
-  };
-
-  // ✅ Send notification
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const res = await axios.post(
-        `${API_URL}/notification/send`,
-        {
-          title,
-          message,
-          type: notificationType, // 👈 send parent name
-        },
-        { headers: { Authorization: token } }
-      );
-      alert(res.data.message || "Notification sent!");
-      setTitle("");
-      setMessage("");
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to send notification");
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function SendNotification() {
+  const {
+    title,
+    setTitle,
+    message,
+    setMessage,
+    notificationType,
+    setNotificationType,
+    types,
+    intypes,
+    newType,
+    setNewType,
+    newChildren,
+    setNewChildren,
+    loading,
+    handleAddType,
+    handleRemoveType,
+    handleSubmit,
+  } = useNotification();
 
   return (
     <div className="max-w-5xl mx-auto mt-10 p-4">
@@ -251,64 +207,3 @@ function SendNotification() {
     </div>
   );
 }
-
-/* 🔹 Component for adding multiple children */
-function ChildInput({ onChange }) {
-  const [child, setChild] = useState("");
-  const [children, setChildren] = useState([]);
-
-  const addChild = () => {
-    if (child.trim() && !children.includes(child.trim())) {
-      const updated = [...children, child.trim()];
-      setChildren(updated);
-      onChange(updated); // send back to parent
-      setChild("");
-    }
-  };
-
-  const removeChild = (c) => {
-    const updated = children.filter((ch) => ch !== c);
-    setChildren(updated);
-    onChange(updated);
-  };
-
-  return (
-    <div>
-      <div className="flex gap-2 mb-2">
-        <input
-          type="text"
-          value={child}
-          onChange={(e) => setChild(e.target.value)}
-          className="flex-1 p-2 border rounded bg-white text-black"
-          placeholder="e.g. Discount"
-        />
-        <button
-          type="button"
-          onClick={addChild}
-          className="bg-blue-500 text-white px-3 py-1 rounded"
-        >
-          Add
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {children.map((c, idx) => (
-          <span
-            key={idx}
-            className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
-          >
-            {c}
-            <button
-              type="button"
-              className="text-red-500"
-              onClick={() => removeChild(c)}
-            >
-              ✕
-            </button>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default SendNotification;

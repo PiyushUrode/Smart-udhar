@@ -1,79 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { FaBusinessTime } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
-import axios from "axios";
-
+import  useStoreController  from "../../controller/store/store-list";
 const Storelist = () => {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const Auth_token = localStorage.getItem("authToken");
-  const [storeList, setStoreList] = useState([]);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // Business Profile state
-  const [businessProfiles, setBusinessProfiles] = useState([]);
-  const [selectedStoreId, setSelectedStoreId] = useState(null);
-  const [showProfiles, setShowProfiles] = useState(false);
-  // Fetch store list
-  useEffect(() => {
-    const fetchStores = async () => {
-      try {
-        const response = await axios.get(
-          API_URL + `/admin/store-list?page=${page}&limit=${limit}`,
-          {
-            headers: {
-              Authorization: Auth_token,
-            },
-          }
-        );
-        setStoreList(response.data.data || []);
-        setTotalPages(response.data.totalPages || 1);
-      } catch (error) {
-        console.error("Error fetching store list:", error);
-      }
-    };
-    fetchStores();
-  }, [page, limit]);
-
-  // Fetch business profiles by store_id
-  const fetchBusinessProfiles = async (store_id) => {
-    try {
-      const response = await axios.get(
-        API_URL + `/store-business-profile/find-all/${store_id}?page=1&limit=5`,
-        {
-          headers: {
-            Authorization: Auth_token,
-          },
-        }
-      );
-      setBusinessProfiles(response.data.data || []);
-      setSelectedStoreId(store_id);
-      setShowProfiles(true);
-    } catch (error) {
-      console.error("Error fetching business profiles:", error);
-    }
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
-    const date = new Date(dateStr);
-
-    return date.toLocaleString("en-IN", {
-      year: "numeric",
-      month: "short", // e.g., Sep
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const filteredList = storeList.filter(
-    (store) =>
-      store.mobile?.toLowerCase().includes(search.toLowerCase()) ||
-      store.roles?.toLowerCase().includes(search.toLowerCase())
-  );
+  const {
+    search,
+    setSearch,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalPages,
+    filteredList,
+    fetchBusinessProfiles,
+    formatDate,
+    showProfiles,
+    setShowProfiles,
+    businessProfiles,
+  } = useStoreController();
 
   return (
     <div className="mx-auto mt-5 p-4">
@@ -82,8 +26,8 @@ const Storelist = () => {
         <h1 className="text-xl font-semibold text-gray-800">Store List</h1>
       </div>
 
+      {/* Search & Page Size */}
       <div className="flex flex-row gap-5 flex-wrap border-b md:px-6 py-3 items-center mb-4">
-        {/* Search Input */}
         <div className="w-full md:w-52 relative">
           <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">
             <CiSearch size={18} />
@@ -97,7 +41,6 @@ const Storelist = () => {
           />
         </div>
 
-        {/* Page Size Selector */}
         <div className="flex items-center gap-2">
           <label htmlFor="pageSize" className="text-sm text-gray-600">
             Show
@@ -195,11 +138,10 @@ const Storelist = () => {
         </button>
       </div>
 
-      {/* Business Profiles Modal */}
+      {/* Modal */}
       {showProfiles && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-6 relative overflow-y-auto max-h-[80vh]">
-            {/* Close Button */}
             <button
               className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl font-bold transition"
               onClick={() => setShowProfiles(false)}
@@ -207,12 +149,10 @@ const Storelist = () => {
               &times;
             </button>
 
-            {/* Header */}
             <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
               Business Profiles
             </h2>
 
-            {/* Profiles */}
             {businessProfiles.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {businessProfiles.map((profile) => (
@@ -223,42 +163,17 @@ const Storelist = () => {
                     <h3 className="font-semibold text-xl mb-2 text-gray-900">
                       {profile.businessName}
                     </h3>
-
                     <div className="text-gray-700 space-y-1">
+                      <p><b>GST Number:</b> {profile.gstNumber}</p>
+                      <p><b>Address:</b> {profile.address}, {profile.pincode}</p>
+                      <p><b>Mobile:</b> {profile.mobile}</p>
+                      <p><b>Email:</b> {profile.email}</p>
+                      <p><b>Short Bio:</b> {profile.shortBio}</p>
+                      <p><b>Industry:</b> {profile.industry}</p>
+                      <p><b>Today Collection:</b> {profile.today_collection}</p>
+                      <p><b>Total Collection:</b> {profile.total_collection}</p>
                       <p>
-                        <span className="font-semibold">GST Number:</span>{" "}
-                        {profile.gstNumber}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Address:</span>{" "}
-                        {profile.address}, {profile.pincode}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Mobile:</span>{" "}
-                        {profile.mobile}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Email:</span>{" "}
-                        {profile.email}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Short Bio:</span>{" "}
-                        {profile.shortBio}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Industry:</span>{" "}
-                        {profile.industry}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Today Collection:</span>{" "}
-                        {profile.today_collection}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Total Collection:</span>{" "}
-                        {profile.total_collection}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Website:</span>{" "}
+                        <b>Website:</b>{" "}
                         <a
                           href={profile.websiteURL}
                           target="_blank"
@@ -267,46 +182,6 @@ const Storelist = () => {
                           {profile.websiteURL}
                         </a>
                       </p>
-                    </div>
-
-                    {/* Social Links */}
-                    <div className="flex gap-4 mt-3 flex-wrap">
-                      {profile.fbURL && (
-                        <a
-                          href={profile.fbURL}
-                          target="_blank"
-                          className="text-blue-600 hover:underline"
-                        >
-                          Facebook
-                        </a>
-                      )}
-                      {profile.twitterURL && (
-                        <a
-                          href={profile.twitterURL}
-                          target="_blank"
-                          className="text-blue-600 hover:underline"
-                        >
-                          Twitter
-                        </a>
-                      )}
-                      {profile.linkedInURL && (
-                        <a
-                          href={profile.linkedInURL}
-                          target="_blank"
-                          className="text-blue-600 hover:underline"
-                        >
-                          LinkedIn
-                        </a>
-                      )}
-                      {profile.instagramURL && (
-                        <a
-                          href={profile.instagramURL}
-                          target="_blank"
-                          className="text-blue-600 hover:underline"
-                        >
-                          Instagram
-                        </a>
-                      )}
                     </div>
                   </div>
                 ))}

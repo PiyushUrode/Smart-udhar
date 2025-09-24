@@ -1,80 +1,43 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link } from "react-router-dom";
+import useSubscriptionPlans  from "../../controller/Subcriptions/ViewSubscriptionCTR.jsx";
 
 function ViewSubscription() {
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-  const [plans, setPlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const navigate = useNavigate();
-  const limit = 6;
+  const {
+    plans,
+    loading,
+    error,
+    page,
+    totalPages,
+    setPage,
+    handleDeleteClick,
+    confirmDelete,
+    cancelDelete,
+    showConfirm,
+    message,
+  } = useSubscriptionPlans();
 
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("authToken");
-        const res = await axios.get(
-          `${API_URL}/plan/list?page=${page}&limit=${limit}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        setPlans(res.data.data || []);
-        setTotalPages(res.data.totalPages || 1);
-      } catch (err) {
-        setError(err.response?.data?.error || "❌ Failed to fetch plans");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlans();
-  }, [API_URL, page]);
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this plan?")) return;
-
-    try {
-      const token = localStorage.getItem("authToken"); // or however you store JWT
-
-      const response = await axios.delete(`${API_URL}/plan/delete/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.data.success) {
-        alert("Plan deleted successfully ✅");
-        // Refresh plans list or remove deleted plan from state
-        setPlans((prev) => prev.filter((plan) => plan._id !== id));
-      } else {
-        alert("Failed to delete plan ❌");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error deleting plan ❌");
-    }
-  };
   if (loading) {
     return <p className="text-center mt-10">Loading plans...</p>;
-  }
-
-  if (error) {
-    return <p className="text-center mt-10 text-red-500">{error}</p>;
   }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold text-center mb-10">Our Plans</h2>
+
+      {message && (
+        <div
+          className={`px-4 py-2 rounded-md mb-4 text-center ${
+            message.includes("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}
+        >
+          {message}
+        </div>
+      )}
+
+      {error && (
+        <p className="text-center mt-10 text-red-500">{error}</p>
+      )}
 
       {plans.length === 0 ? (
         <p className="text-center">No plans available</p>
@@ -105,21 +68,20 @@ function ViewSubscription() {
                     <li>📧 Email: {plan.emailLimit}</li>
                     <li>📞 Calls: {plan.callLimit}</li>
                     <li>📦 Products: {plan.productLimit}</li>
-                    <li>🧾 Invoices: {plan.invoiceLimit}</li>                    
+                    <li>🧾 Invoices: {plan.invoiceLimit}</li>
                     <li>💬 Support: {plan.supportLevel}</li>
-                    
                   </ul>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="p-6 border-t flex justify-between">
-                  <Link to={`/dashboard/subscriptions/create/${plan._id}`}>
+                  <Link to={`/admin/dashboard/subscriptions/create/${plan._id}`}>
                     <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm">
                       Edit
                     </button>
                   </Link>
                   <button
-                    onClick={() => handleDelete(plan._id)}
+                    onClick={() => handleDeleteClick(plan._id)}
                     className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
                   >
                     Delete
@@ -150,6 +112,34 @@ function ViewSubscription() {
             </button>
           </div>
         </>
+      )}
+
+      {/* Custom Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+          <div className="relative p-8 bg-white w-96 max-w-md m-auto flex-col flex rounded-lg shadow-2xl">
+            <div className="text-center">
+              <h3 className="text-xl font-bold mb-4">Confirm Deletion</h3>
+              <p className="text-gray-700 mb-6">
+                Are you sure you want to delete this plan? This action cannot be undone.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={cancelDelete}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,82 +1,23 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
 import { BadgeCheck, XCircle, User } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { useProfile } from "../../controller/Profile/profileCTR";
 
 export default function ProfileCard() {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const Auth_token = localStorage.getItem("authToken");
-
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({ name: "", mobile: "", roles: "" });
-  const [saving, setSaving] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/admin-auth/profile`, {
-          headers: { Authorization: Auth_token },
-        });
-        const store = response.data?.store || null;
-        setProfile(store);
-        setFormData({
-          name: store?.name || "",
-          mobile: store?.mobile || "",
-          roles: store?.roles || "",
-        });
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedImage(e.target.files[0]);
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const data = new FormData();
-      data.append("name", formData.name);
-      data.append("mobile", formData.mobile);
-      data.append("roles", formData.roles);
-      if (selectedImage) data.append("img_url", selectedImage);
-
-      const response = await axios.put(
-        `${API_URL}/admin-auth/update-profile`,
-        data,
-        {
-          headers: {
-            Authorization: Auth_token,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      setProfile(response.data.store);
-      setEditing(false);
-      setSelectedImage(null);
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      alert("Failed to update profile");
-    } finally {
-      setSaving(false);
-    }
-  };
+  const {
+    profile,
+    loading,
+    editing,
+    setEditing,
+    formData,
+    handleInputChange,
+    handleImageChange,
+    handleSave,
+    handleCancel,
+    saving,
+    selectedImage,
+    API_URL,
+  } = useProfile();
 
   if (loading) {
     return (
@@ -134,7 +75,7 @@ export default function ProfileCard() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="absolute inset-0 w-full h-full  cursor-pointer rounded-full opacity-0"
+                  className="absolute inset-0 w-full h-full cursor-pointer rounded-full opacity-0"
                   title="Click to change image"
                 />
 
@@ -256,15 +197,7 @@ export default function ProfileCard() {
                 {saving ? "Saving..." : "Save"}
               </button>
               <button
-                onClick={() => {
-                  setEditing(false);
-                  setFormData({
-                    name: profile.name,
-                    mobile: profile.mobile,
-                    roles: profile.roles,
-                  });
-                  setSelectedImage(null);
-                }}
+                onClick={handleCancel}
                 className="bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-full hover:bg-gray-400 transition-colors"
               >
                 Cancel
