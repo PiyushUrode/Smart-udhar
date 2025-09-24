@@ -1,4 +1,4 @@
-// Smart Udhar Dashboard - API Integrated (Dynamic)
+// Smart Udhar Dashboard - API Integrated (Dynamic & Improved)
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -17,17 +17,14 @@ import {
 import ApexCharts from "react-apexcharts";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { CSVLink } from "react-csv";
+
 const API_URL = import.meta.env.VITE_API_URL;
+const API_TOKEN = import.meta.env.VITE_API_TOKEN; // 🔑 safer than hardcoding
+
 // === Chart Configurations ===
 const monthlyRevenueOptions = {
   chart: { type: "line", zoom: { enabled: true }, toolbar: { show: true } },
   stroke: { curve: "smooth" },
-  xaxis: {
-    categories: [
-      "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec",
-    ],
-  },
   tooltip: { shared: true, intersect: false },
 };
 
@@ -74,15 +71,29 @@ const ActivityItem = ({ text, time }) => (
   </div>
 );
 
+// === Utility ===
+const formatCurrency = (val) =>
+  `₹${(val || 0).toLocaleString("en-IN")}`;
+
+const percentChange = (currentVal, prevVal) => {
+  if (!prevVal || prevVal === 0) return 0;
+  return Number((((currentVal - prevVal) / prevVal) * 100).toFixed(1));
+};
+
 // === Main Dashboard ===
 const D1DashboardHome = () => {
   const [stats, setStats] = useState({});
   const [graphData, setGraphData] = useState([]);
   const [monthlyRevenueSeries, setMonthlyRevenueSeries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        setLoading(true);
+        setError("");
+
         const year = new Date().getFullYear();
         const currentMonth = new Date().getMonth() + 1; // 1-12
 
@@ -96,14 +107,14 @@ const D1DashboardHome = () => {
               {
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", // 🔑 Replace with real
+                  Authorization: `Bearer ${API_TOKEN}`,
                 },
               }
             )
           )
         );
 
-        const monthNames = [
+        const MONTH_NAMES = [
           "Jan","Feb","Mar","Apr","May","Jun",
           "Jul","Aug","Sep","Oct","Nov","Dec",
         ];
@@ -111,38 +122,31 @@ const D1DashboardHome = () => {
         const chartData = responses.map((res, idx) => {
           const data = res.data;
           return {
-            month: monthNames[idx],
-            sales: data.totalSum || 0,
-            paid: data.paidSum || 0,
-            pending: data.pendingSum || 0,
+            month: MONTH_NAMES[idx],
+            sales: Math.ceil(data.totalSum) || 0,
+            paid: Math.ceil(data.paidSum) || 0,
+            pending: Math.ceil(data.pendingSum) || 0,
           };
         });
 
         // Last month & current month for percentage change
         const current = responses[responses.length - 1]?.data;
         const previous =
-          responses.length > 1
-            ? responses[responses.length - 2]?.data
-            : null;
-
-        const percentChange = (currentVal, prevVal) => {
-          if (!prevVal || prevVal === 0) return 0;
-          return (((currentVal - prevVal) / prevVal) * 100).toFixed(1);
-        };
+          responses.length > 1 ? responses[responses.length - 2]?.data : null;
 
         if (current?.status === "success") {
           setStats({
-            totalSum: current.totalSum,
+            totalSum: Math.floor(current.totalSum),
             totalSumChange: percentChange(
               current.totalSum,
               previous?.totalSum
             ),
-            paidSum: current.paidSum,
+            paidSum: Math.floor(current.paidSum),
             paidSumChange: percentChange(
               current.paidSum,
               previous?.paidSum
             ),
-            pendingSum: current.pendingSum,
+            pendingSum: Math.floor(current.pendingSum),
             pendingSumChange: percentChange(
               current.pendingSum,
               previous?.pendingSum
@@ -164,6 +168,9 @@ const D1DashboardHome = () => {
         ]);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
+        setError("Failed to fetch dashboard data. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -176,6 +183,18 @@ const D1DashboardHome = () => {
     { type: "paid", text: "Payment received", time: "20 min ago" },
   ];
 
+  if (loading) {
+    return (
+      <div className="p-4 pt-10 text-center text-gray-500">Loading dashboard...</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 pt-10 text-center text-red-500">{error}</div>
+    );
+  }
+
   return (
     <div className="p-4 pt-10 space-y-6">
       {/* Stat Cards */}
@@ -183,23 +202,23 @@ const D1DashboardHome = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatCard
             title="OverAll Monthly Sales"
-            value={`₹${stats.totalSum}`}
-            change={Math.abs(stats.totalSumChange)}
+            value={formatCurrency(stats.totalSum)}
+            change={stats.totalSumChange}
             isPositive={stats.totalSumChange >= 0}
             type="sale"
           />
           <StatCard
             title="OverAll Monthly Paid"
-            value={`₹${stats.paidSum}`}
-            change={Math.abs(stats.paidSumChange)}
+            value={formatCurrency(stats.paidSum)}
+            change={stats.paidSumChange}
             isPositive={stats.paidSumChange >= 0}
             type="paid"
           />
           <StatCard
             title="OverAll Monthly Pending"
-            value={`₹${stats.pendingSum}`}
-            change={Math.abs(stats.pendingSumChange)}
-            isPositive={stats.pendingSumChange <= 0} // less pending is good
+            value={formatCurrency(stats.pendingSum)}
+            change={stats.pendingSumChange}
+            isPositive={stats.pendingSumChange < 0} // ✅ less pending is good
             type="pending"
           />
           <StatCard title="OverAll Users" value={stats.storecount} type="stores" />
