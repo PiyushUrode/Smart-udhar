@@ -1,95 +1,87 @@
 // src/components/CustomDropdown.jsx
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useNotificationTypes } from "../../controller/Notification/ManageNotificationTypesCTR"; 
 
-function CustomDropdown() {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const token = localStorage.getItem("authToken") || "";
-
-  const [types, setTypes] = useState([]);
-  const [newType, setNewType] = useState("");
-  const [newChildren, setNewChildren] = useState([]);
-  const [editingType, setEditingType] = useState(null); // for update mode
+// ChildInput remains the same as it's a presentational component
+function ChildInput({ onChange, initialChildren = [] }) {
+  const [child, setChild] = useState("");
+  const [children, setChildren] = useState(initialChildren);
 
   useEffect(() => {
-    fetchAllTypes();
-  }, []);
+    setChildren(initialChildren || []);
+  }, [initialChildren?.join(",")]);
 
-  // ✅ Fetch all types
-  const fetchAllTypes = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/notification-type/list`, {
-        headers: { Authorization: token },
-      });
-      if (res.data.success) {
-        setTypes(res.data.data);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load notification types");
+  const addChild = () => {
+    if (child.trim() && !children.includes(child.trim())) {
+      const updated = [...children, child.trim()];
+      setChildren(updated);
+      onChange(updated);
+      setChild("");
     }
   };
 
-  // ✅ Add new type
-  const handleAddType = async () => {
-    if (!newType.trim()) return alert("Type name required");
-    try {
-      const res = await axios.post(
-        `${API_URL}/notification-type/add`,
-        { name: newType, children: newChildren },
-        { headers: { Authorization: token } }
-      );
-      if (res.data.success) {
-        fetchAllTypes();
-        setNewType("");
-        setNewChildren([]);
-      }
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to add type");
-    }
-  };
-
-  // ✅ Delete type
-  const handleRemoveType = async (id) => {
-    if (!window.confirm("Remove this notification type?")) return;
-    try {
-      const res = await axios.delete(`${API_URL}/notification-type/delete/${id}`, {
-        headers: { Authorization: token },
-      });
-      if (res.data.success) {
-        fetchAllTypes();
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete type");
-    }
-  };
-
-  // ✅ Update type
-  const handleUpdateType = async () => {
-    if (!editingType) return;
-    try {
-      const res = await axios.put(
-        `${API_URL}/notification-type/update/${editingType._id}`,
-        { name: editingType.name, children: editingType.children },
-        { headers: { Authorization: token } }
-      );
-      if (res.data.success) {
-        fetchAllTypes();
-        setEditingType(null);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update type");
-    }
+  const removeChild = (c) => {
+    const updated = children.filter((ch) => ch !== c);
+    setChildren(updated);
+    onChange(updated);
   };
 
   return (
+    <div>
+      <div className="flex gap-2 mb-2">
+        <input
+          type="text"
+          value={child}
+          onChange={(e) => setChild(e.target.value)}
+          className="flex-1 p-2 border rounded bg-white"
+          placeholder="Child name"
+        />
+        <button
+          type="button"
+          onClick={addChild}
+          className="bg-blue-500 text-white px-3 py-1 rounded"
+        >
+          Add
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {children.map((c, idx) => (
+          <span
+            key={idx}
+            className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
+          >
+            {c}
+            <button
+              type="button"
+              className="text-red-500"
+              onClick={() => removeChild(c)}
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function CustomDropdown() {
+  const {
+    types,
+    newType,
+    setNewType,
+    newChildren,
+    setNewChildren,
+    editingType,
+    setEditingType,
+    handleAddType,
+    handleRemoveType,
+    handleUpdateType,
+  } = useNotificationTypes();
+
+  return (
     <div className="max-w-3xl mx-auto mt-10 p-4">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        Manage Dropdown
-      </h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Manage Dropdown</h2>
 
       {/* Add new type form */}
       <div className="border rounded shadow p-6 bg-white mb-6">
@@ -188,69 +180,3 @@ function CustomDropdown() {
     </div>
   );
 }
-
-/* 🔹 ChildInput Component (used in Add + Edit forms) */
-function ChildInput({ onChange, initialChildren = [] }) {
-  const [child, setChild] = useState("");
-  const [children, setChildren] = useState(initialChildren);
-
-  // ✅ Only update when actual array changes
-  useEffect(() => {
-    setChildren(initialChildren || []);
-  }, [initialChildren?.join(",")]);
-
-  const addChild = () => {
-    if (child.trim() && !children.includes(child.trim())) {
-      const updated = [...children, child.trim()];
-      setChildren(updated);
-      onChange(updated);
-      setChild("");
-    }
-  };
-
-  const removeChild = (c) => {
-    const updated = children.filter((ch) => ch !== c);
-    setChildren(updated);
-    onChange(updated);
-  };
-
-  return (
-    <div>
-      <div className="flex gap-2 mb-2">
-        <input
-          type="text"
-          value={child}
-          onChange={(e) => setChild(e.target.value)}
-          className="flex-1 p-2 border rounded bg-white"
-          placeholder="Child name"
-        />
-        <button
-          type="button"
-          onClick={addChild}
-          className="bg-blue-500 text-white px-3 py-1 rounded"
-        >
-          Add
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {children.map((c, idx) => (
-          <span
-            key={idx}
-            className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
-          >
-            {c}
-            <button
-              type="button"
-              className="text-red-500"
-              onClick={() => removeChild(c)}
-            >
-              ✕
-            </button>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default CustomDropdown;
