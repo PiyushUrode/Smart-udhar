@@ -1,17 +1,48 @@
 import { FaBell, FaUserCircle, FaBars, FaEnvelope, FaCog, FaSignOutAlt, FaChartBar, FaUser, FaWrench } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import smartlogo from "../assets/logo/logo_hr.png";
 import { LiaCalculatorSolid } from "react-icons/lia";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const Navbar = ({ toggleSidebar }) => {
+
+  const API_URL = import.meta.env.VITE_API_URL;
+  const Auth_token = localStorage.getItem("authToken");
   const { t, i18n } = useTranslation();
   const [showDropdown, setShowDropdown] = useState(false);
+   const [profile, setProfile] = useState(null);
+  const navigate = useNavigate();
 
   const handleLanguageChange = (e) => {
     i18n.changeLanguage(e.target.value);
   };
+
+  const Logout = () =>{
+    localStorage.removeItem("storeProfile_id");
+    localStorage.removeItem("store_id");
+    localStorage.removeItem("authToken");
+    navigate('/admin')
+  }
+
+   useEffect(() => {
+      const fetchProfile = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/admin-auth/profile`, {
+            headers: { Authorization: Auth_token },
+          });
+          const store = response.data?.store || null;
+          setProfile(store);   
+          console.log(store);
+                 
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }  
+      };
+  
+      fetchProfile();
+    }, []);
 
   return (
     <nav className="w-full h-20 flex items-center justify-between px-4 bg-white shadow-sm border-b-2 border-gray-200">
@@ -83,7 +114,7 @@ const Navbar = ({ toggleSidebar }) => {
   {/* Admin Image & Dropdown */}
   <div className="relative hidden md:block">
     <img
-      src="https://i.pravatar.cc/300"
+      src={profile?.img_url ? `${API_URL}/assets/admin/${profile.img_url}` : `${API_URL}/assets/admin/68aeb0394c48cbc642f35e5e-1758539837124.jpeg`}
       onClick={() => setShowDropdown(!showDropdown)}
       className="w-10 h-10 rounded-full cursor-pointer border shadow-sm"
       alt="Admin"
@@ -91,22 +122,22 @@ const Navbar = ({ toggleSidebar }) => {
     {showDropdown && (
       <div className="absolute right-0 mt-2 w-56 bg-white border rounded-xl shadow-lg z-50 text-sm overflow-hidden">
         <div className="p-4 border-b flex items-center gap-3">
-          <img src="https://i.pravatar.cc/300" className="w-10 h-10 rounded-full" alt="Admin" />
+          <img  src={profile?.img_url ? `${API_URL}/assets/admin/${profile.img_url}` : `${API_URL}/assets/admin/68aeb0394c48cbc642f35e5e-1758539837124.jpeg`} className="w-10 h-10 rounded-full" alt="Admin" />
           <div>
-            <p className="font-semibold text-gray-800">Admin</p>
-            <p className="text-gray-500 text-xs">Administrator</p>
+            <p className="font-semibold text-gray-800">{profile.name}</p>
+            <p className="text-gray-500 text-xs">{profile.roles}</p>
           </div>
         </div>
-        <Link to="/profile" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+        <Link to="/admin/dashboard/profile" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
           <FaUser /> My Profile
         </Link>
-        <Link to="/settings" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+        {/* <Link to="/settings" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
           <FaWrench /> Settings
         </Link>
         <Link to="/reports" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
           <FaChartBar /> Reports
-        </Link>
-        <button className="flex items-center gap-2 w-full text-red-600 px-4 py-2 hover:bg-red-100">
+        </Link> */}
+        <button onClick={Logout} className="flex items-center gap-2 w-full text-red-600 px-4 py-2 hover:bg-red-100">
           <FaSignOutAlt /> Logout
         </button>
       </div>

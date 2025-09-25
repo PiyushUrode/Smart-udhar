@@ -1,172 +1,26 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import * as XLSX from "xlsx";
-
+import React from "react";
+import { useBusinessStaffController } from "../../controller/store/staff-listCTR";
 export default function BusinessStaffViewer() {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const Auth_token = localStorage.getItem("authToken");
-  const [mobile, setMobile] = useState("");
-  const [storeId, setStoreId] = useState(null);
-  const [businesses, setBusinesses] = useState([]);
-  const [selectedBusiness, setSelectedBusiness] = useState(null);
-  const [staffList, setStaffList] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [limit, setLimit] = useState(5);
-  const [loading, setLoading] = useState(false);
-  const [expandedRow, setExpandedRow] = useState(null);
-
-  const token = Auth_token;
-
-  // Fetch all staff (Admin)
-  const fetchAllStaffAdmin = async (pageNumber = 1, pageLimit = limit) => {
-    try {
-      setLoading(true);
-      const res = await axios.get(`${API_URL}/admin/staff-list`, {
-        params: { page: pageNumber, limit: pageLimit },
-        headers: { Authorization: token },
-      });
-
-      if (res.data.success) {
-         
-        setStaffList(res.data.staff || []);
-        setPage(pageNumber);
-        setTotalPages(Math.ceil(res.data.total / pageLimit) || 1);
-      }
-    } catch (err) {
-      console.error("Error fetching admin staff:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllStaffAdmin();
-  }, []);
-
-  // Fetch store by mobile
-  const fetchStoreByMobile = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.post(
-        `${API_URL}/store-auth/profileBy-number`,
-        { mobile },
-        {
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (res.data.store?.length > 0) {
-        const id = res.data.store[0]._id;
-        setStoreId(id);
-        fetchBusinessProfiles(id);
-      }
-    } catch (err) {
-      console.error("Error fetching store:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch businesses
-  const fetchBusinessProfiles = async (id) => {
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `${API_URL}/store-business-profile/find-all/${id}`,
-        {
-          headers: { Authorization: token },
-        }
-      );
-      setBusinesses(res.data.data || []);
-    } catch (err) {
-      console.error("Error fetching business profiles:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch staff by store and business
-  const fetchStaff = async (
-    pageNumber = 1,
-    businessId = selectedBusiness,
-    pageLimit = limit
-  ) => {
-    if (!storeId || !businessId) return;
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `${API_URL}/admin/staff-list/${storeId}/${businessId}`,
-        {
-          params: { page: pageNumber, limit: pageLimit },
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (res.data.success) {
-        
-        setStaffList(res.data.staff || []);
-        setPage(pageNumber);
-        setTotalPages(Math.ceil(res.data.total / pageLimit) || 1);
-      }
-    } catch (err) {
-      console.error(
-        "Error fetching staff:",
-        err.response?.data || err.message
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const pagination = (newPage) => {
-    if (newPage < 1 || newPage > totalPages) return;
-    storeId
-      ? fetchStaff(newPage, selectedBusiness, limit)
-      : fetchAllStaffAdmin(newPage, limit);
-  };
-
-  const RowPerPage = (newLimit) => {
-    setLimit(newLimit);
-    storeId
-      ? fetchStaff(1, selectedBusiness, newLimit)
-      : fetchAllStaffAdmin(1, newLimit);
-  };
-
-  // Export to Excel
-  const exportToExcel = () => {
-    if (staffList.length === 0) return;
-
-    const worksheetData = staffList.map((staff, index) => ({
-      "S.No": (page - 1) * limit + index + 1,
-      "First Name": staff.firstName,
-      "Last Name": staff.lastName,
-      "Mobile Number": staff.mobileNumber,
-      "Email ID": staff.emailId,
-      "Address": staff.address || "-",
-      "Pin Number": staff.pinNumber || "-",
-      "City": staff.city || "-",
-      "State": staff.state || "-",
-      "Roles": staff.roles?.join(", ") || "-",
-      "Status": staff.status || "-",
-      "Online": staff.online ? "Yes" : "No",
-      "Created At": new Date(staff.createdAt).toLocaleDateString(),
-      "Updated At": new Date(staff.updatedAt).toLocaleDateString(),
-      "Store Mobile": staff.storeMobile || "-",
-      "Business Name": staff.businessName || "-",
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Staff");
-
-    XLSX.writeFile(workbook, "staff.xlsx");
-  };
+  const {
+    mobile,
+    setMobile,
+    businesses,
+    selectedBusiness,
+    setSelectedBusiness,
+    staffList,
+    page,
+    totalPages,
+    limit,
+    loading,
+    expandedRow,
+    setExpandedRow,
+    fetchStoreByMobile,
+    fetchStaff,
+    handlePagination,
+    handleRowsPerPage,
+    handleExportToExcel,
+    API_URL,
+  } = useBusinessStaffController();
 
   return (
     <div className="max-w-6xl mx-auto mt-12 p-6 bg-white shadow-lg rounded-2xl space-y-6">
@@ -227,22 +81,20 @@ export default function BusinessStaffViewer() {
             <h3 className="text-lg font-semibold text-gray-800">
               Staff List {totalPages > 1 && `(Page ${page})`}
             </h3>
-
             <div className="flex flex-wrap items-center gap-3">
               <button
-                onClick={exportToExcel}
+                onClick={handleExportToExcel}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition"
               >
                 Export Excel
               </button>
-
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-600">
                   Rows per page:
                 </label>
                 <select
                   value={limit}
-                  onChange={(e) => RowPerPage(parseInt(e.target.value))}
+                  onChange={(e) => handleRowsPerPage(parseInt(e.target.value))}
                   className="border bg-white rounded-lg p-1 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                 >
                   <option value={5}>5</option>
@@ -291,7 +143,6 @@ export default function BusinessStaffViewer() {
                         <td className="border px-4 py-2">{staff.emailId}</td>
                         <td className="border px-4 py-2">{staff.status}</td>
                       </tr>
-
                       {isExpanded && (
                         <tr className="bg-gray-50">
                           <td colSpan={7} className="p-4 text-left">
@@ -357,14 +208,14 @@ export default function BusinessStaffViewer() {
             <div className="flex justify-end gap-3 mt-4">
               <button
                 disabled={page <= 1}
-                onClick={() => pagination(page - 1)}
+                onClick={() => handlePagination(page - 1)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Prev
               </button>
               <button
                 disabled={page >= totalPages}
-                onClick={() => pagination(page + 1)}
+                onClick={() => handlePagination(page + 1)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next

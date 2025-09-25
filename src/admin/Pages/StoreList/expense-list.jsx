@@ -1,174 +1,27 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import * as XLSX from "xlsx";
-import { ChevronDown, ChevronUp } from "lucide-react"; // ✅ nice icons
+import React from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useExpenseController }  from "../../controller/store/expense-listCTR.jsx";
 
 export default function BusinessExpenseViewer() {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const Auth_token = localStorage.getItem("authToken");
-  const [mobile, setMobile] = useState("");
-  const [storeId, setStoreId] = useState(null);
-  const [businesses, setBusinesses] = useState([]);
-  const [selectedBusiness, setSelectedBusiness] = useState(null);
-  const [expenses, setExpenses] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [limit, setLimit] = useState(5);
-  const [loading, setLoading] = useState(false);
-  const [expandedRow, setExpandedRow] = useState(null); // ✅ track expanded row
-
-  const token = Auth_token;
-
-  // ✅ Step 0: Fetch all expenses (Admin)
-  const fetchAllExpensesAdmin = async (pageNumber = 1, pageLimit = limit) => {
-    try {
-      setLoading(true);
-      const res = await axios.get(`${API_URL}/admin/expense-list`, {
-        params: { page: pageNumber, limit: pageLimit },
-        headers: { Authorization: token },
-      });
-
-      if (res.data.success) {
-        setExpenses(res.data.expenses || []);
-        setPage(pageNumber);
-        setTotalPages(Math.ceil(res.data.total / pageLimit) || 1);
-      }
-    } catch (err) {
-      console.error("Error fetching admin expenses:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllExpensesAdmin();
-  }, []);
-
-  // ✅ Step 1: Fetch store by mobile
-  const fetchStoreByMobile = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.post(
-        `${API_URL}/store-auth/profileBy-number`,
-        { mobile },
-        {
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (res.data.store?.length > 0) {
-        const id = res.data.store[0]._id;
-        setStoreId(id);
-        fetchBusinessProfiles(id);
-      }
-    } catch (err) {
-      console.error("Error fetching store:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Step 2: Fetch businesses
-  const fetchBusinessProfiles = async (id) => {
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `${API_URL}/store-business-profile/find-all/${id}`,
-        {
-          headers: { Authorization: token },
-        }
-      );
-      setBusinesses(res.data.data || []);
-    } catch (err) {
-      console.error("Error fetching business profiles:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Step 3: Fetch expenses with pagination
-  const fetchExpenses = async (
-    pageNumber = 1,
-    businessId = selectedBusiness,
-    pageLimit = limit
-  ) => {
-    if (!storeId || !businessId) return;
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `${API_URL}/admin/expense-list/${storeId}/${businessId}`,
-        {
-          params: { page: pageNumber, limit: pageLimit },
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (res.data.success) {
-        setExpenses(res.data.expenses || []);
-        setPage(pageNumber);
-        setTotalPages(Math.ceil(res.data.total / pageLimit) || 1);
-      }
-    } catch (err) {
-      console.error(
-        "Error fetching expenses:",
-        err.response?.data || err.message
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const pagination = (newPage) => {
-    if (newPage < 1 || newPage > totalPages) return;
-
-    storeId
-      ? fetchExpenses(newPage, selectedBusiness, limit)
-      : fetchAllExpensesAdmin(newPage, limit);
-  };
-
-  const RowPerPage = (newLimit) => {
-    setLimit(newLimit);
-    storeId
-      ? fetchExpenses(1, selectedBusiness, newLimit)
-      : fetchAllExpensesAdmin(1, newLimit);
-  };
-
-  // ✅ Export to Excel
-  const exportToExcel = () => {
-    if (expenses.length === 0) return;
-
-    const worksheetData = expenses.map((exp, index) => ({
-      "S.No": (page - 1) * limit + index + 1,
-      "Expense ID": exp._id,
-      Date: new Date(exp.date).toLocaleDateString(),
-      Category: exp.expenseCategory,
-      "Item Name": exp.itemName,
-      Amount: exp.amount,
-      "Vendor Name": exp.vendorName || "-",
-      "GST Applicable": exp.gstApplicable ? "Yes" : "No",
-      "Payment Mode": exp.paymentMode,
-      "Notes / Bill": exp.notesOrBill || "-",
-      "Created At": new Date(exp.createdAt).toLocaleDateString(),
-      "Vendor Number": exp.storeMobile || "-",
-      "Vendor Shop": exp.businessName || "-",
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
-
-    XLSX.writeFile(workbook, "expenses.xlsx");
-  };
-
-  // ✅ Toggle Row Expand
-  const toggleExpand = (id) => {
-    setExpandedRow(expandedRow === id ? null : id);
-  };
+  const {
+    mobile,
+    setMobile,
+    businesses,
+    selectedBusiness,
+    setSelectedBusiness,
+    expenses,
+    page,
+    totalPages,
+    limit,
+    loading,
+    expandedRow,
+    toggleExpand,
+    fetchStoreByMobile,
+    fetchExpenses,
+    handlePagination,
+    handleRowPerPage,
+    handleExportToExcel,
+  } = useExpenseController();
 
   return (
     <div className="max-w-6xl mx-auto mt-12 p-6 bg-white shadow-lg rounded-2xl space-y-6">
@@ -228,31 +81,26 @@ export default function BusinessExpenseViewer() {
       {/* Step 3: Expenses List */}
       {expenses.length > 0 && (
         <div className="space-y-4">
-          <div className="flex  flex-wrap justify-between items-center border-b pb-2">
+          <div className="flex flex-wrap justify-between items-center border-b pb-2">
             <h3 className="text-lg font-semibold text-gray-800">
               Expenses {totalPages > 1 && `(Page ${page})`}
             </h3>
-
             <div className="flex flex-wrap items-center gap-3">
-              {/* ✅ Export Button */}
+              {/* Export Button */}
               <button
-                onClick={exportToExcel}
+                onClick={handleExportToExcel}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition"
               >
                 Export Excel
               </button>
-
-              {/* ✅ Page Size Selector */}
+              {/* Page Size Selector */}
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-600">
                   Rows per page:
                 </label>
                 <select
                   value={limit}
-                  onChange={(e) => {
-                    const newLimit = parseInt(e.target.value);
-                    RowPerPage(newLimit);
-                  }}
+                  onChange={(e) => handleRowPerPage(parseInt(e.target.value))}
                   className="border bg-white rounded-lg p-1 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                 >
                   <option value={5}>5</option>
@@ -285,30 +133,22 @@ export default function BusinessExpenseViewer() {
                       <tr className="hover:bg-gray-50">
                         <td className="border px-2 py-2 text-center w-10">
                           <button
-                            onClick={() =>
-                              setExpandedRow(isExpanded ? null : exp._id)
-                            }
+                            onClick={() => toggleExpand(exp._id)}
                             className="flex items-center justify-center w-5 h-5 bg-blue-100 hover:bg-blue-200 rounded-full transition"
                           >
                             {isExpanded ? (
-                              <span className="text-blue-600 text-sm font-bold">
-                                −
-                              </span>
+                              <ChevronUp size={16} />
                             ) : (
-                              <span className="text-blue-600 text-sm font-bold">
-                                +
-                              </span>
+                              <ChevronDown size={16} />
                             )}
                           </button>
                         </td>
-
                         <td className="border px-4 py-2">
                           {(page - 1) * limit + index + 1}
                         </td>
                         <td className="border px-4 py-2">
                           {new Date(exp.date).toLocaleDateString()}
                         </td>
-
                         <td className="border px-4 py-2">{exp.itemName}</td>
                         <td className="border px-4 py-2">{exp.amount}</td>
                       </tr>
@@ -321,17 +161,15 @@ export default function BusinessExpenseViewer() {
                               <div>
                                 <span className="font-semibold text-gray-700">
                                   Category :
-                                </span>{" "}  
+                                </span>{" "}
                                 {exp.expenseCategory}
                               </div>
-                              
                               <div>
                                 <span className="font-semibold text-gray-700">
                                   Vendor:
                                 </span>{" "}
                                 {exp.vendorName || "-"}
                               </div>
-
                               <div>
                                 <span className="font-semibold text-gray-700">
                                   GST:
@@ -384,14 +222,14 @@ export default function BusinessExpenseViewer() {
             <div className="flex justify-end gap-3">
               <button
                 disabled={page <= 1}
-                onClick={() => pagination(page - 1)}
+                onClick={() => handlePagination(page - 1)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Prev
               </button>
               <button
                 disabled={page >= totalPages}
-                onClick={() => pagination(page + 1)}
+                onClick={() => handlePagination(page + 1)}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
