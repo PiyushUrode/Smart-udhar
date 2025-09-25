@@ -49,7 +49,7 @@ const handleGetOtp = async () => {
   // Step 2: Verify OTP
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) return toast.error("Enter 6-digit OTP");
-
+if (loading) return;
     try {
       const res = await AuthService.loginVerify(phone, otp);
       toast.success("Login successful!");
@@ -57,6 +57,9 @@ const handleGetOtp = async () => {
     } catch (err) {
       toast.error(err.message);
     }
+    finally {
+    setLoading(false);
+  }
   };
 
   // OTP Input Handling
@@ -144,7 +147,7 @@ const handleKeyDown = (e, index) => {
                     />
                   ))}
                 </div>
-                <button className="btn otp mt-5" onClick={handleVerifyOtp}>
+                <button className="btn otp mt-5" onClick={handleVerifyOtp}  disabled={loading} >
                   Confirm
                 </button>
               </>

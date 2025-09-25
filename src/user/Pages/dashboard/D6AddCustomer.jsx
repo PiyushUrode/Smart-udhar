@@ -82,34 +82,32 @@ const D6AddCustomer = () => {
   };
 
   // Validation
-  const validate = () => {
-    let newErrors = {};
+  // Validation
+const validate = () => {
+  let newErrors = {};
 
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.mobile.match(/^[6-9]\d{9}$/))
-      newErrors.mobile = "Enter a valid 10-digit mobile number";
-    if (!formData.email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/))
-      newErrors.email = "Enter a valid email";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
-    if (!formData.city.trim()) newErrors.city = "City is required";
-    if (!formData.state.trim()) newErrors.state = "State is required";
-    if (!formData.pin.trim()) newErrors.pin = "PIN is required";
+  // ✅ Required fields only
+  if (!formData.name.trim()) newErrors.name = "Name is required";
 
-    if (!formData.companyName.trim())
-      newErrors.companyName = "Company name is required";
-    if (!formData.aadharCardNumber.match(/^\d{12}$/))
-      newErrors.aadharCardNumber = "Enter 12-digit Aadhaar";
-    if (!formData.panNumber.match(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/))
-      newErrors.panNumber = "Enter PAN (ABCDE1234F)";
-    if (
-      !formData.gstNumber.match(
-        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
-      )
-    )
-      newErrors.gstNumber = "Enter GST (22ABCDE1234F1Z5)";
+  if (!formData.mobile.match(/^[6-9]\d{9}$/))
+    newErrors.mobile = "Enter a valid 10-digit mobile number";
 
-    return newErrors;
-  };
+  if (!formData.email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/))
+    newErrors.email = "Enter a valid email";
+
+  // ✅ Optional fields: only validate if filled
+  if (formData.aadharCardNumber && !formData.aadharCardNumber.match(/^\d{12}$/))
+    newErrors.aadharCardNumber = "Enter 12-digit Aadhaar";
+
+  if (formData.panNumber && !formData.panNumber.match(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/))
+    newErrors.panNumber = "Enter PAN (ABCDE1234F)";
+
+  if (formData.gstNumber && !formData.gstNumber.match(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/))
+    newErrors.gstNumber = "Enter GST (22ABCDE1234F1Z5)";
+
+  return newErrors;
+};
+
 
   // Clear form
   const clearForm = () => {
