@@ -6,48 +6,58 @@
 @font-face {
   font-family: 'Roboto-Medium';
   src: url('./user/assets/font/Inter/Roboto/static/Roboto-Medium.ttf') format('truetype');
+  font-weight: 500;
 }
 @font-face {
   font-family: 'Roboto-Regular';
   src: url('./user/assets/font/Inter/Roboto/static/Roboto-Regular.ttf') format('truetype');
+  font-weight: 400;
 }
 @font-face {
   font-family: 'Roboto-Bold';
   src: url('./user/assets/font/Inter/Roboto/static/Roboto-Bold.ttf') format('truetype');
-}
+font-weight: 700;}
 @font-face {
   font-family: 'Roboto-Thin';
   src: url('./user/assets/font/Inter/Roboto/static/Roboto-Thin.ttf') format('truetype');
+  font-weight: 300;
 }
 @font-face {
   font-family: 'Roboto-SemiBold';
   src: url('./user/assets/font/Inter/Roboto/static/Roboto-SemiBold.ttf') format('truetype');
+  font-weight: 600;
 }
 
 @font-face {
   font-family: 'Inter-Medium';
   src: url('./user/assets/font/Inter/Inter/static/Inter_18pt-Medium.ttf') format('truetype');
+font-weight:500 ;
 }
 @font-face {
   font-family: 'Inter-Regular';
   src: url('./assets/font/Inter/Inter/static/Inter_18pt-Regular.ttf') format('truetype');
+font-weight:400 ;
 }
 @font-face {
   font-family: 'Inter-Bold';
   src: url('./user/assets/font/Inter/Inter/static/Inter_18pt-Bold.ttf') format('truetype');
+font-weight:700 ;
 }
 @font-face {
   font-family: 'Inter-Light';
   src: url('./user/assets/font/Inter/Inter/static/Inter_18pt-Light.ttf') format('truetype');
+font-weight:300 ;
 }
 @font-face {
   font-family: 'Inter-SemiBold';
   src: url('./user/assets/font/Inter/Inter/static/Inter_18pt-SemiBold.ttf') format('truetype');
+font-weight:600 ;
 }
 
 @font-face {
   font-family: 'InriaSans-Regular';
   src: url('./user/assets/font/Inria_Sans/InriaSans-Regular.ttf') format('truetype');
+  font-weight: 400;
 }
 
 :root {
