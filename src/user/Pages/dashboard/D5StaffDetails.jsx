@@ -4,9 +4,12 @@ import { StaffService } from "../../api/staffDetails.js";
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+
 const D5StaffDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
 
   const [isOpen, setIsOpen] = useState(true);
   const [formData, setFormData] = useState({
@@ -72,27 +75,34 @@ const D5StaffDetails = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      let res;
-      if (id) {
-        // 🔹 Edit staff
-        res = await StaffService.updateStaff(id, formData, staffImage);
-        toast.success("✅ Staff updated successfully!");
-      } else {
-        // 🔹 Add staff
-        res = await StaffService.createStaff(formData, staffImage);
-        toast.success("✅ Staff member added successfully!");
-      }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (loading) return; // Prevent multiple clicks
 
-      console.log("API Response:", res);
-      navigate("/dashboard/staff-role"); // redirect if needed
-    } catch (err) {
-      console.error("❌ Error saving staff:", err);
-      toast.error(err.response?.data?.message || "Failed to save staff");
+  setLoading(true); // Start loading
+
+  try {
+    let res;
+    if (id) {
+      // Edit staff
+      res = await StaffService.updateStaff(id, formData, staffImage);
+      toast.success("✅ Staff updated successfully!");
+    } else {
+      // Add staff
+      res = await StaffService.createStaff(formData, staffImage);
+      toast.success("✅ Staff member added successfully!");
     }
-  };
+
+    console.log("API Response:", res);
+    navigate("/dashboard/staff-role"); // redirect if needed
+  } catch (err) {
+    console.error("❌ Error saving staff:", err);
+    toast.error(err.response?.data?.message || "Failed to save staff");
+  } finally {
+    setLoading(false); // Stop loading
+  }
+};
+
 
   return (
     <div className="max-w-4xl mx-auto my-5 p-4 sm:p-6 bg-white rounded-lg shadow-xl">

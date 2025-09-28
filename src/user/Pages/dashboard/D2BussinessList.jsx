@@ -125,7 +125,7 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
   localStorage.setItem("storeProfile_id", id);
 
   // 4️⃣ Notification
-  alert("✔️ Active business set successfully!");
+  // alert("✔️ Active business set successfully!");
 };
 
 

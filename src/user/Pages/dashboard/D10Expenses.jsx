@@ -7,11 +7,16 @@ import { FaCloudUploadAlt } from "react-icons/fa";
 // import ExpenseService from "../../api/expenseservice.js"; // Adjust the path as necessary
 import ExpenseService from "../../api/expenseservice.js"; // ✅
 import Cookies from "js-cookie"; // to fetch token / storeId from cookie
+import DatePicker from "react-datepicker";
+import { format, parse } from "date-fns";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 const D10Expenses = () => {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("Monthly"); // default
-
+const [loading, setLoading] = useState(false);
+const [expenses, setExpenses] = useState([]);
   const handleFilterChange = (option) => {
     setSelectedFilter(option);
     setShowFilterDropdown(false);
@@ -64,7 +69,7 @@ const [formData, setFormData] = useState({
 
 
 
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   const categories = ["Travel", "Office Supplies", "Rent", "Utilities"];
   const paymentModes = ["Cash", "UPI", "Bank"];
@@ -92,7 +97,7 @@ const [formData, setFormData] = useState({
 //   }
 // };
 
-const [expenses, setExpenses] = useState([]);
+
   const [summary, setSummary] = useState({
     total: 0,
     gstCredit: 0,
@@ -136,20 +141,38 @@ const [expenses, setExpenses] = useState([]);
     setSummary({ total, gstCredit, categories });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const result = await ExpenseService.createExpense(formData);
-      if (result.success) {
-        console.log("✅ Expense created:", result.expense);
-        fetchExpenses(); // refresh list + summary
-      } else {
-        console.error("❌ Error creating expense:", result.error);
-      }
-    } catch (err) {
-      console.error("❌ Unexpected error:", err);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const result = await ExpenseService.createExpense(formData);
+    if (result.success) {
+      console.log("✅ Expense created:", result.expense);
+
+      // ✅ Reset form fields
+      setFormData({
+        date: "",
+        expenseCategory: "",
+        itemName: "",
+        amount: "",
+        vendorName: "",
+        gstApplicable: true,
+        paymentMode: "",
+        notesOrBill: "",
+        expenseImage: "",
+      });
+
+      fetchExpenses(); // refresh list + summary
+    } else {
+      console.error("❌ Error creating expense:", result.error);
     }
-  };
+  } catch (err) {
+    console.error("❌ Unexpected error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 
 
@@ -165,17 +188,27 @@ const [expenses, setExpenses] = useState([]);
           <form onSubmit={handleSubmit} className="space-y-6 text-sm text-gray-700">
             {/* Date & Category */}
             <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="font-medium mb-1 block">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
-                  required
-                />
-              </div>
+             <div>
+  <label className="font-medium mb-1 block">Date</label>
+  <DatePicker
+    className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+    selected={
+      formData.date
+        ? parse(formData.date, "dd/MM/yyyy", new Date()) // string → Date
+        : null
+    }
+    onChange={(date) =>
+      setFormData({
+        ...formData,
+        date: date ? format(date, "dd/MM/yyyy") : "", // Date → string
+      })
+    }
+    dateFormat="dd/MM/yyyy"        // ✅ DD/MM/YYYY format force
+    placeholderText="DD/MM/YYYY"   // 👈 Placeholder
+    isClearable                    // optional: allow clearing
+  />
+</div>
+
               <div>
                 <label className="font-medium mb-1 block">Expense Category</label>
                 <select

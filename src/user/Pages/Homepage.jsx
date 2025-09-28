@@ -54,289 +54,427 @@ const Homepage = () => {
   };
 
   return (
-    <div className="homepage" style={{ backgroundColor: "#F6F6F6" }}>
+    <div className="homepage" style={{ backgroundColor: "#FFFFFF" }}>
       {/* header start */}
-      <header>
-        <div className="h-logo">
+      <header className="flex items-center h-[10vh] justify-between px-4 md:px-8 py-3 bg-white relative z-[100]">
+        {/* Logo */}
+        <div className="flex items-center flex-shrink-0">
           <Link to="/">
-            <img src={logo} alt="Logo" />
+            <img
+              src={logo}
+              alt="Logo"
+              className="w-[120px] sm:w-[150px] h-auto"
+            />
           </Link>
         </div>
-        <nav className={`nav-menu ${isMobileMenuOpen ? "open" : ""}`}>
-          <ul className="font-robotoR">
+
+        {/* Navigation Menu */}
+        <nav
+          className={`${
+            isMobileMenuOpen ? "flex" : "hidden"
+          } absolute lg:static top-full left-0 right-0 flex-col lg:flex lg:flex-row lg:items-center bg-white lg:bg-transparent p-5 lg:p-0 gap-6 lg:gap-10 flex-1 justify-center`}
+        >
+          <ul
+            className="flex flex-col lg:flex-row items-center gap-4 lg:gap-8 
+             font-robotoM text-base text-[#595959] w-full lg:w-auto"
+          >
             <li>
-              <Link to="/?scrollTo=about">About Us</Link>
+              <Link
+                to="/?scrollTo=about"
+                className="block w-full text-center hover:text-[#2563EB] transition"
+              >
+                About Us
+              </Link>
             </li>
             <li>
-              <Link to="/?scrollTo=pricelist">Price list</Link>
+              <Link
+                to="/?scrollTo=pricelist"
+                className="block w-full text-center hover:text-[#2563EB] transition"
+              >
+                Price List
+              </Link>
             </li>
             <li>
-              <Link to="/?scrollTo=features">Features</Link>
+              <Link
+                to="/?scrollTo=features"
+                className="block w-full text-center hover:text-[#2563EB] transition"
+              >
+                Features
+              </Link>
             </li>
             <li>
-              <Link to="/?scrollTo=partner">Partner With Us</Link>
+              <Link
+                to="/?scrollTo=partner"
+                className="block w-full text-center hover:text-[#2563EB] transition"
+              >
+                Partner With Us
+              </Link>
             </li>
             <li>
-              <Link to="/?scrollTo=more">More</Link>
+              <Link
+                to="/?scrollTo=more"
+                className="block w-full text-center hover:text-[#2563EB] transition"
+              >
+                More
+              </Link>
             </li>
           </ul>
 
-          <div className="nav-buttons mobile-visible">
-            <button className="login-btn font-InriaR font-normal">
-              <a href="/login">Login/Signup</a>
+          {/* Mobile Buttons (inside toggle menu) */}
+          <div className="flex flex-col md:hidden w-full mt-6 gap-3 items-center">
+            <button className="w-full px-4 py-2 rounded-md border border-black/20 shadow-md font-InriaR text-base sm:text-lg bg-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-green-500 hover:text-white transition">
+              <a
+                href="/login"
+                className="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent hover:text-white"
+              >
+                Login/Signup
+              </a>
             </button>
-            <button className="app-btn font-InriaR font-normal ">
-              <a target="blank" href="/">
+            <button className="w-full px-4 py-2 rounded-md bg-gradient-to-r from-blue-600 to-green-500 text-white font-InriaR text-base sm:text-lg shadow-md hover:shadow-lg transition">
+              <a target="_blank" href="/">
                 SmartUdhar App
               </a>
             </button>
           </div>
         </nav>
 
+        {/* Buttons Section */}
         <div
-          className="translator-dropdown"
-          style={{ display: "flex", alignItems: "center", flex: "0.050" }}
+          className="
+      hidden 
+      md:flex lg:hidden  /* Show only on tablet (>=768px and <1024px) */
+      flex-1 justify-center gap-4
+    "
         >
-          <select onChange={(e) => changeLanguage(e.target.value)}>
-            <option value="en">EN </option>
-          </select>
-        </div>
-
-        <div className="nav-buttons desktop-visible">
-          <button className="login-btn">
-            <a href="/login">Login/Signup</a>
+          {/* Login Button */}
+          <button className="px-6 py-2 rounded-full border border-black/10 bg-[#F1F1F1] font-InriaR font-bold text-[16px] shadow-[inset_0px_3px_2.6px_rgba(0,0,0,0.09),inset_0px_-4px_3.6px_#ffffff] transition">
+            <a
+              href="/login"
+              className="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent"
+            >
+              Login
+            </a>
           </button>
-          <button className="app-btn">
-            <a target="blank" href="/">
+
+          {/* SmartUdhar App Button */}
+          <button className="px-6 py-2 rounded-full text-white font-InriaR font-bold text-[16px] bg-gradient-to-r from-blue-600 to-green-500 shadow-[inset_0px_4px_4px_rgba(0,0,0,0.25),inset_0px_-4px_4px_#ffffff82] transition">
+            <a target="_blank" href="/">
               SmartUdhar App
             </a>
           </button>
         </div>
 
-        <div className="mobile-menu-toggle" onClick={toggleMobileMenu}>
-          <span className="hamburger-icon"></span>
-          <span className="hamburger-icon"></span>
-          <span className="hamburger-icon"></span>
+        {/* Desktop Buttons (aligned right) */}
+        <div className="hidden lg:flex flex-shrink-0 gap-4">
+          {/* Login Button */}
+          <button className="px-6 py-2 rounded-full border border-black/10 bg-[#F1F1F1] font-InriaR font-bold text-[16px] shadow-[inset_0px_3px_2.6px_rgba(0,0,0,0.09),inset_0px_-4px_3.6px_#ffffff] transition">
+            <a
+              href="/login"
+              className="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent"
+            >
+              Login
+            </a>
+          </button>
+
+          {/* SmartUdhar App Button */}
+          <button className="px-6 py-2 rounded-full text-white font-InriaR font-bold text-[16px] bg-gradient-to-r from-blue-600 to-green-500 shadow-[inset_0px_4px_4px_rgba(0,0,0,0.25),inset_0px_-4px_4px_#ffffff82] transition">
+            <a target="_blank" href="/">
+              SmartUdhar App
+            </a>
+          </button>
+        </div>
+
+        {/* Mobile Menu Toggle */}
+        <div
+          className="flex lg:hidden flex-col gap-1 cursor-pointer ml-3"
+          onClick={toggleMobileMenu}
+        >
+          <span className="w-6 h-[3px] navbar-login"></span>
+          <span className="w-6 h-[3px] navbar-login"></span>
+          <span className="w-6 h-[3px] navbar-login"></span>
         </div>
       </header>
+
       {/* header End */}
 
       {/* hero section start */}
-      <section className="hero-section">
-        <h2 className="hero-title">
-          Generate The <span>Credit History</span> Of customers
-        </h2>
-        <p className="he-des">
-          Empowering India's small businesses to build trust, improve credit
-          scores, and manage udhar smartly.
-        </p>
-        <div className="mobile-container">
-          <div className="input-wrapper">
-            <select className="country-code">
-              <option value="+91">+91</option>
-            </select>
-            <input
-              type="tel"
-              className="mobile-input"
-              placeholder="Enter mobile number"
-            />
+      <section className="hero-section h-[90vh]   bg-[#0D0F1F] pt-20 px-5 sm:px-10 lg:px-16 rounded-bl-[40px] sm:rounded-bl-[60px] md:rounded-bl-[80px] lg:rounded-bl-[100px]">
+        <div className="max-w-[1440px] mx-auto flex flex-col items-center lg:items-start">
+          <div className="text-center lg:text-left ">
+            <h2 className="font-roboto text-[#F2F0E0] text-[34px] sm:text-[40px] md:text-[45px] lg:text-[50px] leading-[100%] tracking-[0.02em] font-normal max-w-[700px] font-robotoR text-[#F2F0E0] ">
+              Generate the{" "}
+              <span className="font-extrabold  font-robotoB ]">
+                Credit History
+              </span>{" "}
+              of customers
+            </h2>
           </div>
-          <button className="get-started-btn font-InriaR">Get Started</button>
-        </div>
-        <div className="hero-content">
-          <div className="content-left">
-            {/* <p className="he-des">Empowering India's small businesses to build trust, improve credit scores, and manage udhar smartly.</p>
-            <div className="mobile-container">
-              <div className="input-wrapper">
-                <select className="country-code">
-                  <option value="+91">+91</option>
-                </select>
-                <input
-                  type="tel"
-                  className="mobile-input"
-                  placeholder="Enter mobile number"
-                />
+
+          <div className="flex flex-col lg:flex-row justify-between items-start align-top  w-full gap-10">
+            <div className="flex flex-col items-start gap-3  ">
+              <div>
+                <p className="font-roboto text-[#C1C0B7] font-robotoR text-[16px] md:text-[18px] leading-[115%] max-w-[515px] leading-normal mt-4">
+                  Empowering India's small businesses to build trust, improve
+                  credit scores, and manage udhar smartly.
+                </p>
               </div>
-              <button className="get-started-btn">Get Started</button>
-            </div> */}
-          </div>
-          <div className="content-center">
-            <img src={womanImage} alt="" />
-          </div>
-          <div className="content-right">
-            <div className="trust-container">
-              <h3 className="trust-title">Trust Badges:</h3>
-              <p className="trust-subtitle">
-                Trusted by 1000+ merchants | Backed by leading fintech advisors
-                | Safe, secure, & verified platform
-              </p>
-
-              <div className="trust-section">
-                <div className="connect-image">
-                  <img src={connectImg} alt="connection path" />
+              <div className="flex gap-3 w-full pt-3">
+                <div className="flex items-center rounded-md overflow-hidden bg-white border border-gray-300 rounded-l-full">
+                  <select className="p-2 text-black text-sm bg-white outline-none cursor-pointer border-r px-2">
+                    <option value="+91">+91</option>
+                  </select>
+                  <input
+                    type="tel"
+                    placeholder="Enter mobile number"
+                    className="flex-1 border-0 outline-none p-2 text-black text-sm bg-transparent"
+                  />
                 </div>
+                <button className="px-5 py-2 navbar-login rounded-full font-InriaR font-bold text-[16px]  text-white  hover:opacity-90 transition shadow-[inset_0px_3px_2.6px_rgba(0,0,0,0.09),inset_0px_-1px_3.6px_#ffffff]">
+                  Get Started
+                </button>
+              </div>
+            </div>
 
-                <div className="steps-labels">
-                  <div className="step-label">Easy Invoicing & Billing</div>
-                  <div className="step-label">Digital Credit Score</div>
-                  <div className="step-label">Automated Reminders</div>
-                </div>
+            <div className=" flex justify-center lg:justify-start">
+              <img
+                src={womanImage}
+                alt="woman"
+                className="h-[100%] w-fit overflow-hidden object-contain"
+              />
+            </div>
 
-                <div className="community">
-                  <div className="users">
-                    <img src={community} alt="" />
+            <div className=" max-w-[400px]  py-10">
+              <div className="">
+                <h3 className="font-roboto font-bold text-[22px] sm:text-[26px]  text-white mb-2">
+                  Trust Badges:
+                </h3>
+                <p className="font-roboto text-[#FFFFFFC9] text-sm  mb-4">
+                  Trusted by 1000+ merchants | Backed by leading fintech
+                  advisors | Safe, secure, & verified platform
+                </p>
+
+                <div className="relative">
+                  <div className="relative w-[18vh]">
+                    <img
+                      src={connectImg}
+                      alt="connection path"
+                      className="w-full h-auto"
+                    />
                   </div>
-                  <p className="community-text">Community</p>
+                  <div className="absolute top-0 left-[40px] sm:left-[45px] lg:left-[70px] flex flex-col gap-5 ">
+                    <div className="text-[#FFFFFFC9] text-[14px] sm:text-[14px] lg:text-[16px]">
+                      Easy Invoicing & Billing
+                    </div>
+                    <div className="text-[#FFFFFFC9] text-[14px] sm:text-[14px] lg:text-[16px]">
+                      Digital Credit Score
+                    </div>
+                    <div className="text-[#FFFFFFC9] text-[14px] sm:text-[14px] lg:text-[16px]">
+                      Automated Reminders
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-row justify-center items-center gap-3 mt-6">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={community}
+                      alt="users"
+                      className="w-full max-w-[188px] h-auto"
+                    />
+                  </div>
+                  <p className="font-roboto text-white text-[16px] sm:text-[18px]">
+                    Community
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </section>
+
       {/* hero section End */}
 
       {/* About section Start */}
 
-      <section className="secure-section">
-        <div className="secure-h">
-          <h2 className="secure-title">
-            Secure
-            <img src={hicon} alt="" />
-            your <span className="highlight">Debts</span> Smartly
-          </h2>
-        </div>
-        <p className="secure-subtext">
-          Manage credit, track payments, send reminders, and grow your business
-          effortlessly with SMARTUDHAR's intelligent accounting tools designed
-          for smarter, faster, and more reliable repayment management.
-        </p>
+<section className="py-[70px] px-[30px] bg-[#f6f6f6] text-center">
+  <div className="inline-block">
+    <h2 className="flex items-center justify-center text-[50px] leading-[90px] font-robotoM text-black mb-5 gap-[10px]">
+      Secure
+      <img src={hicon} alt="" className="mx-3 w-[100px] h-auto" />
+      your <span className="text-[#2563EB] font-robotoR">Debts</span> Smartly
+    </h2>
+  </div>
 
-        <div className="tabs">
-          <button
-            className={`tab-btn ${activeTab === "why" ? "active" : ""}`}
-            onClick={() => setActiveTab("why")}
-          >
+  <p className="max-w-[950px] mx-auto mb-[30px] font-robotoR text-[18px] leading-[130%] text-[#595959] px-2">
+    Manage credit, track payments, send reminders, and grow your business
+    effortlessly with SMARTUDHAR's intelligent accounting tools designed for
+    smarter, faster, and more reliable repayment management.
+  </p>
+
+  {/* Tabs */}
+  <div className="flex justify-center flex-wrap gap-5 mb-[30px] font-robotoM">
+    <button
+      className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-[18px] text-center cursor-pointer ${
+        activeTab === "why"
+          ? "bg-[#2563EB] text-white shadow-[0_0_18px_2px_#49B4F654] font-robotoM"
+          : "bg-white text-black font-robotoR"
+      }`}
+      onClick={() => setActiveTab("why")}
+    >
+      Why We Built Smart Udhar?
+    </button>
+    <button
+      className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-[18px] text-center cursor-pointer ${
+        activeTab === "how"
+          ? "bg-[#2563EB] text-white shadow-[0_0_18px_2px_#49B4F654] font-robotoM"
+          : "bg-white text-black font-robotoR"
+      }`}
+      onClick={() => setActiveTab("how")}
+    >
+      How Smart Udhar Works
+    </button>
+    <button
+      className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-[18px] text-center cursor-pointer ${
+        activeTab === "who"
+          ? "bg-[#2563EB] text-white shadow-[0_0_18px_2px_#49B4F654] font-robotoM"
+          : "bg-white text-black font-robotoR"
+      }`}
+      onClick={() => setActiveTab("who")}
+    >
+      Who It's For
+    </button>
+  </div>
+
+  {/* Tab Content */}
+  <div className="flex flex-wrap gap-5 justify-center items-start">
+    {activeTab === "why" && (
+      <>
+        <div className="max-w-[556px] bg-white p-[30px] rounded-[20px] text-left shadow-[0_0_18px_2px_#49B4F654]">
+          <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-[15px] leading-[120%]">
             Why We Built Smart Udhar?
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "how" ? "active" : ""}`}
-            onClick={() => setActiveTab("how")}
-          >
+          </h3>
+          <p className="font-robotoR text-[18px] text-[#484848] mb-[30px] leading-[135%]">
+            Small businesses across India run on trust — but there’s no system
+            to prove that trust. Thousands repay on time, but still struggle to
+            get credit, discounts, or partnerships.
+          </p>
+          <h4 className="font-robotoM text-[27px] text-[#2D2D2D] mb-[15px] leading-[120%]">
+            Smart Udhar is India's first platform to:
+          </h4>
+          <ul className="list-none">
+            <li className="flex items-center font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+              <img
+                src={icon1}
+                alt="icon1"
+                className="w-6 h-6 mr-5"
+              />
+              Track real udhar (credit) transactions.
+            </li>
+            <li className="flex items-center font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+              <img
+                src={icon2}
+                alt="icon2"
+                className="w-6 h-6 mr-5"
+              />
+              Build a verifiable digital credit score
+            </li>
+            <li className="flex items-center font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+              <img
+                src={icon3}
+                alt="icon3"
+                className="w-6 h-6 mr-5"
+              />
+              Help small businesses grow with credibility
+            </li>
+          </ul>
+        </div>
+        <div className="max-w-[556px]">
+          <img
+            src={whyImage}
+            alt="Why Smart Udhar"
+            className="w-full rounded-[20px]"
+          />
+        </div>
+      </>
+    )}
+
+    {activeTab === "how" && (
+      <>
+        <div className="max-w-[556px] bg-white p-[30px] rounded-[20px] text-left shadow-[0_0_18px_2px_#49B4F654]">
+          <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-[15px]">
             How Smart Udhar Works
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "who" ? "active" : ""}`}
-            onClick={() => setActiveTab("who")}
-          >
-            Who It's For
-          </button>
+          </h3>
+          <p className="font-robotoR text-[18px] text-[#484848] mb-[30px]">
+            Smart Udhar enables you to record every credit (udhar) transaction
+            digitally. Whether you're giving credit or receiving it, every entry
+            gets timestamped and securely stored.
+          </p>
+          <h4 className="font-robotoM text-[27px] text-[#2D2D2D] mb-[15px]">
+            What happens next?
+          </h4>
+          <ul className="list-none">
+            <li className="font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+              ⚙️ Your customers are reminded about repayment dates.
+            </li>
+            <li className="font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+              ⚙️ You build a digital repayment history.
+            </li>
+            <li className="font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+              ⚙️ A credit score is automatically generated.
+            </li>
+          </ul>
         </div>
-
-        <div className="tab-content">
-          {activeTab === "why" && (
-            <>
-              <div className="content-box">
-                <h3>Why We Built Smart Udhar?</h3>
-                <p>
-                  Small businesses across India run on trust — but there’s no
-                  system to prove that trust. Thousands repay on time, but still
-                  struggle to get credit, discounts, or partnerships.
-                </p>
-                <h4>Smart Udhar is India's first platform to:</h4>
-                <ul>
-                  <li style={{ display: "flex", alignItems: "center" }}>
-                    <img
-                      src={icon1}
-                      alt="icon1"
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        marginRight: "20px",
-                      }}
-                    />
-                    Track real udhar (credit) transactions.
-                  </li>
-
-                  <li style={{ display: "flex", alignItems: "center" }}>
-                    <img
-                      src={icon2}
-                      alt="icon2"
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        marginRight: "20px",
-                      }}
-                    />
-                    Build a verifiable digital credit score
-                  </li>
-
-                  <li style={{ display: "flex", alignItems: "center" }}>
-                    <img
-                      src={icon3}
-                      alt="icon3"
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        marginRight: "20px",
-                      }}
-                    />
-                    Help small businesses grow with credibility
-                  </li>
-                </ul>
-              </div>
-              <div className="image-box">
-                <img src={whyImage} alt="Why Smart Udhar" />
-              </div>
-            </>
-          )}
-
-          {activeTab === "how" && (
-            <>
-              <div className="content-box">
-                <h3>How Smart Udhar Works</h3>
-                <p>
-                  Smart Udhar enables you to record every credit (udhar)
-                  transaction digitally. Whether you're giving credit or
-                  receiving it, every entry gets timestamped and securely
-                  stored.
-                </p>
-                <h4>What happens next?</h4>
-                <ul>
-                  <li>⚙️ Your customers are reminded about repayment dates.</li>
-                  <li>⚙️ You build a digital repayment history.</li>
-                  <li>⚙️ A credit score is automatically generated.</li>
-                </ul>
-              </div>
-              <div className="image-box">
-                <img src={howImage} alt="How Smart Udhar Works" />
-              </div>
-            </>
-          )}
-
-          {activeTab === "who" && (
-            <>
-              <div className="content-box">
-                <h3>Who It’s For</h3>
-                <p>
-                  Smart Udhar is built for India’s small and medium businesses
-                  that want to grow but face barriers due to lack of credit
-                  history or informal systems.
-                </p>
-                <h4>Perfect for:</h4>
-                <ul>
-                  <li>👨‍🍳 Kirana Stores, Retail Shops</li>
-                  <li>👷‍♂️ Local Service Providers & Distributors</li>
-                  <li>👩‍💼 Wholesalers & Small Manufacturers</li>
-                  <li>📱 Digital Lenders & Fintech Companies</li>
-                </ul>
-              </div>
-              <div className="image-box">
-                <img src={whoImage} alt="Who Smart Udhar Is For" />
-              </div>
-            </>
-          )}
+        <div className="max-w-[556px]">
+          <img
+            src={howImage}
+            alt="How Smart Udhar Works"
+            className="w-full rounded-[20px]"
+          />
         </div>
-      </section>
+      </>
+    )}
+
+    {activeTab === "who" && (
+      <>
+        <div className="max-w-[556px] bg-white p-[30px] rounded-[20px] text-left shadow-[0_0_18px_2px_#49B4F654]">
+          <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-[15px]">
+            Who It’s For
+          </h3>
+          <p className="font-robotoR text-[18px] text-[#484848] mb-[30px]">
+            Smart Udhar is built for India’s small and medium businesses that
+            want to grow but face barriers due to lack of credit history or
+            informal systems.
+          </p>
+          <h4 className="font-robotoM text-[27px] text-[#2D2D2D] mb-[15px]">
+            Perfect for:
+          </h4>
+          <ul className="list-none">
+            <li className="font-robotoR text-[18px] text-[#484848] mb-[10px]">
+              👨‍🍳 Kirana Stores, Retail Shops
+            </li>
+            <li className="font-robotoR text-[18px] text-[#484848] mb-[10px]">
+              👷‍♂️ Local Service Providers & Distributors
+            </li>
+            <li className="font-robotoR text-[18px] text-[#484848] mb-[10px]">
+              👩‍💼 Wholesalers & Small Manufacturers
+            </li>
+            <li className="font-robotoR text-[18px] text-[#484848] mb-[10px]">
+              📱 Digital Lenders & Fintech Companies
+            </li>
+          </ul>
+        </div>
+        <div className="max-w-[556px]">
+          <img
+            src={whoImage}
+            alt="Who Smart Udhar Is For"
+            className="w-full rounded-[20px]"
+          />
+        </div>
+      </>
+    )}
+  </div>
+</section>
+
       {/* About section end */}
 
       {/* Why Smart Udhar start */}
