@@ -2,6 +2,7 @@ import React from "react";
 import { BadgeCheck, XCircle, User } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { useProfile } from "../../controller/Profile/profileCTR";
+import { FaPencilAlt } from "react-icons/fa";
 
 export default function ProfileCard() {
   const {
@@ -80,8 +81,8 @@ export default function ProfileCard() {
                 />
 
                 {/* Plus icon overlay */}
-                <div className="absolute bottom-6 right-6 bg-blue-600 bg-opacity-85 text-white rounded-full p-2 shadow-md w-2 h-2 flex justify-center items-center">
-                  <span className="text-xs font-bold">+</span>
+                <div className="absolute bottom-0 right-0 bg-blue-600 bg-opacity-85 text-white rounded-full p-2 shadow-md w-6 h-6 flex justify-center items-center">
+                  <span className="text-xs font-bold m-2"><FaPencilAlt className="text-xs" /></span>
                 </div>
               </div>
             )}
