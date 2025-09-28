@@ -62,7 +62,7 @@ const Navbar = ({ toggleSidebar }) => {
           <FaBars />
         </button>
 
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/dashboard" className="flex items-center gap-2">
           <img src={smartlogo} alt="logo" className="h-5 md:h-8" />
         </Link>
 

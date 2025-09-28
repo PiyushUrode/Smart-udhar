@@ -626,11 +626,11 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="w-full justify-center flex py-10">
+      {/* <div className="w-full justify-center flex py-10">
         <div className="bg-[#EB2525] px-6 py-4 rounded-full text-white flex gap-5 shadow-md">
           <FaPlus /> Add Button
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

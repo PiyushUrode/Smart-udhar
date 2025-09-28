@@ -18,7 +18,7 @@ import { CiCalendarDate } from "react-icons/ci";
 import { Invoice  } from "../../api/Invoice.js";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
-
+import {ProfileService} from "../../api/profileservice.js"
 // NEW: date picker + date-fns
 import DatePicker from "react-datepicker";
 import { parse, format, isValid } from "date-fns";
@@ -31,6 +31,9 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [searchTriggered, setSearchTriggered] = useState(false);
+  const [storeProfile, setStoreProfile] = useState(null);
+  const [isDownloadMode, setIsDownloadMode] = useState(false);
+
 
   // Payment
   const [showStep3, setShowStep3] = useState(false);
@@ -39,7 +42,7 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [transactionId, setTransactionId] = useState("");
 
-  // NOTE: storing milestone.dueDate as string in `dd/MM/yyyy` format
+  // NOTE: storing milestone.dueDate as string in `dd/MM/yyyy` formatasdjsjd
   const [milestones, setMilestones] = useState([
     { id: Date.now(), name: "Promise1", amount: "", dueDate: format(new Date(), "dd/MM/yyyy"), status: "Pending" },
   ]);
@@ -90,6 +93,9 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
     };
     fetchCustomers();
   }, []);
+
+
+
 
   const filteredCustomers = searchTerm
     ? customers.filter((cust) => {
@@ -501,6 +507,29 @@ const calculateTotal = (row) => {
       alert("Failed to create PDF.");
     }
   };
+
+useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const storeProfile_id = localStorage.getItem("storeProfile_id");
+        if (!storeProfile_id) {
+          console.warn("⚠️ No active business found");
+          return;
+        }
+
+        const res = await ProfileService.getProfile(storeProfile_id);
+        // API structure check
+        console.log("📌 Store Profile fetched:", res);
+
+        setStoreProfile(res?.data || res); // kuch APIs me `data` wrapper hota hai
+      } catch (err) {
+        console.error("❌ Error fetching profile:", err.message);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1068,6 +1097,8 @@ const calculateTotal = (row) => {
       </div>
 
       {/* ---------- Invoice Preview Modal ---------- */}
+
+      {/* ---------- Invoice Preview Modal ---------- */}
 {showPreview && previewInvoice && (
   <div className="fixed inset-0 z-50 flex items-start justify-center p-6 bg-black/40">
     <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
@@ -1094,99 +1125,137 @@ const calculateTotal = (row) => {
       </div>
 
       {/* body: the printable invoice area */}
-      <div ref={previewRef} className="p-6 bg-white text-black">
-        {/* ---- Top: company + customer ---- */}
-        <div className="flex justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-robotoB">Your Company Name</h2>
-            <div className="text-sm">Address line 1</div>
-            <div className="text-sm">Phone / Email</div>
-          </div>
-          <div className="text-right">
-            <div><strong>Invoice ID:</strong> {previewInvoice._id || previewInvoice.id}</div>
-            <div><strong>Date:</strong> {new Date(previewInvoice.createdAt || Date.now()).toLocaleDateString()}</div>
-            <div><strong>Status:</strong> {previewInvoice.paymentStatus || invoiceSummary.paymentStatus}</div>
-          </div>
-        </div>
+      <div ref={previewRef} className="p-8 bg-white text-black font-sans">
+  {/* ---- Top: company + invoice details ---- */}
+  <div className="flex justify-between items-start mb-6 border-b pb-4">
+    {/* Company Info */}
+    <div>
+      <h2 className="text-2xl font-robotoB text-gray-800">
+        {storeProfile?.businessName || "Your Company Name"}
+      </h2>
+      <div className="text-sm text-gray-600">{storeProfile?.address || "Address line 1"}</div>
+      <div className="text-sm text-gray-600">
+        {storeProfile?.mobile ? storeProfile.mobile : ""}{" "}
+        {storeProfile?.email ? `/ ${storeProfile.email}` : ""}
+      </div>
+    </div>
 
-        {/* Customer details */}
-        <div className="mb-4 border p-3 rounded">
-          <div className="text-sm"><strong>Customer:</strong> {previewInvoice.name || selectedCustomer?.name}</div>
-          <div className="text-sm"><strong>Mobile:</strong> {previewInvoice.phone || selectedCustomer?.mobile}</div>
-          <div className="text-sm"><strong>Address:</strong> {previewInvoice.address || selectedCustomer?.address}</div>
-        </div>
+    {/* Invoice Info */}
+    <div className="text-sm text-gray-700 text-right space-y-1">
+      <div><strong>Invoice ID:</strong> {previewInvoice._id || previewInvoice.id}</div>
+      <div><strong>Date:</strong> {new Date(previewInvoice.createdAt || Date.now()).toLocaleDateString()}</div>
+      <div>
+        <strong>Status:</strong>{" "}
+        <span
+          className={`px-2 py-1 rounded text-xs ${
+            (previewInvoice.paymentStatus || invoiceSummary.paymentStatus) === "Paid"
+              ? "bg-green-100 text-green-800"
+              : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
+          {previewInvoice.paymentStatus || invoiceSummary.paymentStatus}
+        </span>
+      </div>
+    </div>
+  </div>
 
-        {/* Products table */}
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">#</th>
-              <th className="text-left py-2">Product</th>
-              <th className="text-right py-2">Qty</th>
-              <th className="text-right py-2">Unit Price</th>
-              <th className="text-right py-2">Tax</th>
-              <th className="text-right py-2">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(previewInvoice.products || []).map((p, i) => (
-              <tr key={i} className="border-b">
-                <td className="py-2">{i + 1}</td>
-                <td className="py-2">{p.name}</td>
-                <td className="py-2 text-right">{p.qty}</td>
-                <td className="py-2 text-right">₹{Number(p.price).toFixed(2)}</td>
-                <td className="py-2 text-right">{p.tax}%</td>
-                <td className="py-2 text-right">₹{Number(p.total || (p.qty * p.price + ((p.qty * p.price * p.tax) / 100))).toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  {/* Customer details */}
+  <div className="mb-6 p-4 border rounded bg-gray-50">
+    <h3 className="font-semibold mb-2 text-gray-700">Bill To:</h3>
+    <div className="text-sm text-gray-700"><strong>Name:</strong> {previewInvoice.name || selectedCustomer?.name}</div>
+    <div className="text-sm text-gray-700"><strong>Mobile:</strong> {previewInvoice.phone || selectedCustomer?.mobile}</div>
+    <div className="text-sm text-gray-700"><strong>Address:</strong> {previewInvoice.address || selectedCustomer?.address}</div>
+  </div>
 
-        {/* totals */}
-        <div className="mt-4 flex justify-end">
-          <div className="w-full max-w-xs">
-            <div className="flex justify-between"><span>Subtotal:</span><span>₹{Number(previewInvoice.subtotal || invoiceSummary.subtotal).toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Tax:</span><span>₹{Number(previewInvoice.tax || invoiceSummary.totalTax).toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Delivery:</span><span>₹{Number(previewInvoice.deliveryFee || invoiceSummary.deliveryFee).toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Discount:</span><span>-₹{Number(previewInvoice.discount || invoiceSummary.discount).toFixed(2)}</span></div>
-            <div className="flex justify-between font-robotoB text-lg border-t pt-1 mt-1"><span>Total:</span><span>₹{Number(previewInvoice.total || invoiceSummary.total).toFixed(2)}</span></div>
-            <div className="flex justify-between mt-2"><span>Paid:</span><span>₹{Number(previewInvoice.totalReceived || invoiceSummary.totalReceived).toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Due:</span><span>₹{Number(previewInvoice.dueBalance || invoiceSummary.dueBalance).toFixed(2)}</span></div>
-          </div>
-        </div>
+  {/* Products table */}
+  <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
+    <thead className="bg-gray-100">
+      <tr>
+        <th className="text-left py-2 px-2 border-b">#</th>
+        <th className="text-left py-2 px-2 border-b">Product</th>
+        <th className="text-right py-2 px-2 border-b">Qty</th>
+        <th className="text-right py-2 px-2 border-b">Unit Price</th>
+        <th className="text-right py-2 px-2 border-b">Tax</th>
+        <th className="text-right py-2 px-2 border-b">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {(previewInvoice.products || []).map((p, i) => (
+        <tr key={i} className="border-b">
+          <td className="py-2 px-2">{i + 1}</td>
+          <td className="py-2 px-2">{p.name}</td>
+          <td className="py-2 px-2 text-right">{p.qty}</td>
+          <td className="py-2 px-2 text-right">₹{Number(p.price).toFixed(2)}</td>
+          <td className="py-2 px-2 text-right">{p.tax}%</td>
+          <td className="py-2 px-2 text-right">
+            ₹{Number(p.total || (p.qty * p.price + ((p.qty * p.price * p.tax) / 100))).toFixed(2)}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
 
-        {/* notes & payment details */}
-        <div className="mt-4">
-          <div><strong>Payment Mode:</strong> {previewInvoice.paymentMode || paymentMode}</div>
-          <div><strong>Payment Method / Txn:</strong> {previewInvoice.paymentMethod || paymentMethod} {previewInvoice.transactionId ? ` / ${previewInvoice.transactionId}` : ""}</div>
-          {previewInvoice.milestones && previewInvoice.milestones.length > 0 && (
-            <div className="mt-2">
-              <strong>Milestones:</strong>
-              <ul className="list-disc ml-5">
-                {previewInvoice.milestones.map((m, idx) => (
-                  <li key={idx}>{m.milestoneName} — ₹{Number(m.amount || 0).toFixed(2)} {m.dueDate ? ` (Due: ${new Date(m.dueDate).toLocaleDateString()})` : ""} — {m.status}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {previewInvoice.note && <div className="mt-3"><strong>Note:</strong><div>{previewInvoice.note}</div></div>}
-        </div>
-        <div className="flex justify-end gap-3 mt-4">
-  <button
-    onClick={() => setShowPreview(false)}
-    className="px-4 py-2 border rounded"
-  >
-    Cancel
-  </button>
-  <button
-    onClick={handleSubmit}
-    className="px-4 py-2 bg-blue-600 text-white rounded"
-  >
-    Submit Invoice
-  </button>
+  {/* totals */}
+  <div className="mt-6 flex justify-end">
+    <div className="w-full max-w-sm bg-gray-50 p-4 rounded border">
+      <div className="flex justify-between py-1"><span>Subtotal:</span><span>₹{Number(previewInvoice.subtotal || invoiceSummary.subtotal).toFixed(2)}</span></div>
+      <div className="flex justify-between py-1"><span>Tax:</span><span>₹{Number(previewInvoice.tax || invoiceSummary.totalTax).toFixed(2)}</span></div>
+      <div className="flex justify-between py-1"><span>Delivery:</span><span>₹{Number(previewInvoice.deliveryFee || invoiceSummary.deliveryFee).toFixed(2)}</span></div>
+      <div className="flex justify-between py-1"><span>Discount:</span><span>-₹{Number(previewInvoice.discount || invoiceSummary.discount).toFixed(2)}</span></div>
+      <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2"><span>Total:</span><span>₹{Number(previewInvoice.total || invoiceSummary.total).toFixed(2)}</span></div>
+      <div className="flex justify-between mt-2"><span>Paid:</span><span>₹{Number(previewInvoice.totalReceived || invoiceSummary.totalReceived).toFixed(2)}</span></div>
+      <div className="flex justify-between"><span>Due:</span><span>₹{Number(previewInvoice.dueBalance || invoiceSummary.dueBalance).toFixed(2)}</span></div>
+    </div>
+  </div>
+
+  {/* notes & payment details */}
+  <div className="mt-6 text-sm">
+    <div><strong>Payment Mode:</strong> {previewInvoice.paymentMode || paymentMode}</div>
+    <div><strong>Payment Method / Txn:</strong> {previewInvoice.paymentMethod || paymentMethod} {previewInvoice.transactionId ? ` / ${previewInvoice.transactionId}` : ""}</div>
+    {previewInvoice.milestones && previewInvoice.milestones.length > 0 && (
+      <div className="mt-3">
+        <strong>Milestones:</strong>
+        <ul className="list-disc ml-6">
+          {previewInvoice.milestones.map((m, idx) => (
+            <li key={idx} className="mt-1">
+              {m.milestoneName} — ₹{Number(m.amount || 0).toFixed(2)} {m.dueDate ? `(Due: ${new Date(m.dueDate).toLocaleDateString()})` : ""} — {m.status}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+    {previewInvoice.note && (
+      <div className="mt-4">
+        <strong>Note:</strong>
+        <p className="mt-1 text-gray-700">{previewInvoice.note}</p>
+      </div>
+    )}
+  </div>
+
+
+
+
+</div>
+<div className="flex justify-end gap-3 my-6">
+  {!isDownloadMode && (
+    <>
+      <button
+        onClick={() => setShowPreview(false)}
+        className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSubmit}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Submit Invoice
+      </button>
+    </>
+  )}
 </div>
 
-      </div>
+
     </div>
   </div>
 )}
