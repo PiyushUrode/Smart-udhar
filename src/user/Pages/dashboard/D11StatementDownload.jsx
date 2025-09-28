@@ -12,75 +12,65 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { FaQuestion } from "react-icons/fa";
-import { Invoice } from "../../api/Invoice.js";
-import ReportService from "../../api/statementdownload.js";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
+import StatementDownload from "../../api/statementdownload";
 
 const reports = [
   {
-    title: "Sales Report",
-desc: "Daily, weekly, or monthly summaries of total sales performance and revenue tracking.",
-    formats: ["PDF", "Excel"],
-    color: "green",
-    icon: <BookOpenCheck className="text-green-600" />,
-    hasFilter: true,
-  },
-  {
-    title: "Credit Report",
-desc: "Complete list of all customers with outstanding payments and credit details.",
-    formats: ["PDF", "Excel"],
-    color: "blue",
-    icon: <Users className="text-blue-600" />,
-    hasFilter: true,
-  },
-  {
     title: "Product Report",
-desc: "Track all Product you’ve made or received with detailed transaction history.",
+    desc: "Track all products you’ve made or received.",
     formats: ["PDF", "Excel"],
     color: "red",
     icon: <Wallet className="text-red-600" />,
     hasFilter: true,
   },
   {
-    title: "Expense Report",
-desc: "Categorized list of business expenses with GST and Non-GST classifications.",
+    title: "Customer Report",
+    desc: "Complete list of all customers with outstanding credit details.",
     formats: ["PDF", "Excel"],
-    color: "purple",
-    icon: <Receipt className="text-purple-600" />,
+    color: "indigo",
+    icon: <Users className="text-indigo-600" />,
     hasFilter: true,
   },
   {
-    title: "Payment Collection Amount",
-desc: "Categorized list of business expenses with GST and Non-GST classifications.",
+    title: "Staff Report",
+    desc: "Today, weekly, or monthly summaries of total staff performance and payroll tracking.",
     formats: ["PDF", "Excel"],
-    color: "yellow",
-    icon: <Clock className="text-yellow-600" />,
+    color: "green",
+    icon: <BookOpenCheck className="text-green-600" />,
+    hasFilter: true,
   },
   {
-    title: "Custom Date Range",
-desc: "Download reports for any specific time period with flexible date filtering.",
-    formats: ["Set"],
-    color: "indigo",
-    icon: <CalendarClock className="text-indigo-600" />,
+    title: "Invoice Report",
+    desc: "Complete list of all invoices with payment status and due dates.",
+    formats: ["PDF", "Excel"],
+    color: "blue",
+    icon: <Receipt className="text-blue-600" />,
+    hasFilter: true,
   },
+  {
+    title: "Expense Report",
+    desc: "Categorized list of business expenses with GST and Non-GST classifications.",
+    formats: ["PDF", "Excel"],
+    color: "purple",
+    icon: <Clock className="text-purple-600" />,
+    hasFilter: true,
+  },
+  // {
+  //   title: "Payment Collection Amount",
+  //   desc: "Overview of all payments collected with due balances and promised dates.",
+  //   formats: ["PDF", "Excel"],
+  //   color: "yellow",
+  //   icon: <CalendarClock className="text-yellow-600" />,
+  //   hasFilter: true,
+  // },
 ];
-
-const reportApiMap = {
-  "Sales Report": "store-sales",
-  "Credit Report": "store-credit",
-  "Product Report": "store-product",
-  "Expense Report": "store-expense",
-  "Custom Date Range": "store-custom",
-  "Payment Collection Amount": "store-invoice",
-};
 
 const formatIcons = {
   PDF: <FileText className="w-4 h-4 mr-1" />,
   Excel: <FileSpreadsheet className="w-4 h-4 mr-1" />,
   Set: <Download className="w-4 h-4 mr-1" />,
 };
+
 const colorClassMap = {
   green: "bg-green-600 text-white",
   blue: "bg-blue-600 text-white",
@@ -89,78 +79,111 @@ const colorClassMap = {
   yellow: "bg-yellow-500 text-white",
   indigo: "bg-indigo-600 text-white",
 };
-const filterOptions = ["Daily", "Weekly", "Monthly"];
 
-const D11StatementDownload = () => {
+const filterOptions = ["Today", "Weekly", "Monthly", "Custom"];
+
+const D11StatementDownloadUI = () => {
   const [activeFilter, setActiveFilter] = useState(null);
   const [selectedFilters, setSelectedFilters] = useState({});
-  const [dateRange] = useState({
-    startDate: "2025-01-01",
-    endDate: new Date().toISOString().split("T")[0],
-  });
+  const [customDates, setCustomDates] = useState({ start: "", end: "" });
 
   const toggleFilter = (index) =>
     setActiveFilter(activeFilter === index ? null : index);
+
   const selectFilter = (reportTitle, option) => {
     setSelectedFilters((prev) => ({ ...prev, [reportTitle]: option }));
     setActiveFilter(null);
   };
 
-  const exportPDF = (data, fileName) => {
-    const doc = new jsPDF();
-    doc.text(fileName, 14, 10);
-    if (data.length === 0) doc.text("No data available", 14, 20);
-    else
-      autoTable(doc, {
-        head: [Object.keys(data[0])],
-        body: data.map((row) => Object.values(row)),
-      });
-    doc.save(`${fileName}.pdf`);
-  };
+  const getDateRange = (filter) => {
+    const today = new Date();
+    let startDate, endDate;
 
-  const exportExcel = (data, fileName) => {
-    if (data.length === 0) return;
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-    XLSX.writeFile(workbook, `${fileName}.xlsx`);
-  };
-
-const handleDownload = async (report, format) => {
-    const apiName = reportApiMap[report.title];
-    const filter = selectedFilters[report.title] || null;
-
-    // ✅ Special cases for client-side downloads
-    if (report.title === "Payment Collection Amount") {
-      const data = await Invoice.getAllInvoices();
-      const exportData = data.invoices.map((inv) => ({
-        Name: inv.name || "-",
-        Phone: inv.phone || "-",
-        Amount: inv.dueBalance ?? inv.balance ?? 0,
-        DueDate: inv.milestones?.[0]?.dueDate ? new Date(inv.milestones[0].dueDate).toLocaleDateString("en-IN") : "-",
-        Promise: inv.milestones?.[0]?.amount || "-",
-        Status: inv.paymentStatus || "Pending",
-      }));
-      format === "PDF" ? exportPDF(exportData, "PaymentCollectionList") : exportExcel(exportData, "PaymentCollectionList");
-      return;
+    if (filter === "Today") {
+      startDate = endDate = today.toISOString().split("T")[0];
+    } else if (filter === "Weekly") {
+      const firstDay = new Date(
+        today.setDate(today.getDate() - today.getDay())
+      );
+      const lastDay = new Date(today.setDate(firstDay.getDate() + 6));
+      startDate = firstDay.toISOString().split("T")[0];
+      endDate = lastDay.toISOString().split("T")[0];
+    } else if (filter === "Monthly") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      startDate = firstDay.toISOString().split("T")[0];
+      endDate = lastDay.toISOString().split("T")[0];
+    } else if (filter === "Custom") {
+      startDate = customDates.start;
+      endDate = customDates.end;
+    } else {
+      startDate = endDate = "";
     }
 
-    if (report.title === "Credit Report") {
-      format === "PDF" ? await ReportService.exportCustomersToPDF() : await ReportService.exportCustomersToExcel();
-      return;
-    }
-
-    if (report.title === "Product Report") {
-      format === "PDF" ? await ReportService.exportProductsPDF() : await ReportService.exportProductsExcel();
-      return;
-    }
-
-    // Generic server-side export
-    await ReportService.exportReport(apiName, format.toLowerCase(), dateRange.startDate, dateRange.endDate, filter);
+    return { startDate, endDate };
   };
-  
+
+  // ✅ Common download handler
+  const downloadReport = async (reportTitle, format, filter) => {
+    const { startDate, endDate } = getDateRange(filter);
+
+    try {
+      switch (reportTitle) {
+        case "Product Report":
+          if (format === "PDF") {
+            await StatementDownload.exportPDF({ startDate, endDate });
+          } else if (format === "Excel") {
+            await StatementDownload.exportExcel({ startDate, endDate });
+          } else {
+            alert("❌ Unsupported format");
+          }
+          break;
+        case "Customer Report":
+          if (format === "PDF") {
+            await StatementDownload.exportCustomerPDF({ startDate, endDate });
+          } else if (format === "Excel") {
+            await StatementDownload.exportCustomerExcel({ startDate, endDate });
+          } else {
+            alert("❌ Unsupported format");
+          }
+          break;
+        case "Staff Report":
+          if (format === "PDF")
+            await StatementDownload.exportStaffPDF({ startDate, endDate });
+          else if (format === "Excel")
+            await StatementDownload.exportStaffExcel({ startDate, endDate });
+          else alert("❌ Unsupported format");
+          break;
+
+        case "Invoice Report":
+          if (format === "PDF")
+            await StatementDownload.exportInvoicePDF({ startDate, endDate });
+          else if (format === "Excel")
+            await StatementDownload.exportInvoiceExcel({ startDate, endDate });
+          else alert("❌ Unsupported format");
+          break;
+
+        case "Expense Report":
+          if (format === "PDF")
+            await StatementDownload.exportExpensePDF({ startDate, endDate });
+          else if (format === "Excel")
+            await StatementDownload.exportExpenseExcel({ startDate, endDate });
+          else alert("❌ Unsupported format");
+          break;
+
+        // Add cases for other reports as needed
+        default:
+          alert(`🚧 ${reportTitle} not implemented yet.`);
+      }
+    } catch (err) {
+      console.error("❌ Error generating report", err);
+      alert("Failed to generate report.");
+    }
+  };
+
   return (
-    <div className="py-5 px-5 md:px-0 sm:py-7 lg:py-14 max-w-6xl mx-auto space-y-10">
+    <div className="py-5 px-5 md:px-4 sm:py-7 lg:py-14 max-w-6xl mx-auto space-y-10">
+      {/* Header Section */}
       <div className="bg-[#2563EB] border py-10 border-blue-300 rounded-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-10">
         <div>
           <h2 className="text-lg md:text-xl font-semibold text-white">
@@ -176,6 +199,7 @@ const handleDownload = async (report, format) => {
         </div>
       </div>
 
+      {/* Reports List */}
       <div>
         <h3 className="text-lg font-semibold mb-4">Available Reports</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -184,6 +208,7 @@ const handleDownload = async (report, format) => {
               key={index}
               className="relative bg-white shadow rounded-lg p-4 border border-gray-100 hover:shadow-md transition"
             >
+              {/* Report Header */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-full bg-gray-100">
@@ -193,6 +218,7 @@ const handleDownload = async (report, format) => {
                     {report.title}
                   </h4>
                 </div>
+
                 {report.hasFilter && (
                   <div className="relative">
                     <button
@@ -203,12 +229,12 @@ const handleDownload = async (report, format) => {
                       <ChevronDown className="w-4 h-4 ml-1" />
                     </button>
                     {activeFilter === index && (
-                      <div className="absolute top-5 right-0 z-10 bg-white border border-gray-200 rounded shadow-lg w-32">
+                      <div className="absolute top-5 right-0 z-10 bg-white border border-gray-200 rounded shadow-lg w-40 p-2 space-y-1">
                         {filterOptions.map((option) => (
                           <button
                             key={option}
                             onClick={() => selectFilter(report.title, option)}
-                            className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                            className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
                           >
                             {option}
                           </button>
@@ -218,19 +244,63 @@ const handleDownload = async (report, format) => {
                   </div>
                 )}
               </div>
+
+              {/* Report Description */}
               <p className="text-sm text-gray-600 mb-4">{report.desc}</p>
 
+              {/* Custom Date Range Picker */}
+              {selectedFilters[report.title] === "Custom" && (
+                <div className="mb-4 space-y-2">
+                  <label className="block text-xs text-gray-500">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={customDates.start}
+                    onChange={(e) =>
+                      setCustomDates((prev) => ({
+                        ...prev,
+                        start: e.target.value,
+                      }))
+                    }
+                    className="w-full border rounded px-2 py-1 text-sm bg-white"
+                  />
+                  <label className="block text-xs text-gray-500">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={customDates.end}
+                    onChange={(e) =>
+                      setCustomDates((prev) => ({
+                        ...prev,
+                        end: e.target.value,
+                      }))
+                    }
+                    className="w-full border rounded px-2 py-1 text-sm bg-white"
+                  />
+                </div>
+              )}
+
+              {/* Download Buttons */}
+              {/* Download Buttons */}
               <div className="flex flex-wrap gap-2">
                 {report.formats.map((format) => (
-                  <span
+                  <button
                     key={format}
-                    onClick={() => handleDownload(report, format)}
-                    className={`cursor-pointer text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${
-                      colorClassMap[report.color]
-                    }`}
+                    className={`text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 transition-all duration-150 shadow-sm
+        ${colorClassMap[report.color]} 
+        hover:opacity-90 active:scale-95 active:shadow-inner`}
+                    onClick={() =>
+                      downloadReport(
+                        report.title,
+                        format,
+                        selectedFilters[report.title]
+                      )
+                    }
                   >
                     {formatIcons[format]} {format}
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -241,4 +311,4 @@ const handleDownload = async (report, format) => {
   );
 };
 
-export default D11StatementDownload;
+export default D11StatementDownloadUI;
