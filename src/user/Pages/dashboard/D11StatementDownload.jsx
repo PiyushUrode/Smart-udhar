@@ -311,5 +311,5 @@ const D11StatementDownloadUI = () => {
   );
 };
  
-export default D11StatementDownload;
+export default D11StatementDownloadUI;
  
