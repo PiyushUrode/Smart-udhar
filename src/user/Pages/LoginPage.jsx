@@ -146,7 +146,7 @@ const handleKeyDown = (e, index) => {
             </div>
             <div>
               <h2 className="l-head">Welcome Back</h2>
-              <p className="l-para">Please enter your details to sign in</p>
+              <p className="l-para">Please Enter Your Details to Login  </p>
             </div>
 
             {/* Step 1: Phone */}

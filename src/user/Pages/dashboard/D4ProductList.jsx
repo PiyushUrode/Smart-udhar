@@ -486,7 +486,7 @@ const handleImportExcel = async () => {
 
       {/* Export */}
       <div className="flex gap-3 align-middle mt-6 p-5 border rounded-md shadow">
-        <button
+        {/* <button
           onClick={handleExportExcel}
           className="flex items-center gap-2 border px-4 py-2 rounded text-blue-600 hover:bg-gray-100"
         >
@@ -497,7 +497,7 @@ const handleImportExcel = async () => {
           className="flex items-center gap-2 border px-4 py-2 rounded text-blue-600 hover:bg-gray-100"
         >
           <FaFilePdf /> Download PDF
-        </button>
+        </button> */}
 
 
 <div className="flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
