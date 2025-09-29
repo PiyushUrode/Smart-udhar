@@ -4,12 +4,10 @@ import { StaffService } from "../../api/staffDetails.js";
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-
 const D5StaffDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
 
   const [isOpen, setIsOpen] = useState(true);
   const [formData, setFormData] = useState({
@@ -25,17 +23,17 @@ const D5StaffDetails = () => {
   });
   const [staffImage, setStaffImage] = useState(null);
   const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState({});
+
+  const requiredFields = ["firstName", "lastName", "emailId", "roles"];
 
   // 🔹 Fetch staff if editing
   useEffect(() => {
     const fetchStaff = async () => {
-      if (!id) return; // add mode
+      if (!id) return;
 
       try {
         const res = await StaffService.findStaffById(id);
-        console.log("Fetched Staff:", res);
-
-        // ⚠️ adjust if API response is wrapped
         const staff = res?.staff || res?.data || res;
 
         setFormData({
@@ -58,9 +56,9 @@ const D5StaffDetails = () => {
     fetchStaff();
   }, [id]);
 
+  // Input change
   const handleChange = (e) => {
     const { id, value, files } = e.target;
-
     if (files) {
       const file = files[0];
       if (file.size > 2 * 1024 * 1024) {
@@ -72,37 +70,75 @@ const D5StaffDetails = () => {
       setStaffImage(file);
     } else {
       setFormData((prev) => ({ ...prev, [id]: value }));
+      setFormErrors((prev) => ({ ...prev, [id]: "" })); // Clear field error on change
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (loading) return; // Prevent multiple clicks
+  // Validation
+  const validateForm = () => {
+    const errors = {};
 
-  setLoading(true); // Start loading
+    requiredFields.forEach((field) => {
+      if (!formData[field]?.trim()) {
+        errors[field] = `${field.replace(/([A-Z])/g, " $1")} is required`;
+      }
+    });
 
-  try {
-    let res;
-    if (id) {
-      // Edit staff
-      res = await StaffService.updateStaff(id, formData, staffImage);
-      toast.success("✅ Staff updated successfully!");
-    } else {
-      // Add staff
-      res = await StaffService.createStaff(formData, staffImage);
-      toast.success("✅ Staff member added successfully!");
+    // Optional: Email & mobile format check
+    if (formData.emailId && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.emailId)) {
+      errors.emailId = "Enter a valid email";
     }
 
-    console.log("API Response:", res);
-    navigate("/dashboard/staff-role"); // redirect if needed
-  } catch (err) {
-    console.error("❌ Error saving staff:", err);
-    toast.error(err.response?.data?.message || "Failed to save staff");
-  } finally {
-    setLoading(false); // Stop loading
-  }
-};
+    if (formData.mobileNumber && !/^[6-9]\d{9}$/.test(formData.mobileNumber)) {
+      errors.mobileNumber = "Enter a valid 10-digit mobile number";
+    }
 
+    return errors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setLoading(true);
+    setFormErrors({});
+    setError("");
+
+    try {
+      let res;
+      if (id) {
+        res = await StaffService.updateStaff(id, formData, staffImage);
+        toast.success("✅ Staff updated successfully!");
+      } else {
+        res = await StaffService.createStaff(formData, staffImage);
+        toast.success("✅ Staff member added successfully!");
+      }
+      navigate("/dashboard/staff-role");
+    } catch (err) {
+      console.error("❌ Error saving staff:", err);
+      toast.error(err.response?.data?.message || "Failed to save staff");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fields = [
+    { id: "firstName", label: "First Name", placeholder: "Enter first name" },
+    { id: "lastName", label: "Last Name", placeholder: "Enter last name" },
+    { id: "mobileNumber", label: "Mobile Number", placeholder: "Enter mobile number" },
+    { id: "emailId", label: "Email Id", placeholder: "Enter email address" },
+    { id: "address", label: "Address", placeholder: "Enter full address" },
+    { id: "pinNumber", label: "Pin Number", placeholder: "Enter pin code" },
+    { id: "city", label: "City", placeholder: "Enter city" },
+    { id: "state", label: "State", placeholder: "Enter state" },
+    { id: "roles", label: "Roles", placeholder: "Enter staff role" },
+  ];
 
   return (
     <div className="max-w-4xl mx-auto my-5 p-4 sm:p-6 bg-white rounded-lg shadow-xl">
@@ -120,39 +156,32 @@ const handleSubmit = async (e) => {
       {isOpen && (
         <form className="mt-6 p-2 space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              "firstName",
-              "lastName",
-              "mobileNumber",
-              "emailId",
-              "address",
-              "pinNumber",
-              "city",
-              "state",
-              "roles"
-            ].map((field) => (
-              <div key={field}>
-                <label className="block text-sm font-medium text-[#374151] mb-1 capitalize">
-                  {field}
+            {fields.map(({ id, label, placeholder }) => (
+              <div key={id}>
+                <label htmlFor={id} className="block text-sm font-medium mb-1 capitalize">
+                  {label} {requiredFields.includes(id) && "*"}
                 </label>
                 <input
-                  id={field}
+                  id={id}
                   type="text"
-                  placeholder={field}
-                  value={formData[field]}
+                  placeholder={placeholder}
+                  value={formData[id] || ""}
                   onChange={handleChange}
-                  className="p-2 border rounded-md focus:outline-none focus:ring w-full bg-[#F6F8FA]"
+                  className={`p-2 border rounded-md focus:outline-none focus:ring w-full ${
+                    formErrors[id] ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
+                {formErrors[id] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors[id]}</p>
+                )}
               </div>
             ))}
 
-            {/* Upload */}
+            {/* Upload Section */}
             <div className="border border-dashed border-gray-400 p-6 mt-4 flex flex-col items-center text-center rounded-md">
               <FaCloudUploadAlt size={30} color="#9CA3AF" />
               <label htmlFor="upload" className="cursor-pointer">
-                <div className="text-[#4B5563] text-sm">
-                  Drop files here or click to upload
-                </div>
+                <div className="text-[#4B5563] text-sm">Drop files here or click to upload</div>
                 <input
                   id="upload"
                   type="file"
@@ -160,13 +189,11 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                 />
               </label>
-              <p className="mt-2 text-sm font-semibold">
-                {staffImage ? staffImage.name : "Upload Image Here"}
-              </p>
+              <p className="mt-2 text-sm font-semibold">{staffImage ? staffImage.name : ""}</p>
             </div>
           </div>
 
-          {/* Error */}
+          {/* Image error */}
           {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
 
           {/* Submit */}

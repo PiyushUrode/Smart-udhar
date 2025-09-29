@@ -1,13 +1,11 @@
-// src/pages/D6AddCustomer.jsx
 import { FaUpload } from "react-icons/fa6";
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { CustomerService } from "../../api/customerService.js";
-import Button from "../../common/Button.jsx"; // ✅ Import global button
+import Button from "../../common/Button.jsx";
 
 const D6AddCustomer = () => {
   const location = useLocation();
-
   const editingCustomer = location.state?.customer || null;
 
   const [formData, setFormData] = useState({
@@ -30,8 +28,6 @@ const D6AddCustomer = () => {
   const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
-  // Global status modal
   const [status, setStatus] = useState(null);
 
   // Prefill if editing
@@ -77,37 +73,70 @@ const D6AddCustomer = () => {
 
   // Input change
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setErrors({ ...errors, [name]: "" });
   };
 
   // Validation
-  // Validation
-const validate = () => {
-  let newErrors = {};
+  const validate = () => {
+    let newErrors = {};
 
-  // ✅ Required fields only
-  if (!formData.name.trim()) newErrors.name = "Name is required";
+    // Required fields
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
 
-  if (!formData.mobile.match(/^[6-9]\d{9}$/))
-    newErrors.mobile = "Enter a valid 10-digit mobile number";
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!formData.email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+      newErrors.email = "Enter a valid email (e.g., example@domain.com)";
+    }
 
-  if (!formData.email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/))
-    newErrors.email = "Enter a valid email";
+    if (!formData.mobile.trim()) {
+      newErrors.mobile = "Mobile number is required";
+    } else if (!formData.mobile.match(/^[6-9]\d{9}$/)) {
+      newErrors.mobile = "Enter a valid 10-digit mobile number starting with 6-9";
+    }
 
-  // ✅ Optional fields: only validate if filled
-  if (formData.aadharCardNumber && !formData.aadharCardNumber.match(/^\d{12}$/))
-    newErrors.aadharCardNumber = "Enter 12-digit Aadhaar";
+    // Optional fields: validate only if filled
+    if (formData.address && !formData.address.trim()) {
+      newErrors.address = "Address cannot be empty if provided";
+    }
 
-  if (formData.panNumber && !formData.panNumber.match(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/))
-    newErrors.panNumber = "Enter PAN (ABCDE1234F)";
+    if (formData.pin && !formData.pin.match(/^\d{6}$/)) {
+      newErrors.pin = "Enter a valid 6-digit PIN code";
+    }
 
-  if (formData.gstNumber && !formData.gstNumber.match(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/))
-    newErrors.gstNumber = "Enter GST (22ABCDE1234F1Z5)";
+    if (formData.city && !formData.city.trim()) {
+      newErrors.city = "City cannot be empty if provided";
+    }
 
-  return newErrors;
-};
+    if (formData.state && !formData.state.trim()) {
+      newErrors.state = "State cannot be empty if provided";
+    }
 
+    if (formData.aadharCardNumber && !formData.aadharCardNumber.match(/^\d{12}$/)) {
+      newErrors.aadharCardNumber = "Enter a valid 12-digit Aadhaar number";
+    }
+
+    if (formData.panNumber && !formData.panNumber.match(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/)) {
+      newErrors.panNumber = "Enter a valid PAN (e.g., ABCDE1234F)";
+    }
+
+    if (formData.companyName && !formData.companyName.trim()) {
+      newErrors.companyName = "Company name cannot be empty if provided";
+    }
+
+    if (
+      formData.gstNumber &&
+      !formData.gstNumber.match(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/)
+    ) {
+      newErrors.gstNumber = "Enter a valid GST number (e.g., 22ABCDE1234F1Z5)";
+    }
+
+    return newErrors;
+  };
 
   // Clear form
   const clearForm = () => {
@@ -134,7 +163,7 @@ const validate = () => {
   // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return; // prevent double click
+    if (loading) return;
 
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -146,13 +175,20 @@ const validate = () => {
     setStatus("processing");
 
     try {
-// Inside handleSubmit before API call
-const payload = {
-  ...formData,
-  name: formData.name?.trim() || "Unnamed",  // fallback
-  mobile: formData.mobile
-    ? `${formData.countryCode}${formData.mobile}`
-    : "+910000000000", // fallback
+      const payload = {
+  name: formData.name.trim(),
+  mobile: `${formData.countryCode}${formData.mobile}`,
+  email: formData.email.trim(),
+  address: formData.address.trim() || "N/A",
+  pin: formData.pin.trim() || "000000",
+  city: formData.city.trim() || "N/A",
+  state: formData.state.trim() || "N/A",
+  aadharCardNumber: formData.aadharCardNumber.trim() || "000000000000",
+  panNumber: formData.panNumber.trim() || "AAAAA1111A",
+  companyName: formData.companyName.trim() || "N/A",
+  gstNumber: formData.gstNumber.trim() || "22AAAAA0000A1Z5",
+  product_image: formData.product_image || "",
+
 };
 
 
@@ -165,7 +201,7 @@ const payload = {
 
       console.log("Response:", res);
       setStatus("success");
-      clearForm(); // ✅ Clear after submit
+      clearForm();
     } catch (error) {
       console.error("❌ Error:", error);
       setStatus("error");
@@ -188,7 +224,6 @@ const payload = {
         onSubmit={handleSubmit}
         className="grid grid-cols-1 md:grid-cols-2 gap-6 px-10 max-w-5xl"
       >
-        {/* Inputs */}
         {/* Name */}
         <div>
           <label className="block text-sm text-gray-600">Name *</label>
@@ -205,48 +240,72 @@ const payload = {
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
         </div>
 
-        {/* Mobile with code */}
+<div className="w-full ">
+  <label className="block text-sm text-gray-600 mb-1">Mobile *</label>
+  <div className="flex gap-5">
+    {/* Country Code */}
+    <div className="flex w-20 ">
+      <select
+        name="countryCode"
+        value={formData.countryCode}
+        onChange={handleChange}
+        className="border border-gray-300 rounded-l-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+      >
+        <option value="+91">+91</option>
+        <option value="+1">+1</option>
+        <option value="+44">+44</option>
+      </select>
+    </div>
+
+    {/* Mobile Number */}
+    <input
+      type="text"
+      name="mobile"
+      value={formData.mobile}
+      onChange={handleChange}
+      placeholder="Enter 10-digit number"
+      className={`flex-1 border border-gray-300 rounded-r-md px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+        errors.mobile ? "border-red-500" : ""
+      }`}
+    />
+  </div>
+
+  {/* Error Message */}
+  {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
+</div>
+
+
+        {/* Email */}
         <div>
-          <label className="block text-sm text-gray-600">Mobile *</label>
-          <div className="flex mt-1 gap-2">
-            <select
-              name="countryCode"
-              value={formData.countryCode}
-              onChange={handleChange}
-              className="border border-gray-300 rounded-l-md px-2 py-2 text-sm bg-white"
-            >
-              <option value="+91">+91</option>
-            </select>
-            <input
-              type="text"
-              name="mobile"
-              value={formData.mobile}
-              onChange={handleChange}
-              placeholder="10-digit number"
-              className={`flex-1 border rounded-r-md px-4 py-2 text-sm bg-white ${
-                errors.mobile ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-          </div>
-          {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
+          <label className="block text-sm text-gray-600">Email *</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Enter Email"
+            className={`w-full border rounded-md px-4 py-2 mt-1 text-sm bg-white ${
+              errors.email ? "border-red-500" : "border-gray-300"
+            }`}
+          />
+          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
 
-        {/* Rest fields */}
+        {/* Optional Fields */}
         {[
-          { key: "email", label: "Email *", type: "email" },
-          { key: "address", label: "Address *" },
-          { key: "pin", label: "PIN" },
-          { key: "city", label: "City *" },
-          { key: "state", label: "State *" },
-          { key: "aadharCardNumber", label: "Aadhaar *" },
-          { key: "panNumber", label: "PAN *" },
-          { key: "companyName", label: "Company Name *" },
-          { key: "gstNumber", label: "GST *" },
+          { key: "address", label: "Address", type: "text" },
+          { key: "pin", label: "PIN", type: "text" },
+          { key: "city", label: "City", type: "text" },
+          { key: "state", label: "State", type: "text" },
+          { key: "aadharCardNumber", label: "Aadhaar", type: "text" },
+          { key: "panNumber", label: "PAN", type: "text" },
+          { key: "companyName", label: "Company Name", type: "text" },
+          { key: "gstNumber", label: "GST", type: "text" },
         ].map((field) => (
           <div key={field.key} className="w-full">
             <label className="block text-sm text-gray-600">{field.label}</label>
             <input
-              type={field.type || "text"}
+              type={field.type}
               name={field.key}
               value={formData[field.key]}
               onChange={handleChange}
@@ -280,10 +339,8 @@ const payload = {
             ) : (
               <>
                 <FaUpload size={36} className="text-gray-400 mb-2" />
-                <span className="text-sm text-gray-600 font-medium">
-                  Click to upload
-                </span>
-              <span className="text-sm text-gray-600 font-medium"> (PNG, JPG - max 2MB)</span>
+                <span className="text-sm text-gray-600 font-medium">Click to upload</span>
+                <span className="text-sm text-gray-600 font-medium"> (PNG, JPG - max 2MB)</span>
               </>
             )}
             <input
@@ -310,36 +367,29 @@ const payload = {
             </button>
           )}
         </div>
+
+        {/* Buttons */}
+        <div className="md:col-span-2 mt-8 flex flex-wrap justify-center gap-4">
+          <button
+            type="button"
+            onClick={clearForm}
+            disabled={loading}
+            className="bg-bluecol text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-60"
+          >
+            Clear Fields
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-60"
+          >
+            {loading ? "Saving..." : formData._id ? "Update" : "Submit"}
+          </button>
+        </div>
       </form>
 
-      {/* Buttons */}
-      <div className="mt-8 flex flex-wrap justify-center gap-4">
-        <button
-          type="button"
-          onClick={clearForm}
-          disabled={loading}
-          className="bg-bluecol text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-60"
-        >
-          Clear Fields
-        </button>
-
-        <button
-          type="submit"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-60"
-        >
-          {loading ? "Saving..." : formData._id ? "Update" : "Submit"}
-        </button>
-      </div>
-
       {/* Status Modal */}
-      {status && (
-        <Button
-          type={status}
-          onClose={() => setStatus(null)}
-        />
-      )}
+      {status && <Button type={status} onClose={() => setStatus(null)} />}
     </div>
   );
 };

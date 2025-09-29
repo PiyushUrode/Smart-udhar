@@ -10,6 +10,7 @@ const statusMap = {
     text: "Processing",
     btn: "border border-blue-500 text-blue-500",
     tail: "bg-[#3B82F6]",
+    value : "cancel"
   },
   complete: {
     icon: <Clock className="w-6 h-6 text-white" />,
@@ -19,6 +20,7 @@ const statusMap = {
     text: "Complete Your Profile",
     btn: "border border-blue-500 text-blue-500",
     tail: "bg-[#3B82F6]",
+    value :"Done"
   },
   success: {
     icon: <Check className="w-6 h-6 text-white" />,
@@ -28,6 +30,7 @@ const statusMap = {
     text: "Details Saved",
     btn: "border border-[#60D66999] text-[#60D66999]",
     tail: "bg-[#60D669]",
+     value : "Ok"
   },
   error: {
     icon: <X className="w-6 h-6 text-white" />,
@@ -37,11 +40,12 @@ const statusMap = {
     text: "Process Failed",
     btn: "border border-red-500 text-red-500",
     tail: "bg-[#FF1616]",
+    value : "Cancel"
   },
 };
 
 const Button = ({ type = "error", onClose }) => {
-  const { icon, bg, shadow, ring, text, btn, tail } = statusMap[type];
+  const { icon, bg, shadow, ring, text, btn, tail, value } = statusMap[type];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -62,7 +66,7 @@ const Button = ({ type = "error", onClose }) => {
           onClick={onClose}
           className={`mt-5 px-4 py-1 rounded ${btn}`}
         >
-          Ok
+          {value}
         </button>
 
         {/* Tail base block (bottom shadow accent) */}

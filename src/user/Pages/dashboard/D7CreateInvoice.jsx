@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { FaCommentSms } from "react-icons/fa6";
 import Select from "react-select";
 import { FaWhatsapp } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { FaPrint } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
 import { FaRegCreditCard } from "react-icons/fa6";
@@ -23,9 +24,10 @@ import {ProfileService} from "../../api/profileservice.js"
 import DatePicker from "react-datepicker";
 import { parse, format, isValid } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
-
 export default function D7CreateInvoice({ onCustomerSelect  }) {
+  const navigate = useNavigate();
   // ----------------- STATES -----------------
+
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -531,6 +533,25 @@ useEffect(() => {
   }, []);
 
 
+
+// start
+
+
+
+
+// end
+
+
+
+
+
+
+
+
+
+
+
+
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
@@ -565,7 +586,9 @@ useEffect(() => {
                 />
                 <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60" />
               </div>
-              <button className="bg-green-600 font-robotoR hover:bg-green-700 text-white px-5 py-3 rounded-lg text-md whitespace-nowrap">
+              <button className="bg-green-600 font-robotoR hover:bg-green-700 text-white px-5 py-3 rounded-lg text-md whitespace-nowrap"
+                          onClick={() => navigate("/dashboard/add-customer")}
+              >
                 + Add New Customer
               </button>
             </div>
@@ -646,35 +669,34 @@ useEffect(() => {
         className="grid grid-cols-2 sm:grid-cols-7 gap-3 sm:gap-4 items-center py-3 border-b sm:border-0"
       >
         {/* Product */}
-        <div className="col-span-2">
-          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Product/Service</label>
-
+       <div className="col-span-2">
+ 
 <Select
-  className="text-sm text-[#4B5563]" // neutral text
+  className="text-sm"
   placeholder="Select Product..."
   isClearable
-  filterOption={(option, inputValue) => {
-    // Custom filter: if no input → only show first 3
-    if (!inputValue) {
-      return option.data.index < 3; // only first 3
-    }
-    // If typing → match normally
-    return option.label.toLowerCase().includes(inputValue.toLowerCase());
-  }}
+  isSearchable
+  menuPortalTarget={document.body}
+  filterOption={(option, inputValue) =>
+    inputValue
+      ? option.label.toLowerCase().includes(inputValue.toLowerCase())
+      : option.data.index < 3 // show top 3 if nothing typed
+  }
   options={Array.isArray(products)
     ? products
-        .filter((p) => p && (p._id || p.id))
+        .filter(p => p && (p._id || p.id))
         .map((p, index) => ({
           value: p._id || p.id,
           label: p.name || p.product_name || "Unnamed",
-          index, // keep original index for top 3 logic
+          index,
         }))
-    : []}
+    : []
+  }
   value={
     row.productId
       ? (() => {
           const selected = products?.find(
-            (p) => p && (p._id === row.productId || p.id === row.productId)
+            p => p && (p._id === row.productId || p.id === row.productId)
           );
           return selected
             ? { value: row.productId, label: selected.name || selected.product_name || "Unnamed" }
@@ -682,49 +704,54 @@ useEffect(() => {
         })()
       : null
   }
-  onChange={(selectedOption) => {
-    if (selectedOption) {
-      const selectedProduct = products?.find(
-        (p) => p && (p._id === selectedOption.value || p.id === selectedOption.value)
-      );
-      if (selectedProduct) handleSelectProduct(row.id, selectedProduct);
-    } else {
-      handleSelectProduct(row.id, null);
-    }
+  onChange={selectedOption => {
+    const selectedProduct = products?.find(
+      p => p && (p._id === selectedOption?.value || p.id === selectedOption?.value)
+    );
+    handleSelectProduct(row.id, selectedProduct || null);
   }}
-  menuPortalTarget={document.body}
   styles={{
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    menuPortal: base => ({ ...base, zIndex: 9999 }),
     control: (base, state) => ({
       ...base,
-      minHeight: "42px",
+      minHeight: 32,
       borderColor: state.isFocused ? "#2563eb" : "#d1d5db",
-      boxShadow: "none",
+      boxShadow: state.isFocused ? "0 0 0 1px #2563eb" : "none",
       "&:hover": { borderColor: "#2563eb" },
+      borderRadius: 8,
     }),
-    option: (base, { isFocused }) => ({
+    option: (base, { isFocused, isSelected }) => ({
       ...base,
-      backgroundColor: isFocused ? "#f3f4f6" : "white", // subtle hover
-      color: "#111827", // dark gray text
-      fontSize: "14px",
+      backgroundColor: isFocused ? "#f3f4f6" : isSelected ? "#2563eb" : "white",
+      color: isSelected ? "white" : "#111827",
+      fontSize: 12,
       cursor: "pointer",
       padding: "8px 12px",
     }),
-    singleValue: (base) => ({
+    singleValue: base => ({
       ...base,
-      color: "#111827", // always dark text
+      color: "#111827",
+      fontWeight: 500,
     }),
-    menu: (base) => ({
+    menu: base => ({
       ...base,
       marginTop: 2,
-      borderRadius: "8px",
+      borderRadius: 8,
       boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-      overflowX: "hidden", // no horizontal scroll
+      overflowX: "hidden",
+    }),
+    placeholder: base => ({
+      ...base,
+      color: "#9CA3AF",
+      fontSize: 14,
     }),
   }}
-/>
 
-        </div>
+  />
+
+  
+</div>
+
 
         {/* Qty */}
         <div>
@@ -1262,7 +1289,7 @@ useEffect(() => {
 
 
       {/* Sidebar */}
-      <div className="bg-white shadow-customCard  rounded-lg p-4">
+      <div className="bg-white shadow-customCard  border rounded-lg p-4 ">
         <h2 className="text-lg font-robotoSb mb-4">Invoice Summary</h2>
 <ul className="text-sm font-robotoR text-black space-y-3">
           <li className="flex justify-between">

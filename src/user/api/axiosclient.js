@@ -12,7 +12,7 @@ export const apiEvents = mitt();
 const axiosClient = axios.create({
   baseURL: API_BASE || "http://localhost:5000",
   withCredentials: true,
-  timeout: 10000, // 10 seconds timeout
+  // timeout: 10000, 
 });
 
 // ======================

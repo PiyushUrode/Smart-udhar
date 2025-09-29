@@ -1,4 +1,3 @@
-// src/api/customerService.js
 import axiosClient from "./axiosclient.js";
 import { AuthService } from "./authservice.js";
 
@@ -40,7 +39,7 @@ const FIELD_LABEL = {
   gstNumber: "GST Number",
   _id: "Unique ID (MongoDB _id)",
   id: "Cust ID (customId)",
-  customId: "Custom ID",  // Added for clarity
+  customId: "Custom ID",
 };
 
 const ALLOWED_FIELDS = new Set([
@@ -51,7 +50,7 @@ const ALLOWED_FIELDS = new Set([
   "address",
   "pin",
   "city",
-  "creditScore", 
+  "creditScore",
   "state",
   "aadharCardNumber",
   "panNumber",
@@ -61,7 +60,7 @@ const ALLOWED_FIELDS = new Set([
   "storeProfile_id",
   "_id",
   "id",
-  "customId",  // Added to allow customId in payloads if needed
+  "customId",
 ]);
 
 function sanitizePayload(raw = {}) {
@@ -72,12 +71,9 @@ function sanitizePayload(raw = {}) {
   return clean;
 }
 
-
 function safePayload(form, store_id, storeProfile_id) {
   return {
-    ...form,
-    name: form.name?.trim() || "Unnamed",
-    mobile: form.mobile || "+910000000000",
+    ...sanitizePayload(form),
     store_id: form.store_id || store_id,
     storeProfile_id: form.storeProfile_id || storeProfile_id,
   };
@@ -98,87 +94,90 @@ function validateRequired(payload, requiredKeys) {
   return missing;
 }
 
-const DEFAULT_REQUIRED_CREATE = ["name", "mobile"];
-const DEFAULT_REQUIRED_UPDATE = ["_id", "name", "mobile"];  // Note: _id is required for update
+const DEFAULT_REQUIRED_CREATE = ["name", "email", "mobile"];
+const DEFAULT_REQUIRED_UPDATE = ["_id", "name", "email", "mobile"];
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` };
 }
 
 export const CustomerService = {
-async createCustomer(form = {}, opts = {}) {
-  const { token, store_id, storeProfile_id } = getAuthContext();
+  async createCustomer(form = {}, opts = {}) {
+    const { token, store_id, storeProfile_id } = getAuthContext();
 
-  let payload;
-  let headers = authHeaders(token);
+    let payload;
+    let headers = authHeaders(token);
 
-  if (form.customerImage instanceof File) {
-    payload = new FormData();
-    Object.entries(safePayload(form, store_id, storeProfile_id)).forEach(
-      ([key, value]) => payload.append(key, value)
-    );
-    headers = { ...headers, "Content-Type": "multipart/form-data" };
-  } else {
-    payload = safePayload(form, store_id, storeProfile_id);
-  }
+    if (form.product_image instanceof File) {
+      payload = new FormData();
+      Object.entries(safePayload(form, store_id, storeProfile_id)).forEach(
+        ([key, value]) => payload.append(key, value === null || value === undefined ? "" : value)
+      );
+      headers = { ...headers, "Content-Type": "multipart/form-data" };
+    } else {
+      payload = safePayload(form, store_id, storeProfile_id);
+    }
 
-  // validateRequired kabhi fail nahi karega because fallback values hamesha hain
-  const required = opts.required || DEFAULT_REQUIRED_CREATE;
-  const missing = validateRequired(payload, required);
-  if (missing.length) {
-    console.warn("⚠️ Missing fields replaced with defaults:", missing);
-  }
+    const required = opts.required || DEFAULT_REQUIRED_CREATE;
+    const missing = validateRequired(payload, required);
+    if (missing.length) {
+      const err = new Error(`Missing required fields: ${missing.join(", ")}`);
+      err.name = "CustomerValidationError";
+      err.missingFields = missing;
+      throw err;
+    }
 
-  const { data } = await axiosClient.post("/store-customer/create", payload, {
-    headers,
-  });
+    const { data } = await axiosClient.post("/store-customer/create", payload, {
+      headers,
+    });
 
-  return {
-    success: data?.success ?? true,
-    customer: data?.data || data,
-    customerId: data?.data?.customId || data?.customId,
-  };
-},
+    return {
+      success: data?.success ?? true,
+      customer: data?.data || data,
+      customerId: data?.data?.customId || data?.customId,
+    };
+  },
 
+  async updateCustomer(form = {}, opts = {}) {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const id = form._id || form.id;
+    if (!id) throw new Error("Missing customer id");
 
-async updateCustomer(form = {}, opts = {}) {
-  const { token, store_id, storeProfile_id } = getAuthContext();
-  const id = form._id || form.id;
-  if (!id) throw new Error("Missing customer id");
+    let payload;
+    let headers = authHeaders(token);
 
-  let payload;
-  let headers = authHeaders(token);
+    if (form.product_image instanceof File) {
+      payload = new FormData();
+      Object.entries(safePayload(form, store_id, storeProfile_id)).forEach(
+        ([key, value]) => payload.append(key, value === null || value === undefined ? "" : value)
+      );
+      payload.append("_id", id);
+      headers = { ...headers, "Content-Type": "multipart/form-data" };
+    } else {
+      payload = { ...safePayload(form, store_id, storeProfile_id), _id: id };
+    }
 
-  if (form.customerImage instanceof File) {
-    payload = new FormData();
-    Object.entries(safePayload(form, store_id, storeProfile_id)).forEach(
-      ([key, value]) => payload.append(key, value)
-    );
-    payload.append("_id", id);
-    headers = { ...headers, "Content-Type": "multipart/form-data" };
-  } else {
-    payload = { ...safePayload(form, store_id, storeProfile_id), _id: id };
-  }
+    const required = opts.required || DEFAULT_REQUIRED_UPDATE;
+    const missing = validateRequired(payload, required);
+    if (missing.length) {
+      const err = new Error(`Missing required fields: ${missing.join(", ")}`);
+      err.name = "CustomerValidationError";
+      err.missingFields = missing;
+      throw err;
+    }
 
-  const required = opts.required || DEFAULT_REQUIRED_UPDATE;
-  const missing = validateRequired(payload, required);
-  if (missing.length) {
-    console.warn("⚠️ Missing fields replaced with defaults:", missing);
-  }
+    const { data } = await axiosClient.put("/store-customer/update", payload, {
+      headers,
+    });
 
-  const { data } = await axiosClient.put("/store-customer/update", payload, {
-    headers,
-  });
+    return {
+      success: data?.success ?? true,
+      customer: data?.customer || data,
+      customerId: data?.customer?.customId || data?.customerId,
+    };
+  },
 
-  return {
-    success: data?.success ?? true,
-    customer: data?.customer || data,
-    customerId: data?.customer?.customId || data?.customerId,
-  };
-},
-
-
-  async deleteCustomer(id) {  // Expects MongoDB _id (e.g., "68bfba0d85ae94d9fe579bbf")
+  async deleteCustomer(id) {
     const { token } = getAuthContext();
     if (!id) {
       const err = new Error("Missing customer _id");
@@ -187,7 +186,6 @@ async updateCustomer(form = {}, opts = {}) {
       throw err;
     }
 
-    // Validate ObjectId client-side to prevent bad requests
     if (!isValidObjectId(id)) {
       const err = new Error("Invalid customer _id format (must be valid MongoDB ObjectId)");
       err.name = "CustomerValidationError";
@@ -196,15 +194,14 @@ async updateCustomer(form = {}, opts = {}) {
     }
 
     const { data } = await axiosClient.post(
-      `/store-customer/delete/${id}`,  // URL uses _id
+      `/store-customer/delete/${id}`,
       null,
       { headers: authHeaders(token) }
     );
 
-    // Matches Postman response: success + deleted customer details
     return {
       success: data?.success ?? true,
-      customer: data?.customer || null,  // Deleted customer (with customId for confirmation)
+      customer: data?.customer || null,
     };
   },
 
@@ -225,7 +222,6 @@ async updateCustomer(form = {}, opts = {}) {
 
     let customers = [];
 
-    // Normalize: Each customer has _id, customId, etc.
     if (Array.isArray(data)) {
       customers = data;
     } else if (Array.isArray(data?.data)) {
@@ -238,11 +234,11 @@ async updateCustomer(form = {}, opts = {}) {
 
     return {
       success: data?.success ?? true,
-      customers,  // Array of full docs: [{ _id: "...", customId: "CUST019", ... }]
+      customers,
     };
   },
 
-  async findCustomerById(id) {  // Expects _id
+  async findCustomerById(id) {
     const { token } = getAuthContext();
     if (!id) {
       const err = new Error("Missing customer _id");
@@ -262,7 +258,7 @@ async updateCustomer(form = {}, opts = {}) {
     );
     return {
       success: data?.success ?? true,
-      customer: data?.data || data,  // Full doc with _id and customId
+      customer: data?.data || data,
     };
   },
 
@@ -274,7 +270,7 @@ async updateCustomer(form = {}, opts = {}) {
     );
     return {
       success: data?.success ?? true,
-      customers: data?.data || data,  // Array with _id and customId
+      customers: data?.data || data,
     };
   },
 
@@ -306,21 +302,19 @@ async updateCustomer(form = {}, opts = {}) {
     return res.data;
   },
 
-
   async exportCustomersToPDF() {
-  const { token, store_id, storeProfile_id } = getAuthContext();
-  const res = await axiosClient.get(
-    `/store-customer/export-pdf/${store_id}/${storeProfile_id}`,
-    { headers: authHeaders(token), responseType: "blob" }
-  );
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const res = await axiosClient.get(
+      `/store-customer/export-pdf/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token), responseType: "blob" }
+    );
 
-  if (!res.data || res.data.size === 0) {
-    throw new Error("Empty PDF received — check backend export logic");
-  }
+    if (!res.data || res.data.size === 0) {
+      throw new Error("Empty PDF received — check backend export logic");
+    }
 
-  return res.data;
-},
-
+    return res.data;
+  },
 };
 
 export default CustomerService;

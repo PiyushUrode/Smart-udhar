@@ -2,6 +2,9 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react"; // ← useEffect ऐड करें
 import axios from "axios"; // ← API के लिए
 import Cookies from "js-cookie"; // ← Token के लिए
+import { NavLink } from "react-router-dom";
+import "../../index.css"
+
 import {
   FaTachometerAlt,
   FaBuilding,
@@ -241,12 +244,15 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
       return (
         <div className="text-white font-bold text-sm mb-1 flex gap-2 items-center">
           <FaBuilding />
-          <h1 className="text-white font-robotoSb text-base leading-[20px] tracking-[0] activateanimation">
-            {activeBusinessName
-              ?.split(" ") // break into words
-              .slice(0, 3) // take only first 2–3 words
-              .join(" ")}
-          </h1>
+         <h1 className="text-white font-robotoSb text-base leading-[20px] tracking-[0] activateanimation truncate">
+  {(() => {
+    const words = activeBusinessName?.split(" ").filter(word => word); // Split and filter out empty strings
+    const fullName = words?.join(" ") || ""; // Full name without extra spaces
+    const firstWord = words?.[0] || ""; // First word
+    // Check if there are multiple words or if the full name is too long (e.g., > 15 characters)
+    return words?.length > 2 || fullName.length > 15 ? `${firstWord} ...` : fullName;
+  })()}
+</h1>
         </div>
       );
     } else {
@@ -255,65 +261,77 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
   };
 
   return (
-    <div
-      className={`bg-[#3B82F6] h-full transition-all duration-300 py-3 custom-scrollbar overflow-y-auto hover:overflow-y-scroll ${
-        isOpen ? "w-56" : "w-16"
-      }`}
+<div
+  className={`bg-[#3B82F6] h-full transition-all duration-300 py-3 ${
+    isOpen ? "w-56" : "w-16"
+  } flex flex-col`}
+>
+  <div className="flex flex-row justify-between items-center justify-center align-middle px-3 py-2">
+    {!isMobile && renderHeader()}
+    
+    {isMobile && (
+      <div className="text-white font-robotoB leading-[20px] tracking-[0]">
+        <span>
+          {activeBusinessName
+            ?.split(" ")
+            .slice(0, 1)
+            .join(" ")}
+        </span>
+      </div>
+    )}
+    <button
+      className="text-white focus:outline-none  hidden sm:block "
+      onClick={toggleSidebar}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 px-3">
-        {!isMobile && (
-          <div className="flex flex-col w-full">
-            {renderHeader()} {/* ← Updated header */}
-          </div>
-        )}
-        <button
-          className="text-white focus:outline-none ml-2 hidden sm:block"
-          onClick={toggleSidebar}
+      ☰
+    </button>
+  </div>
+    <div className="w-full border-[1px] bg-white mb-4"></div>
+
+  {/* Scrollable Menu */}
+  <div className="flex-1 overflow-y-auto custom-scrollbar px-3 space-y-5">
+    {sections.map((section, index) => (
+      <div key={index}>
+        <h2
+          className={`text-xs text-white font-robotoB uppercase tracking-wide mb-2 ${
+            isOpen ? "block" : "hidden"
+          }`}
         >
-          ☰
-        </button>
-        <div className="text-white font-robotoB  sm:hidden leading-[20px] tracking-[0] ">
-          {" "}
-          <span>{activeBusinessName}</span>
-        </div>
+          {section.title}
+        </h2>
+
+        <ul>
+          {section.items.map((item, idx) => (
+            <li key={idx}>
+              {item.disabled ? (
+                <div className="mb-2 text-white p-2 rounded-md flex items-center gap-3 cursor-not-allowed opacity-60">
+                  {item.icon}
+                  {isOpen && <span>{item.label}</span>}
+                </div>
+              ) : (
+                <NavLink
+                  to={item.path}
+                  end
+                  className={({ isActive }) =>
+                    `mb-2 font-robotoR p-2 rounded-md flex items-center gap-3 cursor-pointer block transition-colors ${
+                      isActive
+                        ? "bg-white text-[#2563EB]"
+                        : "text-white hover:bg-white hover:text-[#2563EB]"
+                    }`
+                  }
+                >
+                  {item.icon}
+                  {isOpen && <span>{item.label}</span>}
+                </NavLink>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
-      <div className="w-full  border-[1px] bg-white my-2 "></div>
-      {/* Menu */}
-      <div className="space-y-5 px-3">
-        {sections.map((section, index) => (
-          <div key={index}>
-            <h2
-              className={`text-xs text-white  font-robotoSb uppercase tracking-wide mb-2 ${
-                isOpen ? "block" : "hidden"
-              }`}
-            >
-              {section.title}
-            </h2>
-            <ul>
-              {section.items.map((item, idx) => (
-                <li key={idx}>
-                  {item.disabled ? (
-                    <div className="mb-2 text-white p-2 rounded-md flex items-center gap-3 cursor-not-allowed opacity-60">
-                      {item.icon}
-                      {isOpen && <span>{item.label}</span>}
-                    </div>
-                  ) : (
-                    <Link
-                      to={item.path}
-                      className="mb-2 hover:bg-white hover:text-[#2563EB] font-robotoR  text-white p-2 rounded-md flex items-center gap-3 cursor-pointer block"
-                    >
-                      {item.icon}
-                      {isOpen && <span>{item.label}</span>}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
+    ))}
+  </div>
+</div>
+
   );
 };
 
