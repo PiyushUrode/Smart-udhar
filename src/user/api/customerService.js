@@ -205,38 +205,23 @@ export const CustomerService = {
     };
   },
 
-  async getAllCustomers({ page, limit } = {}) {
+  async getAllCustomers({ page = 1, limit = 10 } = {}) {
     const { token, store_id, storeProfile_id } = getAuthContext();
-    const qs =
-      page || limit
-        ? `?${new URLSearchParams({
-            ...(page ? { page: String(page) } : {}),
-            ...(limit ? { limit: String(limit) } : {}),
-          }).toString()}`
-        : "";
+    const qs = `?${new URLSearchParams({ page: String(page), limit: String(limit) }).toString()}`;
 
     const { data } = await axiosClient.get(
       `/store-customer/find-all/${store_id}/${storeProfile_id}${qs}`,
       { headers: authHeaders(token) }
     );
 
-    let customers = [];
-
-    if (Array.isArray(data)) {
-      customers = data;
-    } else if (Array.isArray(data?.data)) {
-      customers = data.data;
-    } else if (Array.isArray(data?.customers)) {
-      customers = data.customers;
-    } else if (Array.isArray(data?.data?.customers)) {
-      customers = data.data.customers;
-    }
-
     return {
       success: data?.success ?? true,
-      customers,
+      customers: data?.customers || [],
+      totalCustomers: data?.totalCustomers || 0,
+      totalPages: data?.totalPages || Math.ceil((data?.totalCustomers || 0) / limit),
     };
   },
+
 
   async findCustomerById(id) {
     const { token } = getAuthContext();
@@ -314,6 +299,23 @@ export const CustomerService = {
     }
 
     return res.data;
+  },
+
+  async uploadExcel(file) {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+    const formData = new FormData();
+    formData.append("excelFile", file);
+    formData.append("schema", "Customer");
+    formData.append("store_id", store_id);
+    formData.append("storeProfile_id", storeProfile_id);
+
+    const { data } = await axiosClient.post(
+      "/store-customer/upload-excel",
+      formData,
+      { headers: authHeaders(token) }
+    );
+
+    return data; // this is your curl response: { message, count, data }
   },
 };
 
