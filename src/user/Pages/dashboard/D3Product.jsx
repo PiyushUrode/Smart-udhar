@@ -6,7 +6,8 @@ import Cookies from "js-cookie";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 import { ProductService } from "../../api/productservice.js"; // ✅ new service i
-
+import Button from "../../common/Button.jsx";
+import { set } from "date-fns";
 
 
 
@@ -425,6 +426,8 @@ export default function D3Product() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [errors, setErrors] = useState({});
   const [isEditMode, setIsEditMode] = useState(!!id); // Check if in edit mode
+  const [popupType, setPopupType] = useState(null);
+  const [message, setMessage] = useState("");
 
   // Fetch product data for edit mode
   useEffect(() => {
@@ -525,6 +528,8 @@ export default function D3Product() {
     setErrors(newErrors);
 
     if (missingFields.length > 0) {
+      setMessage(`Please fill required fields: ${missingFields.join(", ")}`);
+      setPopupType("error");
       toast.error(`Please fill required fields: ${missingFields.join(", ")}`, {
         position: "top-right",
         autoClose: 4000,
@@ -536,6 +541,7 @@ export default function D3Product() {
 
   const handleSubmit = async (e) => {
   e.preventDefault();
+  setPopupType("processing");
 
   if (!validateForm()) {
     return;
@@ -600,6 +606,8 @@ export default function D3Product() {
     }
 
     if (res.success) {
+      setMessage(`${activeTab === "product" ? "Product" : "Service"} ${isEditMode ? "updated" : "saved"} successfully!`);
+      setPopupType("success");
       toast.success(
         `${activeTab === "product" ? "Product" : "Service"} ${isEditMode ? "updated" : "saved"} successfully!`,
         { position: "top-right", autoClose: 3000 }
@@ -609,12 +617,16 @@ export default function D3Product() {
       setShowAdvanced(false);
       if (isEditMode) navigate("/dashboard/product-list"); // Redirect to product list after update
     } else {
+      setMessage(res.error || "Operation failed");
+      setPopupType("error");
       throw new Error(res.error || "Operation failed");
     }
   } catch (err) {
     console.error(`❌ Error ${isEditMode ? "updating" : "saving"} product:`, err);
 
     if (err?.message && err.message.includes("too large")) {
+      setMessage(err.message);
+      setPopupType("error");
       toast.error(err.message, { position: "top-right", autoClose: 5000 });
       return;
     }
@@ -625,10 +637,14 @@ export default function D3Product() {
     if (backendMessage && backendMessage.toLowerCase().includes("file too large")) {
       const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
       toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
+      setMessage(`Uploaded image is too large. Max ${mb} MB allowed.`);
+      setPopupType("error");
       return;
     }
 
     if (backendMessage) {
+      setPopupType("error");
+      setMessage(backendMessage);
       toast.error(backendMessage, { position: "top-right", autoClose: 5000 });
       return;
     }
@@ -636,6 +652,8 @@ export default function D3Product() {
     if (status === 413) {
       const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
       toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
+      setPopupType("error");
+      setMessage(`Uploaded image is too large. Max ${mb} MB allowed.`);
       return;
     }
 
@@ -643,6 +661,8 @@ export default function D3Product() {
       `Failed to ${isEditMode ? "update" : "save"} ${activeTab === "product" ? "product" : "service"}. Please try again.`,
       { position: "top-right", autoClose: 5000 }
     );
+    setPopupType("error");
+    setMessage(`Failed to ${isEditMode ? "update" : "save"} ${activeTab === "product" ? "product" : "service"}. Please try again.`);
   }
 };
 
@@ -699,6 +719,9 @@ export default function D3Product() {
           errors={errors}
         />
       )}
+       {popupType && (
+          <Button type={popupType} message={message} onClose={() => setPopupType(null)} />
+        )}
     </div>
   );
 }
