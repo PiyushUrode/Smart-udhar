@@ -1,71 +1,100 @@
 import React, { useEffect, useState } from "react";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
-import { IoIosArrowDown } from "react-icons/io";
-import { FaBoxOpen } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { CustomerService } from "../../api/customerService.js";
-
-// const generateScore = () => Math.floor(Math.random() * 101);
+import Button from "../../common/Button.jsx";
 
 const CustomerDetailsForm = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
+  const [popupType, setPopupType] = useState(null);
 
-  const fetchCustomers = async () => {
-  try {
-    setLoading(true);
-    const res = await CustomerService.getAllCustomers();
-    if (res?.customers) {
-      const formatted = res.customers.map((cust) => ({
-        mongoId: cust._id,  // For API ops
-        displayId: cust.customId,  // For display
-        name: cust.name,
-        mobile: cust.mobile,
-        email: cust.email,
-        address: cust.address || '',
-        pin: cust.pin || '',
-        city: cust.city,
-        state: cust.state,
-        aadharCardNumber: cust.aadharCardNumber || '',
-        panNumber: cust.panNumber || '',
-        companyName: cust.companyName || '',
-        gstNumber: cust.gstNumber || '',
-        score: cust.creditScore ?? 0,  // ✅ Use backend value instead of random
-      }));
-      setCustomers(formatted);
-    }
-  } catch (err) {
-    console.error("❌ Error fetching customers:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+  const [file, setFile] = useState(null);
+  const [message, setMessage] = useState("");
 
-
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
-
-  const handleDelete = async (mongoId, displayId) => {
-    if (!window.confirm("Are you sure you want to delete this customer?")) return;
-    try {
-      const deleteRes = await CustomerService.deleteCustomer(mongoId);  // ✅ Pass _id
-      if (deleteRes.success) {
-        setCustomers((prev) => prev.filter((cust) => cust.displayId !== displayId));  // Filter by displayId
-        console.log("✅ Deleted:", deleteRes.customer?.customId || displayId);  // Matches Postman
-      }
-    } catch (err) {
-      console.error("❌ Error deleting:", err);
-      // Add toast: "Failed to delete customer. Invalid ID or server error."
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+    } else {
+      setFile(null);
     }
   };
 
-const handleEdit = (customer) => {
-  navigate("/dashboard/add-customer", { 
-    state: { customer }  // Full object with all fields + _id
-  });
-};
+  const handleImportExcel = async () => {
+    if (!file) {
+      alert("Please select a file first!");
+      return;
+    }
+
+    try {
+      setPopupType("processing");
+
+      const res = await CustomerService.uploadExcel(file);
+
+      setMessage(`${res.message}. Total rows inserted: ${res.count}`);
+      setPopupType("success");
+      setFile(null);
+
+      fetchCustomers(page, limit);
+    } catch (err) {
+      console.error("Upload error:", err);
+      setMessage("Error uploading file.");
+      setPopupType("error");
+      setFile(null);
+    }
+  };
+
+  const fetchCustomers = async (page, limit) => {
+    try {
+      setLoading(true);
+      const res = await CustomerService.getAllCustomers({ page, limit });
+
+      const formatted = res.customers.map((cust) => ({
+        mongoId: cust._id,
+        displayId: cust.customId,
+        name: cust.name,
+        mobile: cust.mobile,
+        email: cust.email,
+        city: cust.city,
+        state: cust.state,
+        score: cust.creditScore ?? 0,
+      }));
+
+      setCustomers(formatted);
+      setTotalPages(res.totalPages);
+    } catch (err) {
+      console.error("❌ Error fetching customers:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers(page, limit);
+  }, [page, limit]);
+
+  const handleDelete = async (mongoId, displayId) => {
+    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+
+    try {
+      const deleteRes = await CustomerService.deleteCustomer(mongoId);
+      if (deleteRes.success) {
+        setCustomers((prev) =>
+          prev.filter((cust) => cust.displayId !== displayId)
+        );
+      }
+    } catch (err) {
+      console.error("❌ Error deleting customer:", err);
+    }
+  };
+
+  const handleEdit = (customer) => {
+    navigate("/dashboard/add-customer", { state: { customer } });
+  };
 
   const getScoreColor = (score) => {
     if (score < 40) return "text-red-600";
@@ -77,17 +106,32 @@ const handleEdit = (customer) => {
     <div className="p-4 w-full max-w-7xl mt-5 md:mt-10 mx-auto bg-white">
       <div className="flex justify-between items-center mb-4 px-3">
         <h2 className="text-base md:text-2xl font-bold">Customer Details</h2>
-        <div className="flex flex-row gap-3 items-center">
-          <button
-            className="bg-lightbluecol text-white px-4 py-2 text-xs md:text-base rounded-lg hover:bg-blue-600"
-            onClick={() => navigate("/dashboard/add-customer")}
+        <button
+          className="bg-lightbluecol text-white px-4 py-2 text-xs md:text-base rounded-lg hover:bg-blue-600"
+          onClick={() => navigate("/dashboard/add-customer")}
+        >
+          Add Customer
+        </button>
+      </div>
+
+      {/* Limit Selector */}
+      <div className="flex justify-start items-center mb-4 px-3">
+        <div className="flex items-center mb-3 gap-2 w-full md:w-[30%] text-nowrap">
+          <span>Show per page:</span>
+          <select
+            value={limit}
+            onChange={(e) => {
+              setPage(1);
+              setLimit(Number(e.target.value));
+            }}
+            className="border rounded px-2 py-1"
           >
-            Add Customer
-          </button>
-          {/* <div className="flex flex-row gap-2 items-center text-bluecol cursor-pointer">
-            <h1>Filters</h1>
-            <IoIosArrowDown />
-          </div> */}
+            {[5, 10, 20, 50].map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -98,7 +142,8 @@ const handleEdit = (customer) => {
           <table className="min-w-full text-sm border-separate border-spacing-0 border-[#E5E7EB] border-y border-x-2 rounded-lg shadow-customSoft">
             <thead>
               <tr className="bg-[#F9FAFB] text-left text-lightblack">
-                <th className="p-3 font-semibold py-5">Unique ID (Custom)</th>  {/* Changed label for clarity */}
+                <th className="p-3 font-semibold py-5">S.No</th>
+                <th className="p-3 font-semibold py-5">Unique ID (Custom)</th>
                 <th className="p-3 font-semibold py-5">Name</th>
                 <th className="p-3 font-semibold py-5">Mobile</th>
                 <th className="p-3 font-semibold py-5">Email</th>
@@ -109,56 +154,92 @@ const handleEdit = (customer) => {
               </tr>
             </thead>
             <tbody>
-              {customers.map((cust) => (
+              {customers.map((cust, index) => (
                 <tr
-                  key={cust.displayId}  // Use displayId as key (stable)
+                  key={cust.displayId}
                   className="bg-white text-left shadow-customSoft"
                 >
-                  <td className="p-3 text-black font-robotoM border-y">
-                    {cust.displayId}  {/* Show customId */}
-                  </td>
-                  <td className="p-3 text-[#111827] font-robotoR border-y">
-                    {cust.name}
-                  </td>
-                  <td className="p-3 text-[#111827] font-robotoR border-y">
-                    {cust.mobile}
-                  </td>
-                  <td className="p-3 border-y font-robotoR text-blue-600 hover:underline cursor-pointer">
+                  {/* Serial Number */}
+                  <td className="p-3">{(page - 1) * limit + index + 1}</td>
+                  <td className="p-3">{cust.displayId}</td>
+                  <td className="p-3">{cust.name}</td>
+                  <td className="p-3">{cust.mobile}</td>
+                  <td className="p-3 text-blue-600 hover:underline cursor-pointer">
                     {cust.email}
                   </td>
-
-                  
-                  <td
-                    className={`p-3 border-y font-robotoR ${getScoreColor(
-                      cust.score
-                    )}`}
-                  >
+                  <td className={`p-3 ${getScoreColor(cust.score)}`}>
                     {cust.score}
                   </td>
-                  <td className="p-3 border-y font-robotoR">{cust.city}</td>
-                  <td className="p-3 border-y font-robotoR">{cust.state}</td>
-                  <td className="p-3 border-y text-center space-x-2">
-                    <button
-                      className="text-[#2563EB] hover:text-blue-700"
-                      onClick={() => handleEdit(cust)}
-                    >
-                      <FiEdit className="w-5 h-5" />
+                  <td className="p-3">{cust.city}</td>
+                  <td className="p-3">{cust.state}</td>
+                  <td className="p-3 text-center space-x-2">
+                    <button onClick={() => handleEdit(cust)}>
+                      <FiEdit className="w-5 h-5 text-blue-500" />
                     </button>
                     <button
-                      className="text-[#DC2626] hover:text-red-700"
-                      onClick={() => handleDelete(cust.mongoId, cust.displayId)}  // ✅ Pass _id and displayId
+                      onClick={() => handleDelete(cust.mongoId, cust.displayId)}
                     >
-                      <FiTrash2 className="w-5 h-5" />
+                      <FiTrash2 className="w-5 h-5 text-red-500" />
                     </button>
-                    {/* <button className="text-[#4B5563] hover:text-gray-700">
-                      <FaBoxOpen className="w-5 h-5" />
-                    </button> */}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-5 gap-3">
+        <button
+          className="px-3 py-1 border rounded disabled:opacity-50"
+          onClick={() => setPage((p) => Math.max(p - 1, 1))}
+          disabled={page === 1}
+        >
+          Prev
+        </button>
+        <span className="px-3 py-1 border rounded">
+          Page {page} of {totalPages}
+        </span>
+        <button
+          className="px-3 py-1 border rounded disabled:opacity-50"
+          onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+          disabled={page === totalPages}
+        >
+          Next
+        </button>
+      </div>
+
+      <div className="flex gap-3 align-middle mt-6 p-5 border rounded-md shadow">
+        <div className="flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
+          {/* File Input */}
+          <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
+            <span className="text-gray-700 text-sm">
+              {file?.name || "Choose Excel/CSV file"}
+            </span>
+            <input
+              type="file"
+              accept=".xlsx, .xls, .csv"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </label>
+
+          {/* Import Button */}
+          <button
+            onClick={handleImportExcel}
+            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
+          >
+            Import Excel
+          </button>
+          {popupType && (
+            <Button
+              type={popupType}
+              message={message}
+              onClose={() => setPopupType(null)}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
