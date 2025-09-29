@@ -1,17 +1,15 @@
 import { AuthService } from "./authservice.js";
 import { api } from "../api/api.js";
 
-// helper
-function getstoreProfile_id() {
-  return (
-    AuthService.getstoreProfile_id?.() ||
-    localStorage.getItem("storeProfile_id")
-  );
+// Auth helpers
+function getStoreProfileId() {
+  return AuthService.getstoreProfile_id?.() || localStorage.getItem("storeProfile_id");
 }
+
 function getAuthContext() {
   const token = AuthService.getToken?.();
   const store_id = AuthService.getStoreId?.();
-  const storeProfile_id = getstoreProfile_id();
+  const storeProfile_id = getStoreProfileId();
 
   if (!token) throw new Error("❌ Missing auth token");
   if (!store_id) throw new Error("❌ Missing store_id");
@@ -20,129 +18,95 @@ function getAuthContext() {
   return { token, store_id, storeProfile_id };
 }
 
-// 🟢 Create Expense
+// CRUD + Filter + Export
 const createExpense = async (expenseData) => {
-  try {
-    const { token, store_id, storeProfile_id } = getAuthContext();
-    const response = await api.post(
-      "/store-expense/create",
-      { ...expenseData, store_id, storeProfile_id },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error creating expense:", error.response?.data || error.message);
-    throw error;
-  }
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const response = await api.post("/store-expense/create", { ...expenseData, store_id, storeProfile_id }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
 };
 
-// 🟡 Update Expense
 const updateExpense = async (id, expenseData) => {
-  try {
-    const { token } = getAuthContext();
-    const response = await api.put(
-      `/store-expense/update/${id}`,
-      expenseData,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error updating expense:", error.response?.data || error.message);
-    throw error;
-  }
+  const { token } = getAuthContext();
+  const response = await api.put(`/store-expense/update/${id}`, expenseData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
 };
 
-// 🔵 Get All Expenses
-const getAllExpenses = async () => {
-  try {
-    const { token, store_id, storeProfile_id } = getAuthContext();
-    const response = await api.get(
-      `/store-expense/find-all/${store_id}/${storeProfile_id}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching expenses:", error.response?.data || error.message);
-    throw error;
-  }
+const getAllExpenses = async (page = 1, limit = 10) => {
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const response = await api.get(
+    `/store-expense/find-all/${store_id}/${storeProfile_id}?page=${page}&limit=${limit}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data;
 };
 
-// 🟠 Filter Expenses
+
 const filterExpenses = async (filters = {}) => {
-  try {
-    const { token, store_id, storeProfile_id } = getAuthContext();
-    const response = await api.post(
-      `/store-expense/filter`,
-      { store_id, storeProfile_id, ...filters },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error filtering expenses:", error.response?.data || error.message);
-    throw error;
-  }
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const response = await api.post(`/store-expense/filter`, { store_id, storeProfile_id, ...filters }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
 };
 
-// 📂 Export Excel
+// Excel/PDF Export
 const exportExcel = async (startDate, endDate) => {
-  try {
-    const { token } = getAuthContext();
-    const response = await api.get(
-      `/store-expense/export-excel?startDate=${startDate}&endDate=${endDate}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "blob", // important for file
-      }
-    );
-
-    // Trigger download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `expenses_${startDate}_to_${endDate}.xlsx`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (error) {
-    console.error("Error exporting Excel:", error.response?.data || error.message);
-    throw error;
-  }
+  const { token } = getAuthContext();
+  const response = await api.get(`/store-expense/export-excel?startDate=${startDate}&endDate=${endDate}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    responseType: "blob",
+  });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", `expenses_${startDate}_to_${endDate}.xlsx`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 };
 
-// 📄 Export PDF
 const exportPDF = async (startDate, endDate) => {
-  try {
-    const { token } = getAuthContext();
-    const response = await api.get(
-      `/store-expense/export-pdf?startDate=${startDate}&endDate=${endDate}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "blob",
-      }
-    );
-
-    // Trigger download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `expenses_${startDate}_to_${endDate}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (error) {
-    console.error("Error exporting PDF:", error.response?.data || error.message);
-    throw error;
-  }
+  const { token } = getAuthContext();
+  const response = await api.get(`/store-expense/export-pdf?startDate=${startDate}&endDate=${endDate}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    responseType: "blob",
+  });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", `expenses_${startDate}_to_${endDate}.pdf`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 };
 
-// ✅ Export as a single object
-const ExpenseService = {
+// Excel Upload
+const uploadExcel = async (file) => {
+  const { token, store_id, storeProfile_id } = getAuthContext();
+  const formData = new FormData();
+  formData.append("excelFile", file);
+  formData.append("store_id", store_id);
+  formData.append("storeProfile_id", storeProfile_id);
+  formData.append("schema", "Expense");
+
+  const response = await api.post("/store-expense/upload-excel", formData, {
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+export default {
   createExpense,
   updateExpense,
   getAllExpenses,
   filterExpenses,
   exportExcel,
   exportPDF,
+  uploadExcel,
 };
-
-export default ExpenseService;

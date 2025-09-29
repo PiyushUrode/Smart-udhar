@@ -5,6 +5,7 @@ import { LiaCalculatorSolid } from "react-icons/lia";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { AuthService } from "../api/authservice.js";
+import "../../index.css"
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -55,9 +56,10 @@ const Navbar = ({ toggleSidebar }) => {
   return (
     <nav className="w-full h-16 flex items-center justify-between px-4 bg-white shadow-sm border-b-2 border-gray-200">
       <div className="flex items-center md:gap-24 gap-4">
+        <div className="flex items-center gap-6">  
         <button
           onClick={toggleSidebar}
-          className="md:hidden text-[#00BFFF] text-xl"
+          className=" text-[#00BFFF] text-xl"
         >
           <FaBars />
         </button>
@@ -65,42 +67,46 @@ const Navbar = ({ toggleSidebar }) => {
         <Link to="/dashboard" className="flex items-center gap-2">
           <img src={smartlogo} alt="logo" className="h-5 md:h-8" />
         </Link>
+        </div>
 
-        <ul className="hidden md:flex gap-8 text-sm lg:text-base font-interM">
+
+      </div>
+
+      <div className="flex items-center gap-4 text-blue-500 text-xl relative ">
+
+        <ul className="hidden md:flex gap-8 text-[10px] lg:text-sm lg:text-[14px] font-interM">
           <li>
             <Link
               to="/dashboard/payment-collectionList"
-              className="text-[#3B82F6]"
+              className="text-[#000000]"
             >
               {t("Amount Collection")}
             </Link>
           </li>
           <li>
-            <Link to="/dashboard/credit-score" className="text-[#3B82F6]">
+            <Link to="/dashboard/credit-score" className="text-[#000000]">
               {t("Avg Credit Score")}
             </Link>
           </li>
           <li>
-            <Link to="/dashboard" className="text-[#3B82F6]">
+            <Link to="/dashboard" className="text-[#000000]">
               {t("Remainder")}
             </Link>
           </li>
           <li>
-            <Link to="/dashboard" className="text-[#3B82F6]">
+            <Link to="/dashboard" className="text-[#000000]">
               {t("Support")}
             </Link>
           </li>
         </ul>
-      </div>
-
-      <div className="flex items-center gap-4 text-blue-500 text-xl relative ">
+        
         {/* Language Dropdown */}
         <select
           onChange={handleLanguageChange}
-          className="w-40 px-3 py-2 text-sm hidden md:block text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition"
+          className="w-20 px-3 py-2 text-sm hidden md:block text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition"
         >
-          <option value="en">English (EN)</option>
-          <option value="hi">हिंदी (HI)</option>
+          <option value="en"> (EN)</option>
+          <option value="hi"> (HI)</option>
         </select>
 
         {/* Calculator */}
@@ -134,7 +140,7 @@ const Navbar = ({ toggleSidebar }) => {
         <div className="relative">
           <FaUserCircle
             onClick={() => setOpenUserMenu((prev) => !prev)}
-            className="hover:text-bluecol cursor-pointer"
+            className="hover:text-bluecol cursor-pointer "
             title="User Menu"
           />
           {openUserMenu && (

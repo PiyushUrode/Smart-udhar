@@ -254,7 +254,7 @@ select {
   padding: 0.65rem 0.75rem;
   /* vertical + horizontal padding */
   border: 2px solid var(--input-border);
-  border-radius: 0.75rem;
+  border-radius: 0.45rem;
   background-color: #ffffff;
   font-family: 'Roboto-Medium', sans-serif;
   font-weight: 500;
@@ -535,6 +535,18 @@ input[type="number"] {
   -webkit-appearance: none;
   -moz-appearance: textfield;
 }
+
+ .gradient-text {
+
+      /* background gradient */
+      background: linear-gradient(90deg, #06b6d4, #7c3aed, #ef4444);
+      /* show the background through the text */
+      -webkit-background-clip: text;
+      background-clip: text;
+      /* make the text itself transparent so you see the background */
+      color: transparent;
+    }
+
 
 
 

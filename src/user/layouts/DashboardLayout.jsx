@@ -16,17 +16,17 @@ const MainDashboard = () => {
   }, []);
 
   return (
-    <div className="dashboard-layout">
+    <div className="dashboard-layout ">
       {/* Navbar */}
       <header className="dashboard-navbar">
         <Navbar toggleSidebar={toggleSidebar} />
       </header>
 
       {/* Body */}
-      <div className="dashboard-main">
+      <div className="dashboard-main ">
         {/* Sidebar */}
         <aside
-          className={`dashboard-sidebar ${
+          className={`dashboard-sidebar z-[99999] ${
             isMobile
               ? `mobile ${isSidebarOpen ? "open" : ""}`
               : isSidebarOpen

@@ -10,7 +10,7 @@ const statusMap = {
     text: "Processing",
     btn: "border border-blue-500 text-blue-500",
     tail: "bg-[#3B82F6]",
-    value : "cancel"
+    value : "wait"
   },
   complete: {
     icon: <Clock className="w-6 h-6 text-white" />,
@@ -44,7 +44,7 @@ const statusMap = {
   },
 };
 
-const Button = ({ type = "error", onClose }) => {
+const Button = ({ type = "error", onClose , message="" }) => {
   const { icon, bg, shadow, ring, text, btn, tail, value } = statusMap[type];
 
   return (
@@ -60,6 +60,8 @@ const Button = ({ type = "error", onClose }) => {
 
         {/* Text */}
         <p className="text-lg font-semibold mt-4">{text}</p>
+
+        {message && <p className="mt-2 text-sm text-gray-600">{message}</p>}
 
         {/* Button */}
         <button

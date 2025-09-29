@@ -33,21 +33,19 @@ const D4ProductList = () => {
   const [newStock, setNewStock] = useState("");
   const navigate = useNavigate();
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
-const [productHistory, setProductHistory] = useState([]);
-const [totalItems, setTotalItems] = useState(0);
-const [suggestions, setSuggestions] = useState([]);
-const [showSuggestions, setShowSuggestions] = useState(false);
-const [excelFile, setExcelFile] = useState(null);
+  const [productHistory, setProductHistory] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
 
-const handleFileChange = (e) => {
-  const file = e.target.files[0];
-  setExcelFile(file);
-};
-
-
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setExcelFile(file);
+  };
 
   // ✅ Fetch Products
-   const fetchItems = async () => {
+  const fetchItems = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -58,9 +56,9 @@ const handleFileChange = (e) => {
       });
       if (!success) throw new Error("Failed to fetch products");
 
-setItems(products);
-setTotalItems(total); // ✅ total products from backend
-setTotalPages(Math.ceil(total / limit) || 1);
+      setItems(products);
+      setTotalItems(total); // ✅ total products from backend
+      setTotalPages(Math.ceil(total / limit) || 1);
 
       // Add full URL for product images
       const processedProducts = products.map((p) => ({
@@ -85,7 +83,7 @@ setTotalPages(Math.ceil(total / limit) || 1);
 
   // ✅ Stock Update
 
- useEffect(() => {
+  useEffect(() => {
     fetchItems();
   }, [activeTab, page, limit, searchQuery]);
 
@@ -100,30 +98,31 @@ setTotalPages(Math.ceil(total / limit) || 1);
   }, [items, searchQuery]);
 
   // ✅ Search API
-   const handleSearch = async (e) => {
-  const query = e.target.value;
-  setSearchQuery(query);
-  setPage(1); // reset pagination
+  const handleSearch = async (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    setPage(1); // reset pagination
 
-  if (!query) {
-    setSuggestions([]);
-    setShowSuggestions(false);
-    return;
-  }
-
-  try {
-    const { success, products } = await ProductService.searchProductsByName(query);
-    if (success) {
-      setSuggestions(products.slice(0, 3)); // top 3 results only
-      setShowSuggestions(true);
+    if (!query) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    setSuggestions([]);
-    setShowSuggestions(false);
-  }
-};
 
+    try {
+      const { success, products } = await ProductService.searchProductsByName(
+        query
+      );
+      if (success) {
+        setSuggestions(products.slice(0, 3)); // top 3 results only
+        setShowSuggestions(true);
+      }
+    } catch (err) {
+      console.error(err);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
 
   // ✅ Edit
   const handleEdit = (product) => {
@@ -146,31 +145,30 @@ setTotalPages(Math.ceil(total / limit) || 1);
 
   // ✅ Excel Export
   const handleExportExcel = async () => {
-  try {
-    // Get the Excel file as a blob
-    const response = await ProductService.exportProductsExcel({
-      responseType: "blob", // important!
-    });
+    try {
+      // Get the Excel file as a blob
+      const response = await ProductService.exportProductsExcel({
+        responseType: "blob", // important!
+      });
 
-    // Create a URL for the blob
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = url;
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
 
-    // Set default file name
-    link.setAttribute("download", "products.xlsx");
-    document.body.appendChild(link);
-    link.click();
+      // Set default file name
+      link.setAttribute("download", "products.xlsx");
+      document.body.appendChild(link);
+      link.click();
 
-    // Cleanup
-    link.parentNode.removeChild(link);
-    toast.success("Excel exported successfully!");
-  } catch (err) {
-    toast.error("Export failed");
-    console.error(err);
-  }
-};
-
+      // Cleanup
+      link.parentNode.removeChild(link);
+      toast.success("Excel exported successfully!");
+    } catch (err) {
+      toast.error("Export failed");
+      console.error(err);
+    }
+  };
 
   // ✅ PDF Export
   const handleExportPDF = async () => {
@@ -203,13 +201,19 @@ setTotalPages(Math.ceil(total / limit) || 1);
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="9" className="text-center p-3 align-middle align-middle">
+              <td
+                colSpan="9"
+                className="text-center p-3 align-middle align-middle"
+              >
                 Loading...
               </td>
             </tr>
           ) : error ? (
             <tr>
-              <td colSpan="9" className="text-center text-red-500 p-3 align-middle">
+              <td
+                colSpan="9"
+                className="text-center text-red-500 p-3 align-middle"
+              >
                 {error}
               </td>
             </tr>
@@ -230,11 +234,8 @@ setTotalPages(Math.ceil(total / limit) || 1);
                 return (
                   <tr key={item._id} className="border-t hover:bg-gray-50">
                     <td className="p-3 align-middle">
-                      
                       <img
-                        src={
-                          item.product_image ? item.product_image : product1
-                        }
+                        src={item.product_image ? item.product_image : product1}
                         alt={item.name || "Product Image"}
                         className="w-12 h-12 object-cover rounded"
                         onError={(e) => {
@@ -274,48 +275,46 @@ setTotalPages(Math.ceil(total / limit) || 1);
                         {isLow ? "Low Stock" : "In Stock"}
                       </span>
                     </td>
-<td className="p-3 align-middle">
-  <div className="flex gap-3 items-center">
-    <button
-      onClick={() => handleEdit(item)}
-      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-    >
-      <FaEdit /> Edit
-    </button>
-    <button
-      onClick={() => handleDelete(item._id)}
-      className="text-red-600 hover:text-red-800 flex items-center gap-1"
-    >
-      <FaTrash />
-    </button>
-    {/* <button
+                    <td className="p-3 align-middle">
+                      <div className="flex gap-3 items-center">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        >
+                          <FaEdit /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item._id)}
+                          className="text-red-600 hover:text-red-800 flex items-center gap-1"
+                        >
+                          <FaTrash />
+                        </button>
+                        {/* <button
       onClick={() => setShowStockPopup(true) || setSelectedProduct(item)}
       className="text-black flex items-center gap-1"
     >
       <FaBoxOpen />
     </button> */}
 
-     <button
-      onClick={() => handleFetchHistory(item)}
-      className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
-    >
-      History
-    </button>
-  </div>
-</td>
-
-
-                      <td className="p-3 align-middle">
                         <button
-                          onClick={() =>
-                            setShowStockPopup(true) || setSelectedProduct(item)
-                          }
-                          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                          onClick={() => handleFetchHistory(item)}
+                          className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
                         >
-                          Add Stock
+                          History
                         </button>
-                      </td>
-                    
+                      </div>
+                    </td>
+
+                    <td className="p-3 align-middle">
+                      <button
+                        onClick={() =>
+                          setShowStockPopup(true) || setSelectedProduct(item)
+                        }
+                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                      >
+                        Add Stock
+                      </button>
+                    </td>
                   </tr>
                 );
               })
@@ -324,7 +323,7 @@ setTotalPages(Math.ceil(total / limit) || 1);
       </table>
     );
   };
- const handleUpdateStock = async () => {
+  const handleUpdateStock = async () => {
     try {
       if (!selectedProduct) return toast.error("No product selected");
       const updatedQty =
@@ -365,26 +364,25 @@ setTotalPages(Math.ceil(total / limit) || 1);
     }
   };
 
-const handleImportExcel = async () => {
-  if (!excelFile) return toast.error("Please select an Excel file");
+  const handleImportExcel = async () => {
+    if (!excelFile) return toast.error("Please select an Excel file");
 
-  try {
-    const { success, message, count } = await ProductService.uploadExcel(excelFile);
+    try {
+      const { success, message, count } = await ProductService.uploadExcel(
+        excelFile
+      );
 
-    if (success) {
-      toast.success(`Imported ${count} products successfully!`);
-      setExcelFile(null); // reset input
-      fetchItems(); // refresh product list
-    } else {
-      toast.error(message || "Import failed");
+      if (success) {
+        toast.success(`Imported ${count} products successfully!`);
+        setExcelFile(null); // reset input
+        fetchItems(); // refresh product list
+      } else {
+        toast.error(message || "Import failed");
+      }
+    } catch (err) {
+      toast.error(err.message || "Import failed");
     }
-  } catch (err) {
-    toast.error(err.message || "Import failed");
-  }
-};
-
-
-
+  };
 
   return (
     <div className="mx-auto mt-5 p-4">
@@ -419,39 +417,38 @@ const handleImportExcel = async () => {
 
       {/* Search */}
       <div className="flex gap-5 flex-wrap text-nowrap px-6 py-3 items-center mb-4">
-       <div className="w-full md:w-60 relative">
-  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
-    <CiSearch size={18} />
-  </span>
-  <input
-    type="text"
-    placeholder="Search by name or category"
-    className="w-full pl-8 pr-2 py-2 border rounded bg-gray-100 text-sm"
-    value={searchQuery}
-    onChange={handleSearch}
-    onFocus={() => setShowSuggestions(suggestions.length > 0)}
-    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-  />
-  {showSuggestions && suggestions.length > 0 && (
-    <ul className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg max-h-60 overflow-y-auto">
-      {suggestions.map((item) => (
-        <li
-          key={item._id}
-          onClick={() => {
-            setSearchQuery(item.name);
-            setShowSuggestions(false);
-            setPage(1);
-            fetchItems(); // fetch full table based on selection
-          }}
-          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-        >
-          {item.name}
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
-
+        <div className="w-full md:w-60 relative">
+          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
+            <CiSearch size={18} />
+          </span>
+          <input
+            type="text"
+            placeholder="Search by name or category"
+            className="w-full pl-8 pr-2 py-2 border rounded bg-gray-100 text-sm"
+            value={searchQuery}
+            onChange={handleSearch}
+            onFocus={() => setShowSuggestions(suggestions.length > 0)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg max-h-60 overflow-y-auto">
+              {suggestions.map((item) => (
+                <li
+                  key={item._id}
+                  onClick={() => {
+                    setSearchQuery(item.name);
+                    setShowSuggestions(false);
+                    setPage(1);
+                    fetchItems(); // fetch full table based on selection
+                  }}
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  {item.name}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -460,33 +457,32 @@ const handleImportExcel = async () => {
       </div>
 
       {/* Pagination */}
-<div className="flex justify-between items-center mt-4">
-  <div>
-    Showing {(page - 1) * limit + 1} to{" "}
-    {Math.min(page * limit, totalItems)} of {totalItems} items
-  </div>
-  <div className="flex gap-2">
-    <button
-      onClick={() => setPage((p) => Math.max(p - 1, 1))}
-      disabled={page === 1}
-      className="px-4 py-2 border rounded"
-    >
-      Previous
-    </button>
-    <button
-      onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-      disabled={page === totalPages}
-      className="px-4 py-2 border rounded"
-    >
-      Next
-    </button>
-  </div>
-</div>
-
+      <div className="flex justify-between items-center mt-4">
+        <div>
+          Showing {(page - 1) * limit + 1} to{" "}
+          {Math.min(page * limit, totalItems)} of {totalItems} items
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(p - 1, 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border rounded"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+            disabled={page === totalPages}
+            className="px-4 py-2 border rounded"
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {/* Export */}
       <div className="flex gap-3 align-middle mt-6 p-5 border rounded-md shadow">
-        <button
+        {/* <button
           onClick={handleExportExcel}
           className="flex items-center gap-2 border px-4 py-2 rounded text-blue-600 hover:bg-gray-100"
         >
@@ -497,47 +493,40 @@ const handleImportExcel = async () => {
           className="flex items-center gap-2 border px-4 py-2 rounded text-blue-600 hover:bg-gray-100"
         >
           <FaFilePdf /> Download PDF
-        </button>
+        </button> */}
 
+        <div className="flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
+          {/* File Input */}
+          <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
+            <svg
+              className="w-5 h-5 mr-2 text-gray-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
+            </svg>
+            <span className="text-gray-700 text-sm">
+              {file ? file.name : "Choose Excel/CSV file"}
+            </span>
+            <input
+              type="file"
+              accept=".xlsx, .xls, .csv"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
 
-<div className="flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
-  {/* File Input */}
-  <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
-    <svg
-      className="w-5 h-5 mr-2 text-gray-500"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-    >
-      <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
-    </svg>
-    <span className="text-gray-700 text-sm">
-      {file ? file.name : "Choose Excel/CSV file"}
-    </span>
-    <input
-      type="file"
-      accept=".xlsx, .xls, .csv"
-      onChange={handleFileChange}
-      className="hidden"
-    />
-  </label>
-
-  {/* Import Button */}
-  <button
-    onClick={handleImportExcel}
-    className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
-  >
-    <svg
-      className="w-4 h-4"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-    >
-      <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
-    </svg>
-    Import Excel
-  </button>
-</div>
-
-     
+          {/* Import Button */}
+          <button
+            onClick={handleImportExcel}
+            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
+            </svg>
+            Import Excel
+          </button>
+        </div>
       </div>
 
       {/* Stock Popup */}
@@ -589,72 +578,74 @@ const handleImportExcel = async () => {
         </div>
       )}
       {showHistoryPopup && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
-    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg relative transition-all">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
-        Product History – {selectedProduct?.name}
-      </h2>
-      <div className="max-h-80 overflow-y-auto">
-        {productHistory.length === 0 ? (
-          <p className="text-center text-gray-500">No history found.</p>
-        ) : (
-<table className="w-full text-sm text-left border">
-  <thead>
-    <tr>
-      <th className="p-2 border-b">Date</th>
-      <th className="p-2 border-b">Action</th>
-      <th className="p-2 border-b">Previous Stock</th>
-      <th className="p-2 border-b">Updated Stock</th>
-      <th className="p-2 border-b">Change</th>
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg relative transition-all">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
+              Product History – {selectedProduct?.name}
+            </h2>
+            <div className="max-h-80 overflow-y-auto">
+              {productHistory.length === 0 ? (
+                <p className="text-center text-gray-500">No history found.</p>
+              ) : (
+                <table className="w-full text-sm text-left border">
+                  <thead>
+                    <tr>
+                      <th className="p-2 border-b">Date</th>
+                      <th className="p-2 border-b">Action</th>
+                      <th className="p-2 border-b">Previous Stock</th>
+                      <th className="p-2 border-b">Updated Stock</th>
+                      <th className="p-2 border-b">Change</th>
 
-      <th className="p-2 border-b">Updated By</th>
-    </tr>
-  </thead>
-  <tbody>
-    {productHistory.length === 0 ? (
-      <tr>
-        <td colSpan="5" className="p-3 text-center text-gray-500">
-          No updates found
-        </td>
-      </tr>
-    ) : (
-      productHistory.map((h, index) => (
-        <tr key={index} className="border-b hover:bg-gray-50">
-          <td className="p-2">
-            {new Date(h.updated_at).toLocaleString()}
-          </td>
-          <td className="p-2">{h.action || "Stock Update"}</td>
-          <td className="p-2">
-            {h.changes?.before?.quantity ?? "No Update"}
-          </td>
-          <td className="p-2">
-            {h.changes?.after?.quantity ?? "No Update"}
-          </td>
-          <td className="p-2">
-  {Number(h.changes?.after?.quantity || 0) - Number(h.changes?.before?.quantity || 0)}
-</td>
+                      <th className="p-2 border-b">Updated By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productHistory.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="5"
+                          className="p-3 text-center text-gray-500"
+                        >
+                          No updates found
+                        </td>
+                      </tr>
+                    ) : (
+                      productHistory.map((h, index) => (
+                        <tr key={index} className="border-b hover:bg-gray-50">
+                          <td className="p-2">
+                            {new Date(h.updated_at).toLocaleString()}
+                          </td>
+                          <td className="p-2">{h.action || "Stock Update"}</td>
+                          <td className="p-2">
+                            {h.changes?.before?.quantity ?? "No Update"}
+                          </td>
+                          <td className="p-2">
+                            {h.changes?.after?.quantity ?? "No Update"}
+                          </td>
+                          <td className="p-2">
+                            {Number(h.changes?.after?.quantity || 0) -
+                              Number(h.changes?.before?.quantity || 0)}
+                          </td>
 
-          <td className="p-2">{h.updated_by || "Admin"}</td>
-        </tr>
-      ))
-    )}
-  </tbody>
-</table>
-
-        )}
-      </div>
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={() => setShowHistoryPopup(false)}
-          className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+                          <td className="p-2">{h.updated_by || "Admin"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowHistoryPopup(false)}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
