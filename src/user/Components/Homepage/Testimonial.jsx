@@ -65,7 +65,7 @@ const Testimonial = () => {
   };
 
   return (
-    <section className="testimonial-section">
+    <section id="our-impace" className="testimonial-section">
       <div className="testimonial-header">
         <div>
           <p className="tag">Testimonials</p>

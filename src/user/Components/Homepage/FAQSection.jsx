@@ -31,7 +31,7 @@ const FAQSection = () => {
   };
 
   return (
-    <section className="faq-section">
+    <section id="FAQ" className="faq-section">
       <div className="faq-left">
         <h2>
           Frequently Asked <span>Questions</span>
