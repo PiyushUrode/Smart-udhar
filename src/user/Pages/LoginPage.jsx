@@ -121,115 +121,131 @@ const handleKeyDown = (e, index) => {
 
 
   return (
-    <div className="login-wrapper" style={{ minHeight: "100vh" }}>
-      <header className="login-header">
-        <Link to="/">
-          <img src={logo} alt="Logo" className="logo" />
-        </Link>
-        <div className="login-header-right">
-          <span>Don't have an account?</span>
-          <Link to="/signup">
-            <button className="signup-btn">Sign Up</button>
-          </Link>
-        </div>
-      </header>
-
-      <main className="login-main flex flex-col md:flex-row">
-        <div className="login-left">
-          <img src={lockImage} alt="Illustration" className="lock-img" />
-        </div>
-
-        <div className="login-form-container">
-          <div className="login-card">
-            <div className="icon-placeholder">
-              <img src={icon} alt="" />
-            </div>
-            <div>
-              <h2 className="l-head">Welcome Back</h2>
-              <p className="l-para">Please Enter Your Details to Login  </p>
-            </div>
-
-            {/* Step 1: Phone */}
-            {step === "phone" && (
-              <>
-                <div className="phone-input">
-                  <select>
-                    <option value="+91">+91</option>
-                  </select>
-                  <input
-                    type="tel"
-                    maxLength={10}
-                    placeholder="Enter mobile number"
-                    value={phone}
-                    onChange={handlePhoneChange}
-                    onKeyDown={(e) => handleKeyDown(e)}
-                    ref={phoneRef}
-                  />
-                </div>
-                <button
-                  className="btn otp"
-                  onClick={handleGetOtp}
-                  disabled={loading}
-                >
-                  {loading ? "Sending..." : "Get OTP"}
-                </button>
-              </>
-            )}
-
-            {/* Step 2: OTP */}
-            {step === "otp" && (
-              <>
-                <div
-                  className="flex space-x-3 justify-center mt-4"
-                  onPaste={(e) => {
-                    const pasted = e.clipboardData.getData("Text").trim();
-                    if (/^\d{6}$/.test(pasted)) {
-                      setOtp(pasted);
-                      otpRefs.current[5]?.focus();
-                    }
-                  }}
-                >
-                  {[...Array(6)].map((_, index) => (
-                    <input
-                      key={index}
-                      id={`otp-${index}`}
-                      type="text"
-                      maxLength={1}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={otp[index] || ""}
-                      onChange={(e) => handleOtpChange(e, index)}
-                      onKeyDown={(e) => handleKeyDown(e, index)}
-                      autoComplete={index === 0 ? "one-time-code" : "off"}
-                      ref={(el) => (otpRefs.current[index] = el)}
-                      className="w-12 h-12 md:w-14 md:h-14 rounded-xl text-center text-lg outline-none border bg-white text-gray-700 
-                        focus:ring-2 focus:ring-blue-500 border-gray-400 shadow-sm"
-                    />
-                  ))}
-                </div>
-
-                <button
-                  className="btn otp mt-6 w-full py-3 font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50"
-                  onClick={handleVerifyOtp}
-                  disabled={loading}
-                >
-                  {loading ? "Verifying..." : "Confirm"}
-                </button>
-              </>
-            )}
-
-            <div>
-              <p className="terms mt-8">By continuing, you agree to our</p>
-              <p className="terms">
-                <a href="#">Terms of Service</a> &{" "}
-                <a href="#">Privacy Policy</a>
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
+ <div className="h-screen overflow-y-hidden flex flex-col bg-[linear-gradient(115.57deg,#5BA0F9_3.68%,#77C2FB_24.82%,#6F88FC_45.17%,#BCD4FA_62.05%,#D2E5F4_90.54%)] md:bg-[linear-gradient(115.57deg,#5BA0F9_3.68%,#77C2FB_24.82%,#6F88FC_45.17%,#BCD4FA_62.05%,#D2E5F4_90.54%)] sm:bg-white">
+  {/* Header */}
+  <header className="flex justify-between items-center bg-white px-5 md:px-12 py-3 gap-3 md:gap-10">
+    <Link to="/">
+      <img src={logo} alt="Logo" className="w-[149px] md:w-[130px] sm:w-[100px] h-auto" />
+    </Link>
+    <div className="flex items-center gap-5 md:gap-5 sm:gap-2">
+      <span className="hidden sm:inline text-gray-600 text-base">Don't have an account?</span>
+      <Link to="/signup">
+        <button className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm md:text-base font-semibold px-4 py-2 rounded-md shadow hover:opacity-90">
+          Sign Up
+        </button>
+      </Link>
     </div>
-  );
+  </header>
+
+  {/* Main */}
+  <main className="flex flex-col md:flex-row items-center justify-center px-5 md:px-12 lg:px-16 py-10 md:py-20 max-w-[1079px] mx-auto w-full ">
+    {/* Left Side Image */}
+    <div className="hidden md:block flex-1 text-center">
+      <img src={lockImage} alt="Illustration" className="w-full h-auto rounded-l-lg" />
+    </div>
+
+    {/* Right Form */}
+    <div className="flex-1 flex justify-center  ">
+      <div className="bg-white rounded-xl shadow-md max-w-[554px] w-full p-4  md:p-14 py-10 flex flex-col gap-6 text-center">
+        {/* Icon */}
+        <div className="flex justify-center ">
+          <img src={icon} alt="icon" className="w-9 h-9" />
+        </div>
+
+        {/* Heading */}
+        <div>
+                    <h2 className="text-[30px] sm:text-2xl  mb-1"> <span className="font-robotoSb navbar-login-text "> Login</span></h2>
+          <h2 className="text-[30px] sm:text-2xl font-normal font-interR mb-1">Welcome Back</h2>
+          <p className="text-[#525252] text-xs sm:text-sm font-normal font-interR">Please Enter Your Details to Login</p>
+        </div>
+
+        {/* Phone Step */}
+        {step === "phone" && (
+          <>
+            <div className="flex flex-row gap-3 mb-4 ">
+         <div className="flex flex-row gap-1 w-full">
+                  <div className="flex w-[70px] md:w-16">
+                <select className="border border-[#E5E5E5] rounded-md px-3 py-2 bg-white ">
+                <option value="+91">+91</option>
+              </select>
+        
+        </div>
+              <input
+                type="tel"
+                maxLength={10}
+                placeholder="Enter mobile number"
+                value={phone}
+                onChange={handlePhoneChange}
+                onKeyDown={(e) => handleKeyDown(e)}
+                ref={phoneRef}
+                className="flex-1 border border-[#E5E5E5] rounded-md px-3 py-2 bg-white"
+              />
+            </div>
+            </div>
+
+            <button
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-medium rounded-lg shadow hover:opacity-90 disabled:opacity-50"
+              onClick={handleGetOtp}
+              disabled={loading}
+            >
+              {loading ? "Sending..." : "Get OTP"}
+            </button>
+          </>
+        )}
+
+        {/* OTP Step */}
+        {step === "otp" && (
+          <>
+            <div
+              className="flex space-x-3 justify-center mt-4"
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData("Text").trim();
+                if (/^\d{6}$/.test(pasted)) {
+                  setOtp(pasted);
+                  otpRefs.current[5]?.focus();
+                }
+              }}
+            >
+              {[...Array(6)].map((_, index) => (
+                <input
+                  key={index}
+                  id={`otp-${index}`}
+                  type="text"
+                  maxLength={1}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={otp[index] || ""}
+                  onChange={(e) => handleOtpChange(e, index)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
+                  autoComplete={index === 0 ? "one-time-code" : "off"}
+                  ref={(el) => (otpRefs.current[index] = el)}
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-xl text-center text-lg outline-none border bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 border-gray-400 shadow-sm"
+                />
+              ))}
+            </div>
+            <button
+              className="mt-6 w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50"
+              onClick={handleVerifyOtp}
+              disabled={loading}
+            >
+              {loading ? "Verifying..." : "Confirm"}
+            </button>
+          </>
+        )}
+
+        {/* Terms */}
+        <div className="mt-6 text-sm text-gray-600">
+          <p>By continuing, you agree to our</p>
+          <p>
+            <a href="#" className="underline">Terms of Service</a> &{" "}
+            <a href="#" className="underline">Privacy Policy</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+ );
 };
 
 export default LoginPage;

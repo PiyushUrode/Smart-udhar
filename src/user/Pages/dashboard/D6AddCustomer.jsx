@@ -301,6 +301,7 @@ const D6AddCustomer = () => {
           { key: "panNumber", label: "PAN", type: "text" },
           { key: "companyName", label: "Company Name", type: "text" },
           { key: "gstNumber", label: "GST", type: "text" },
+
         ].map((field) => (
           <div key={field.key} className="w-full">
             <label className="block text-sm text-gray-600">{field.label}</label>

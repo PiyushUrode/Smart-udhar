@@ -49,9 +49,9 @@ function DashboardGuards({ children }) {
         setChecking(false);
 
         setTimeout(() => {
-          console.log("Navigating to /admin/dashboard");
+          // console.log("Navigating to /admin/dashboard");
           
-          navigate("/admin/dashboard");
+          navigate("/dashboard/bussinessList");
         }, 1000);
         return;
       }

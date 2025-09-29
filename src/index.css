@@ -249,9 +249,10 @@ input[type="email"],
 input[type="number"],
 input,
 textarea,
-select {
+select
+   {
   width: 100%;
-  padding: 0.65rem 0.75rem;
+  /* padding: 0.65rem 0.75rem; */
   /* vertical + horizontal padding */
   border: 2px solid var(--input-border);
   border-radius: 0.45rem;
@@ -266,6 +267,14 @@ select {
   box-sizing: border-box;
   transition: all 0.25s ease-in-out;
 }
+
+
+
+
+
+
+
+
 
 /* Placeholder styling */
 input::placeholder,
@@ -404,7 +413,6 @@ button {
   line-height: 100%;
   letter-spacing: 0%;
   cursor: pointer;
-
 }
 
 

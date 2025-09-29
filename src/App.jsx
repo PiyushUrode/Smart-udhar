@@ -86,8 +86,8 @@ function App() {
           <Route
             path="*"
             element={
-              // <DashboardGuards>
-              //         </DashboardGuards>
+              <DashboardGuards>
+
               <Routes>
                 <Route path="product" element={<D3Product />} />
                 <Route path="product/:id" element={<D3Product />} />
@@ -135,6 +135,7 @@ function App() {
                   element={<A2AverageCreditScore />}
                 />
               </Routes>
+                                    </DashboardGuards>
             }
           />
         </Route>
@@ -147,6 +148,8 @@ function App() {
           element={<LoginPageAdmin setAuth={setIsAuthenticated} />}
         />
         {/* admin */}
+        
+
         <Route path="/admin/dashboard/*" element={<DashboardLayoutAdmin />}>
           <Route index element={<D1DashboardHomeAdmin />} />
 
@@ -174,9 +177,12 @@ function App() {
           <Route path="subscriptions/view" element={<ViewSubscription />} />
           <Route path="profile" element={<ProfileCard/>}/>
         </Route>
-
         <Route path="*" element={<Navigate to="/" />} />
+
       </Routes>
+
+
+
     </BrowserRouter>
   );
 }

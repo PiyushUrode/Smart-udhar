@@ -419,8 +419,8 @@ const handleImportExcel = async () => {
 
       {/* Search */}
       <div className="flex gap-5 flex-wrap text-nowrap px-6 py-3 items-center mb-4">
-       <div className="w-full md:w-60 relative">
-  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
+       <div className="w-full md:w-60 relative ">
+  <span className="absolute left-2 top-1/2   -translate-y-1/2 text-gray-500">
     <CiSearch size={18} />
   </span>
   <input
