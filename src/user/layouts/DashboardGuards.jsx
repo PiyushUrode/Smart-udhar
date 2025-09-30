@@ -1,5 +1,4 @@
 import Cookies from "js-cookie";
-// Updated DashboardGuards component
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -8,38 +7,7 @@ function DashboardGuards({ children }) {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState(null);
 
-  // useEffect(() => {
-  //   try {
-  //     // Standardize to use Cookies for store_id (as in business list)
-  //     const storeId = Cookies.get("store_id");
-  //     // Use consistent key: "storeProfile_id" for the active business profile ID
-  //     // const profileId = localStorage.getItem("storeProfile_id");
-
-  //     const profileId = localStorage.getItem("storeProfile_id");
-
-  //     if (!storeId || !profileId) {
-  //       setError("⚠️ No active business profile found. Please select one.");
-  //       setChecking(false);
-
-  //       setTimeout(() => {
-  //         navigate("/dashboard/bussinessList"); // ✅ fixed route
-  //       }, 1000);
-  //       return;
-  //     }
-
-  //     setChecking(false);
-  //   } catch (err) {
-  //     // Suppress console errors as per request - handle silently
-  //     setError("Unexpected error. Please login again.");
-  //     setChecking(false);
-
-  //     setTimeout(() => {
-  //       navigate("/login");
-  //     }, 1000);
-  //   }
-  // }, [navigate]);
-
-  useEffect(() => {
+useEffect(() => {
     try {
       const storeId = Cookies.get("store_id");
       const profileId = localStorage.getItem("storeProfile_id");
@@ -49,8 +17,6 @@ function DashboardGuards({ children }) {
         setChecking(false);
 
         setTimeout(() => {
-          // console.log("Navigating to /admin/dashboard");
-          
           navigate("/dashboard/bussinessList");
         }, 1000);
         return;

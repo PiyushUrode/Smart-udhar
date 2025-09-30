@@ -10,11 +10,10 @@ const D5StaffDetails = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [popupType, setPopupType] = useState(null); // success | error
-const [popupMessage, setPopupMessage] = useState("");
-
-
+  const [popupMessage, setPopupMessage] = useState("");
   const [isOpen, setIsOpen] = useState(true);
-  const [formData, setFormData] = useState({
+ 
+ const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     mobileNumber: "",
@@ -29,7 +28,7 @@ const [popupMessage, setPopupMessage] = useState("");
   const [error, setError] = useState("");
   const [formErrors, setFormErrors] = useState({});
 
-  const requiredFields = ["firstName", "lastName", "emailId", "roles" , "mobileNumber"];
+  const requiredFields = ["firstName", "lastName", "emailId", "roles", "mobileNumber"];
 
   // 🔹 Fetch staff if editing
   useEffect(() => {
@@ -60,6 +59,18 @@ const [popupMessage, setPopupMessage] = useState("");
     fetchStaff();
   }, [id]);
 
+  // Auto-close popup & redirect after success
+  useEffect(() => {
+    if (popupType === "success") {
+      const timer = setTimeout(() => {
+        setPopupType(null);
+      }, 5000); // 5 sec delay
+      
+      navigate("/dashboard/staff-role");
+      return () => clearTimeout(timer);
+    }
+  }, [popupType, navigate]);
+
   // Input change
   const handleChange = (e) => {
     const { id, value, files } = e.target;
@@ -88,54 +99,61 @@ const [popupMessage, setPopupMessage] = useState("");
       }
     });
 
-    // Optional: Email & mobile format check
+    // Email check
     if (formData.emailId && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.emailId)) {
       errors.emailId = "Enter a valid email";
     }
 
-if (
-  formData.mobileNumber && 
-  !/^[6-9]\d{9}$/.test(String(formData.mobileNumber).trim())
-) {
-  errors.mobileNumber = "Enter a valid 10-digit mobile number";
-}
+    // Mobile check
+    if (
+      formData.mobileNumber &&
+      !/^[6-9]\d{9}$/.test(String(formData.mobileNumber).trim())
+    ) {
+      errors.mobileNumber = "Enter a valid 10-digit mobile number";
+    }
 
     return errors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (loading) return;
 
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
 
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // ✅ Run validation before API call
+  const errors = validateForm();
+  if (Object.keys(errors).length > 0) {
+    setFormErrors(errors);   // Show field errors
+    toast.error("Please fix the highlighted errors before submitting.");
+    return; // ⛔ Stop execution
+  }
+
+  try {
     setLoading(true);
-    setFormErrors({});
-    setError("");
+    let res;
 
-    try {
-      let res;
-      if (id) {
-        res = await StaffService.updateStaff(id, formData, staffImage);
- setPopupType("success");
+    if (id) {
+      console.log("🟢 Update Member clicked, calling updateStaff API...");
+      res = await StaffService.updateStaff(id, formData, staffImage);
+      console.log("✅ Update API Response:", res);
+      setPopupType("success");
       setPopupMessage("Staff updated successfully!");
-      } else {
-        res = await StaffService.createStaff(formData, staffImage);
-  setPopupType("success");
+    } else {
+      console.log("🟡 Add Member clicked, calling createStaff API...");
+      res = await StaffService.createStaff(formData, staffImage);
+      console.log("✅ Create API Response:", res);
+      setPopupType("success");
       setPopupMessage("Staff member added successfully!");
-      }
-      // navigate("/dashboard/staff-role");
-    } catch (err) {
-setPopupType("error");
-    setPopupMessage(err.response?.data?.message || "Failed to save staff");
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("❌ Error during staff submit:", error);
+    setPopupType("error");
+    setPopupMessage("Failed to process request!");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fields = [
     { id: "firstName", label: "First Name", placeholder: "Enter first name" },
@@ -205,30 +223,25 @@ setPopupType("error");
           {/* Image error */}
           {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
 
-{/* Submit Button */}
-<div className="text-right">
-  <button
-    type="submit"
-    className="bg-[#2176FF] hover:bg-blue-600 text-white font-robotoSb px-6 py-2 rounded-md"
-  >
-    {id ? "Update Member" : "Add Member"}
-  </button>
-</div>
+          {/* Submit Button */}
+          <div className="text-right">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#2176FF] hover:bg-blue-600 text-white font-robotoSb px-6 py-2 rounded-md"
+            >
+              {loading ? "Processing..." : id ? "Update Member" : "Add Member"}
+            </button>
+          </div>
 
-{/* Popup */}
-{popupType && (
-  <Button
-    type={popupType}             // success | error
-    message={popupMessage}       // "Staff updated successfully!" etc.
-    onClose={() => {
-      setPopupType(null);        // popup बंद करना
-      if (popupType === "success") {
-        navigate("/dashboard/staff-role"); // success पर redirect
-      }
-    }}
-  />
-)}
-
+          {/* Popup */}
+          {popupType && (
+            <Button
+              type={popupType}       // success | error
+              message={popupMessage} // "Staff updated successfully!" etc.
+              onClose={() => setPopupType(null)} // manual close (optional)
+            />
+          )}
         </form>
       )}
     </div>

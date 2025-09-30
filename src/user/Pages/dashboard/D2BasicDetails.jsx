@@ -194,7 +194,7 @@
 
 
 
-  useEffect(() => {
+  useEffect(() => { 
     const fetchData = async () => {
       if (id) {
         try {

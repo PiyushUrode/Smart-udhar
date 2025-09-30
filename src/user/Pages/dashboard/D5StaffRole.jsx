@@ -181,7 +181,7 @@ useEffect(() => {
     }
   };
   return (
-    <div className="px-4 py-12 md:px-10 max-w-screen-xl mx-auto space-y-6 bg-white">
+    <div className="px-1  sm:px-4  py-6 sm:py-12 md:px-10 max-w-screen-xl mx-auto space-y-6 bg-white">
       {/* Header */}
       <div className="flex flex-col gap-5 ">
         <h1 className=" text-xl md:text-2xl font-semibold text-[#1F2937] font-robotoB">
@@ -215,7 +215,7 @@ useEffect(() => {
             <h2 className="text-base font-semibold text-black">
               Team Members
             </h2>
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-3 flex-row">
               <div className="relative w-full sm:w-64">
                 <input
                   type="text"
@@ -238,7 +238,7 @@ useEffect(() => {
               {members.map((member, index) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-3 border rounded-md"
+                  className="flex flex-col md:flex-row  gap-5 items-start  md:items-center justify-between p-3 border rounded-md"
                 >
                   <div className="flex items-center gap-3">
                     <img

@@ -218,10 +218,10 @@ const Header = () => (
     <h1 className="text-base sm:text-2xl font-robotoB text-[#1F2937]">
       Credit Score Management
     </h1>
-    <button className="flex items-center gap-2 bg-blue-600 font-robotoR text-white text-xs sm:text-md px-4 py-2 rounded-lg hover:bg-blue-700">
+    {/* <button className="flex items-center gap-2 bg-blue-600 font-robotoR text-white text-xs sm:text-md px-4 py-2 rounded-lg hover:bg-blue-700">
       <FaDownload size={16} />
       Export Report
-    </button>
+    </button> */}
   </div>
 );
 

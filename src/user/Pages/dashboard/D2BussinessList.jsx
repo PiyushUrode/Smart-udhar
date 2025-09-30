@@ -149,7 +149,17 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
       </div>
 
       {/* Table */}
-      <div className="mx-auto py-2 px-2 md:mt-5">
+      <div className="flex text-xs pl-2 py-3 items-center gap-3">
+        <div className="  p-1 h-0 w-1 aspect-[1/1] rounded-full bg-green-600 font-semibold">
+              {/* dot */}
+            </div> Active
+         
+            <div className=" p-1 h-0 w-1 aspect-[1/1] rounded-full bg-red-500 font-semibold">
+              {/* dot */}
+            </div> Deactivate
+         
+         </div>
+      <div className="mx-auto py-2 px-2 ">
         <div className="overflow-x-auto p-2 lg:p-5 bg-white rounded shadow ">
           {loading ? (
             <p>Loading businesses...</p>
@@ -180,13 +190,20 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
            ${isActive ? "bg-green-50" : ""
         }`}
       >
-        <td className="p-4 font-medium">
-          {item.businessName || "-"}{" "}
-          {isActive && (
-            <span className="ml-2 text-green-600 font-semibold">
-              (Active)
-            </span>
-          )}
+        <td className="p-4 font-medium flex items-center">
+         
+          {isActive ? 
+            <div className="mr-2 p-1 h-0 w-1 aspect-[1/1] rounded-full bg-green-600 font-semibold">
+              {/* dot */}
+            </div>
+          :
+            <div className="mr-2 p-1 h-0 w-1 aspect-[1/1] rounded-full bg-red-500 font-semibold">
+              {/* dot */}
+            </div>
+
+
+        }
+           {item.businessName || "-"}{" "}
         </td>
         <td className="p-4">{item.gstNumber || "-"}</td>
         {/* <td className="p-4">{item.address || "-"}</td> */}

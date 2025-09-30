@@ -216,8 +216,8 @@ const D4ProductList = () => {
   const renderTable = () => {
     const isProductTab = activeTab === "product";
     return (
-      <table className="w-full bg-white rounded-lg shadow-sm text-sm text-nowrap ">
-        <thead className="text-left text-gray-600 font-medium">
+      <table className="w-full bg-white rounded-lg shadow-sm  text-nowrap ">
+        <thead className="text-left text-gray-600 font-medium text-xs md:text-sm">
           <tr>
             <th className="p-3 align-middle">Image</th>
             <th className="p-3 align-middle">Name</th>
@@ -235,7 +235,7 @@ const D4ProductList = () => {
             <tr>
               <td
                 colSpan="9"
-                className="text-center p-3 align-middle align-middle"
+                className="text-center  p-3 align-middle align-middle"
               >
                 Loading...
               </td>
@@ -264,7 +264,7 @@ const D4ProductList = () => {
               .map((item) => {
                 const isLow = (item.quantity || 0) < 10;
                 return (
-                  <tr key={item._id} className="border-t hover:bg-gray-50">
+                  <tr key={item._id} className="border-t hover:bg-gray-50 text-xs md:text-sm">
                     <td className="p-3 align-middle">
                       <img
                         src={item.product_image ? item.product_image : product1}
@@ -445,7 +445,7 @@ const D4ProductList = () => {
   };
 
   return (
-    <div className="mx-auto mt-5 p-4">
+    <div className="mx-auto md:mt-5 border p-1 md:p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 border-b px-6 py-3">
         <h1 className="text-base md:text-xl lg:text-2xl font-semibold">Items</h1>
@@ -517,7 +517,7 @@ const D4ProductList = () => {
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-4">
-        <div>
+        <div className="text-xs md:text-sm">
           Showing {(page - 1) * limit + 1} to{" "}
           {Math.min(page * limit, totalItems)} of {totalItems} items
         </div>
@@ -525,14 +525,14 @@ const D4ProductList = () => {
           <button
             onClick={() => setPage((p) => Math.max(p - 1, 1))}
             disabled={page === 1}
-            className="px-4 py-2 border rounded"
+            className="px-4 py-2 border rounded text-xs md:text-sm "
           >
             Previous
           </button>
           <button
             onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
             disabled={page === totalPages}
-            className="px-4 py-2 border rounded"
+            className="px-4 py-2 border rounded text-xs md:text-sm"
           >
             Next
           </button>
