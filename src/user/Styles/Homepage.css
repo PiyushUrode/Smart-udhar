@@ -767,7 +767,7 @@ letter-spacing: 0%;
 }
 
 .card {
-  background-color: #F2FAFE;
+  background-color: #e2f0f7;
   padding: 24px;
   border-radius: 12px;
   width: 370px;
@@ -934,7 +934,7 @@ letter-spacing: 0%;
 
 .store-buttons {
   display: flex;
-  gap: 10px;
+  
   flex-wrap: wrap;
 }
 
@@ -942,7 +942,7 @@ letter-spacing: 0%;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
+   
   border-radius: 10px;
   text-decoration: none;
   transition: 0.3s ease;
@@ -1033,7 +1033,7 @@ letter-spacing: 0%;
   }
 
   .phone-img {
-    max-width: 240px;
+    max-width: 44rem;
   }
 }
 
@@ -1134,6 +1134,9 @@ letter-spacing: 0%;
   width: 26px;
   height: 26px;
   padding: 5px;
+  display: flex ;
+  justify-content: center;
+  align-items: center;
   border-radius: 25px;
   margin: 0;
 }
