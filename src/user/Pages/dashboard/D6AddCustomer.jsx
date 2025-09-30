@@ -2,6 +2,7 @@
 import React from "react";
 import { FaUpload } from "react-icons/fa6";
 import { useCustomerForm } from "../../api/addCustomerService";
+import Button from "../../common/Button";
 
 const D6AddCustomer = () => {
   const {
@@ -10,6 +11,9 @@ const D6AddCustomer = () => {
     loading,
     errors,
     customerId,
+    popupType,
+    message,
+    setPopupType,
     handleChange,
     handleClear,
     handleSubmit,
@@ -30,7 +34,7 @@ const D6AddCustomer = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto mt-5 md:mt-10 pb-10 bg-white rounded-lg shadow-xl">
+    <div className="max-w-5xl mx-auto mt-5 md:mt-10 pb-10 bg-white rounded-lg shadow-xl relative">
       <div className="flex justify-between bg-bluecol rounded-t-xl px-4 md:px-10 py-4 items-center mb-8">
         <h1 className="text-lg md:text-2xl font-bold text-white">
           {customerId ? "Update Customer" : "Add Customer"}
@@ -47,7 +51,13 @@ const D6AddCustomer = () => {
               {label} {required && <span className="text-red-500">*</span>}
             </label>
             <input
-              type={name === "mobile" ? "number" : name === "email" ? "email" : "text"}
+              type={
+                name === "mobile"
+                  ? "number"
+                  : name === "email"
+                  ? "email"
+                  : "text"
+              }
               name={name}
               value={formData[name] || ""}
               onChange={handleChange}
@@ -98,16 +108,6 @@ const D6AddCustomer = () => {
               onChange={handleChange}
             />
           </label>
-          {preview && (
-            <></>
-            // <button
-            //   type="button"
-            //   onClick={() => handleClear()}
-            //   className="mt-2 text-sm text-red-500 hover:underline"
-            // >
-            //   Remove
-            // </button>
-          )}
         </div>
 
         <div className="md:col-span-2 mt-8 flex flex-wrap justify-center gap-4">
@@ -135,6 +135,15 @@ const D6AddCustomer = () => {
           </button>
         </div>
       </form>
+
+      {/* 🔔 Popup message */}
+      {popupType && (
+        <Button
+          type={popupType}
+          message={message}
+          onClose={() => setPopupType(null)}
+        />
+      )}
     </div>
   );
 };
