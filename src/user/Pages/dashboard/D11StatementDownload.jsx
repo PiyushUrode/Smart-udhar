@@ -17,7 +17,7 @@ import StatementDownload from "../../api/statementdownload";
 const reports = [
   {
     title: "Product Report",
-    desc: "Track all products you’ve made or received.",
+    desc: "Track all products you’ve made, received, and carefully managed over time.",
     formats: ["PDF", "Excel"],
     color: "red",
     icon: <Wallet className="text-red-600" />,
