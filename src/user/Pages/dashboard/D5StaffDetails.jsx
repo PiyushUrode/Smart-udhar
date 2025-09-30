@@ -153,10 +153,10 @@ setPopupType("error");
     <div className="max-w-4xl mx-auto my-5 p-4 sm:p-6 bg-white rounded-lg shadow-xl">
       {/* Header */}
       <div
-        className="flex justify-between items-center bg-[#3B82F6] text-white p-4 rounded-md cursor-pointer"
+        className="flex justify-between items-center bg-bluecol text-white p-4 rounded-md cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <h2 className="text-lg font-robotoM">
+        <h2 className="text-base md:text-xl lg:text-2xl">
           {id ? "Edit Staff Details" : "Add Staff Details"}
         </h2>
         <span>{isOpen ? <FaChevronUp /> : <FaChevronDown />}</span>

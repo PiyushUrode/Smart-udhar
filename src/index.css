@@ -96,7 +96,13 @@ h1 {
   font-weight: 700;
   word-spacing: 0.1em;
   color: #1F2937;
+}
 
+h2 {
+  font-family: 'Roboto-SemiBold', sans-serif;
+  line-height: 1.6;
+  font-weight: 700;
+  word-spacing: 0.1em;
 }
 
 p {
