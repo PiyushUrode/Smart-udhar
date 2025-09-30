@@ -103,6 +103,8 @@ function authHeaders(token) {
 
 export const CustomerService = {
   async createCustomer(form = {}, opts = {}) {
+    console.log("Creating customer with form:", form, "opts:", opts);
+
     const { token, store_id, storeProfile_id } = getAuthContext();
 
     let payload;
@@ -116,16 +118,17 @@ export const CustomerService = {
       headers = { ...headers, "Content-Type": "multipart/form-data" };
     } else {
       payload = safePayload(form, store_id, storeProfile_id);
+      const required = opts.required || DEFAULT_REQUIRED_CREATE;
+      const missing = validateRequired(payload, required);
+      if (missing.length) {
+        const err = new Error(`Missing required fields: ${missing.join(", ")}`);
+        err.name = "CustomerValidationError";
+        err.missingFields = missing;
+        throw err;
+      }
+
     }
 
-    const required = opts.required || DEFAULT_REQUIRED_CREATE;
-    const missing = validateRequired(payload, required);
-    if (missing.length) {
-      const err = new Error(`Missing required fields: ${missing.join(", ")}`);
-      err.name = "CustomerValidationError";
-      err.missingFields = missing;
-      throw err;
-    }
 
     const { data } = await axiosClient.post("/store-customer/create", payload, {
       headers,
@@ -138,33 +141,53 @@ export const CustomerService = {
     };
   },
 
+  async getCustomerById(id) {
+    const { token } = getAuthContext();
+    const headers = authHeaders(token);
+
+    const { data } = await axiosClient.get(`/store-customer/findBy-id/${id}`, {
+      headers,
+    });
+
+    return {
+      success: data?.success ?? true,
+      customer: data?.customer || data?.data,
+    };
+  },
+
   async updateCustomer(form = {}, opts = {}) {
     const { token, store_id, storeProfile_id } = getAuthContext();
     const id = form._id || form.id;
+    console.log("Updating customer with id:", id, "form:", form, "opts:", opts);
+
     if (!id) throw new Error("Missing customer id");
 
     let payload;
     let headers = authHeaders(token);
 
+
     if (form.product_image instanceof File) {
       payload = new FormData();
       Object.entries(safePayload(form, store_id, storeProfile_id)).forEach(
-        ([key, value]) => payload.append(key, value === null || value === undefined ? "" : value)
+        ([key, value]) => payload.append("image", value === null || value === undefined ? "" : value)
       );
-      payload.append("_id", id);
+      payload.append("id", id);
       headers = { ...headers, "Content-Type": "multipart/form-data" };
     } else {
-      payload = { ...safePayload(form, store_id, storeProfile_id), _id: id };
+      payload = { ...safePayload(form, store_id, storeProfile_id), id: id };
+
+      const required = opts.required || DEFAULT_REQUIRED_UPDATE;
+      const missing = validateRequired(payload, required);
+      if (missing.length) {
+        const err = new Error(`Missing required fields: ${missing.join(", ")}`);
+        err.name = "CustomerValidationError";
+        err.missingFields = missing;
+        throw err;
+      }
+
     }
 
-    const required = opts.required || DEFAULT_REQUIRED_UPDATE;
-    const missing = validateRequired(payload, required);
-    if (missing.length) {
-      const err = new Error(`Missing required fields: ${missing.join(", ")}`);
-      err.name = "CustomerValidationError";
-      err.missingFields = missing;
-      throw err;
-    }
+
 
     const { data } = await axiosClient.put("/store-customer/update", payload, {
       headers,
@@ -277,29 +300,7 @@ export const CustomerService = {
     });
     return { success: data?.success ?? true };
   },
-
-  async exportCustomersToExcel() {
-    const { token, store_id, storeProfile_id } = getAuthContext();
-    const res = await axiosClient.get(
-      `/store-customer/export-excel/${store_id}/${storeProfile_id}`,
-      { headers: authHeaders(token), responseType: "blob" }
-    );
-    return res.data;
-  },
-
-  async exportCustomersToPDF() {
-    const { token, store_id, storeProfile_id } = getAuthContext();
-    const res = await axiosClient.get(
-      `/store-customer/export-pdf/${store_id}/${storeProfile_id}`,
-      { headers: authHeaders(token), responseType: "blob" }
-    );
-
-    if (!res.data || res.data.size === 0) {
-      throw new Error("Empty PDF received — check backend export logic");
-    }
-
-    return res.data;
-  },
+ 
 
   async uploadExcel(file) {
     const { token, store_id, storeProfile_id } = getAuthContext();

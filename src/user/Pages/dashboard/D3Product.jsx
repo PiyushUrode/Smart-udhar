@@ -292,11 +292,11 @@ const ProductForm = ({
       >
         Cancel
       </button>
+
       <button
         type="submit"
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Save Product
+      > Save Product
       </button>
     </div>
   </form>
@@ -850,8 +850,10 @@ export default function D3Product() {
   // =================================================================
   return (
     <div className="max-w-4xl mx-auto mt-5 md:mt-10 pb-7 bg-white rounded-lg shadow-customCard">
+
       {/* Removed: <ToastContainer /> */}
       <div className="bg-blue-600 text-white px-6 py-3 rounded-t-md text-lg font-semibold">
+
         Items
       </div>
 

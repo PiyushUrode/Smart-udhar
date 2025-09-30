@@ -31,8 +31,8 @@ const DeleteConfirmationModal = ({ productName, onConfirm, onCancel }) => (
           <p className="text-sm text-gray-500">
             Are you sure you want to delete the product:
             <br />
-            <strong className="text-red-600">{productName}</strong>?
-            This action cannot be undone.
+            <strong className="text-red-600">{productName}</strong>? This action
+            cannot be undone.
           </p>
         </div>
       </div>
@@ -264,7 +264,10 @@ const D4ProductList = () => {
               .map((item) => {
                 const isLow = (item.quantity || 0) < 10;
                 return (
-                  <tr key={item._id} className="border-t hover:bg-gray-50 text-xs md:text-sm">
+                  <tr
+                    key={item._id}
+                    className="border-t hover:bg-gray-50 text-xs md:text-sm"
+                  >
                     <td className="p-3 align-middle">
                       <img
                         src={item.product_image ? item.product_image : product1}
@@ -448,7 +451,9 @@ const D4ProductList = () => {
     <div className="mx-auto md:mt-5 border p-1 md:p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 border-b px-6 py-3">
-        <h1 className="text-base md:text-xl lg:text-2xl font-semibold">Items</h1>
+        <h1 className="text-base md:text-xl lg:text-2xl font-semibold">
+          Items
+        </h1>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
           onClick={() => navigate("/dashboard/product")}
