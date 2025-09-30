@@ -158,7 +158,7 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
     </div>
 
     <div
-      className="bg-[#F6F8FA] p-3 rounded-md text-blue-600 font-semibold text-sm cursor-pointer"
+      className="bg-[#F6F8FA] p-3 rounded-md text-bluecol font-semibold text-sm cursor-pointer"
       onClick={() => setShowAdvanced(!showAdvanced)}
     >
       {showAdvanced ? "▴ Advanced Fields" : "▾ Advanced Fields"}
@@ -220,7 +220,7 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
       <button type="button" className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
         Cancel
       </button>
-      <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      <button type="submit" className="px-4 py-2 bg-bluecol text-white rounded hover:bg-blue-700">
         Save Product
       </button>
     </div>
@@ -323,7 +323,7 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
     </div>
 
     <div
-      className="bg-[#F6F8FA] p-3 rounded-md text-blue-600 font-semibold text-sm cursor-pointer"
+      className="bg-[#F6F8FA] p-3 rounded-md text-bluecol font-semibold text-sm cursor-pointer"
       onClick={() => setShowAdvanced(!showAdvanced)}
     >
       {showAdvanced ? "▴ Advanced Fields" : "▾ Advanced Fields"}
@@ -365,7 +365,7 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2">
       <button
         type="button"
-        className="flex items-center gap-2 text-blue-600 text-sm border px-4 py-2 rounded shadow-sm hover:bg-gray-100"
+        className="flex items-center gap-2 text-bluecol text-sm border px-4 py-2 rounded shadow-sm hover:bg-gray-100"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
@@ -394,7 +394,7 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
       </button>
       <button
         type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        className="px-4 py-2 bg-bluecol text-white rounded hover:bg-blue-700"
       >
         Save Service
       </button>
@@ -670,7 +670,7 @@ export default function D3Product() {
 
   return (
     <div className="max-w-4xl mx-auto mt-5 md:mt-10 pb-7 bg-white rounded-lg shadow-customCard">
-      <div className="bg-blue-600 text-white px-6 py-3 rounded-t-md text-lg font-semibold">
+      <div className="bg-bluecol text-white text-base md:text-xl lg:text-2xl px-6 py-3 rounded-t-md text-lg font-semibold">
         Items
       </div>
 
@@ -688,7 +688,7 @@ export default function D3Product() {
             }}
             className={`pb-2 text-lg font-medium border-b-2 ${
               activeTab === tab
-                ? "border-blue-600 text-blue-600"
+                ? "border-bluecol text-bluecol"
                 : "border-transparent text-gray-500"
             } ${isEditMode ? "cursor-not-allowed opacity-50" : ""}`}
             disabled={isEditMode}

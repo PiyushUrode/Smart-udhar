@@ -214,9 +214,9 @@ const D6AddCustomer = () => {
     <div className="max-w-5xl mx-auto mt-5 md:mt-10 pb-10 bg-white rounded-lg shadow-xl">
       {/* Header */}
       <div className="flex justify-between bg-bluecol rounded-t-xl px-4 md:px-10 py-4 items-center mb-8">
-        <h1 className="text-lg md:text-2xl font-bold text-white">
+        <h2 className="text-lg md:text-2xl font-bold text-white">
           {formData._id ? "Edit Customer" : "Add Customer"}
-        </h1>
+        </h2>
       </div>
 
       {/* Form */}
