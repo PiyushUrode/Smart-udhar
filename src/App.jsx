@@ -97,6 +97,7 @@ function App() {
                 <Route path="staff-details/:id" element={<D5StaffDetails />} />
                 <Route path="staff-details" element={<D5StaffDetails />} />
                 <Route path="add-customer" element={<D6AddCustomer />} />
+                <Route path="add-customer/:id" element={<D6AddCustomer />} />
                 <Route
                   path="customer-details"
                   element={<D6CustomerDetails />}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { CustomerService } from "../../api/customerService.js";
+import { useCustomerForm } from "../../api/addCustomerService.js";
 import Button from "../../common/Button.jsx";
 
 const CustomerDetailsForm = () => {
@@ -78,7 +79,8 @@ const CustomerDetailsForm = () => {
   }, [page, limit]);
 
   const handleDelete = async (mongoId, displayId) => {
-    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+    if (!window.confirm("Are you sure you want to delete this customer?"))
+      return;
 
     try {
       const deleteRes = await CustomerService.deleteCustomer(mongoId);
@@ -93,7 +95,7 @@ const CustomerDetailsForm = () => {
   };
 
   const handleEdit = (customer) => {
-    navigate("/dashboard/add-customer", { state: { customer } });
+    navigate(`/dashboard/add-customer/${customer.mongoId}`);
   };
 
   const getScoreColor = (score) => {
