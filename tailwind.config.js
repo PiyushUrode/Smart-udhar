@@ -8,9 +8,16 @@ export default {
     extend: {
       colors: {
         bluecol: '#2563EB', // your custom blue
-        lightbluecol: '#3B82F6', // your custom blue
         lightblack: '#374151', // your custom blue
-        
+        // accent: '#3B82F6',
+        bg: '#FAFAFA',
+        lightbluecol: '#3B82F6', // your custom blue
+      accent2: '#26C99E',
+      submit: '#3B82F6',
+      success: '#16A34A',
+      warning: '#FACC15',
+      danger: '#EF4444',
+      info: '#6366F1',
 
       },
     

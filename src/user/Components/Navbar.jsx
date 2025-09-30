@@ -70,7 +70,9 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
 
       <div className="flex items-center gap-4 text-blue-500 text-xl relative ">
+
         <ul className="hidden md:flex gap-8 text-[10px] lg:text-sm lg:text-[14px] font-interM">
+
           <li>
             <Link
               to="/dashboard/payment-collectionList"

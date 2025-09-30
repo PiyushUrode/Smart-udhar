@@ -448,7 +448,7 @@ const D4ProductList = () => {
     <div className="mx-auto mt-5 p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 border-b px-6 py-3">
-        <h1 className="text-xl font-semibold">Items</h1>
+        <h1 className="text-base md:text-xl lg:text-2xl font-semibold">Items</h1>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
           onClick={() => navigate("/dashboard/product")}
