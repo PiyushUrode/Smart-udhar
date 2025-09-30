@@ -19,6 +19,7 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false);
   const otpRefs = useRef([]);
   const phoneRef = useRef(null);
+  const [error, setError] = useState("");
 
   const { login } = useAuth();
 
@@ -34,27 +35,39 @@ const SignupPage = () => {
     }
   }, [step]);
 
-  // Send OTP
-  const handleGetOtp = async () => {
-    if (phone.length !== 10) {
-      return toast.error("Enter a valid 10-digit number");
+// ✅ Phone validation सिर्फ OTP भेजने के time पर check होगा
+const validatePhone = (value) => {
+  if (value.length !== 10) {
+    setError("Mobile number must be exactly 10 digits");
+    return false;
+  }
+  setError("");
+  return true;
+};
+
+// Send OTP
+const handleGetOtp = async () => {
+  if (!validatePhone(phone)) return; // ❌ invalid -> stop
+  if (loading) return;
+
+  setLoading(true);
+  try {
+    console.log("[Signup] Sending OTP to:", phone);
+    const res = await AuthService.register(phone);
+
+    toast.success(res.message || "OTP sent!");
+    if (res?.mobile_otp) {
+      toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 5000 });
     }
-    if (loading) return;
-    setLoading(true);
-    try {
-      console.log("[Signup] Sending OTP to:", phone);
-      const res = await AuthService.register(phone);
-      toast.success(res.message || "OTP sent!");
-      if (res?.mobile_otp) {
-        toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 5000 });
-      }
-      setStep("otp");
-    } catch (err) {
-      toast.error(err.message || "Failed to send OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    setStep("otp");
+  } catch (err) {
+    toast.error(err.message || "Failed to send OTP");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Verify OTP
   const handleVerifyOtp = async () => {
@@ -169,13 +182,19 @@ const SignupPage = () => {
                     placeholder="Enter mobile number"
                     value={phone}
                                     className="flex-1 border border-[#E5E5E5] rounded-md px-3 py-2 bg-white"
-                    onChange={(e) =>
-                      setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
-                    }
+                   onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        setPhone(val);
+                        validatePhone(val);
+                      }}
                     onKeyDown={(e) => e.key === "Enter" && handleGetOtp()}
                   />
                 </div>
                 </div>
+
+                 {error && (
+                  <p className="text-indigo-600 text-sm text-left">{error}</p>
+                )}
 
 
                 <button

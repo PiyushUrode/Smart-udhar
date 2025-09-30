@@ -417,41 +417,6 @@ const D4ProductList = () => {
 
       {/* Search */}
       <div className="flex gap-5 flex-wrap text-nowrap px-6 py-3 items-center mb-4">
-<<<<<<< HEAD
-       <div className="w-full md:w-60 relative ">
-  <span className="absolute left-2 top-1/2   -translate-y-1/2 text-gray-500">
-    <CiSearch size={18} />
-  </span>
-  <input
-    type="text"
-    placeholder="Search by name or category"
-    className="w-full pl-8 pr-2 py-2 border rounded bg-gray-100 text-sm"
-    value={searchQuery}
-    onChange={handleSearch}
-    onFocus={() => setShowSuggestions(suggestions.length > 0)}
-    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-  />
-  {showSuggestions && suggestions.length > 0 && (
-    <ul className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg max-h-60 overflow-y-auto">
-      {suggestions.map((item) => (
-        <li
-          key={item._id}
-          onClick={() => {
-            setSearchQuery(item.name);
-            setShowSuggestions(false);
-            setPage(1);
-            fetchItems(); // fetch full table based on selection
-          }}
-          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-        >
-          {item.name}
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
-
-=======
         <div className="w-full md:w-60 relative">
           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
             <CiSearch size={18} />
@@ -484,7 +449,6 @@ const D4ProductList = () => {
             </ul>
           )}
         </div>
->>>>>>> c887fcc4be7b9143c6f5186cf452035fb602149f
       </div>
 
       {/* Table */}

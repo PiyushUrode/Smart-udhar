@@ -3,11 +3,15 @@ import { toast } from "react-toastify";
 import { StaffService } from "../../api/staffDetails.js";
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import Button from "../../common/Button.jsx";
 
 const D5StaffDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [popupType, setPopupType] = useState(null); // success | error
+const [popupMessage, setPopupMessage] = useState("");
+
 
   const [isOpen, setIsOpen] = useState(true);
   const [formData, setFormData] = useState({
@@ -25,7 +29,7 @@ const D5StaffDetails = () => {
   const [error, setError] = useState("");
   const [formErrors, setFormErrors] = useState({});
 
-  const requiredFields = ["firstName", "lastName", "emailId", "roles"];
+  const requiredFields = ["firstName", "lastName", "emailId", "roles" , "mobileNumber"];
 
   // 🔹 Fetch staff if editing
   useEffect(() => {
@@ -89,9 +93,12 @@ const D5StaffDetails = () => {
       errors.emailId = "Enter a valid email";
     }
 
-    if (formData.mobileNumber && !/^[6-9]\d{9}$/.test(formData.mobileNumber)) {
-      errors.mobileNumber = "Enter a valid 10-digit mobile number";
-    }
+if (
+  formData.mobileNumber && 
+  !/^[6-9]\d{9}$/.test(String(formData.mobileNumber).trim())
+) {
+  errors.mobileNumber = "Enter a valid 10-digit mobile number";
+}
 
     return errors;
   };
@@ -114,15 +121,17 @@ const D5StaffDetails = () => {
       let res;
       if (id) {
         res = await StaffService.updateStaff(id, formData, staffImage);
-        toast.success("✅ Staff updated successfully!");
+ setPopupType("success");
+      setPopupMessage("Staff updated successfully!");
       } else {
         res = await StaffService.createStaff(formData, staffImage);
-        toast.success("✅ Staff member added successfully!");
+  setPopupType("success");
+      setPopupMessage("Staff member added successfully!");
       }
-      navigate("/dashboard/staff-role");
+      // navigate("/dashboard/staff-role");
     } catch (err) {
-      console.error("❌ Error saving staff:", err);
-      toast.error(err.response?.data?.message || "Failed to save staff");
+setPopupType("error");
+    setPopupMessage(err.response?.data?.message || "Failed to save staff");
     } finally {
       setLoading(false);
     }
@@ -196,15 +205,30 @@ const D5StaffDetails = () => {
           {/* Image error */}
           {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
 
-          {/* Submit */}
-          <div className="text-right">
-            <button
-              type="submit"
-              className="bg-[#2176FF] hover:bg-blue-600 text-white font-robotoSb px-6 py-2 rounded-md"
-            >
-              {id ? "Update Member" : "Add Member"}
-            </button>
-          </div>
+{/* Submit Button */}
+<div className="text-right">
+  <button
+    type="submit"
+    className="bg-[#2176FF] hover:bg-blue-600 text-white font-robotoSb px-6 py-2 rounded-md"
+  >
+    {id ? "Update Member" : "Add Member"}
+  </button>
+</div>
+
+{/* Popup */}
+{popupType && (
+  <Button
+    type={popupType}             // success | error
+    message={popupMessage}       // "Staff updated successfully!" etc.
+    onClose={() => {
+      setPopupType(null);        // popup बंद करना
+      if (popupType === "success") {
+        navigate("/dashboard/staff-role"); // success पर redirect
+      }
+    }}
+  />
+)}
+
         </form>
       )}
     </div>

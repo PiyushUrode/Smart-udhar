@@ -12,6 +12,7 @@ const LoginPage = () => {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const phoneRef = useRef(null);
   const otpRefs = useRef([]);
@@ -29,7 +30,7 @@ const LoginPage = () => {
   // Step 1: Send OTP
   const handleGetOtp = async () => {
     if (phone.length !== 10) {
-      return toast.error("Enter a valid 10-digit number");
+      return setError("Enter a valid 10-digit number");
     }
 
     if (loading) return;
@@ -62,7 +63,7 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const res = await AuthService.loginVerify(phone, otp);
-      toast.success("Login successful!");
+      // toast.success("Login successful!");
       navigate("/dashboard/bussinessList");
     } catch (err) {
       toast.error(err.message);
@@ -162,7 +163,7 @@ const handleKeyDown = (e, index) => {
         {/* Phone Step */}
         {step === "phone" && (
           <>
-            <div className="flex flex-row gap-3 mb-4 ">
+            <div className="flex flex-row gap-3  ">
          <div className="flex flex-row gap-1 w-full">
                   <div className="flex w-[70px] md:w-16">
                 <select className="border border-[#E5E5E5] rounded-md px-3 py-2 bg-white ">
@@ -182,7 +183,7 @@ const handleKeyDown = (e, index) => {
               />
             </div>
             </div>
-
+          {error && (<p className="text-violet-600 text-sm text-left mt-1">{error}</p>)}
             <button
               className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-medium rounded-lg shadow hover:opacity-90 disabled:opacity-50"
               onClick={handleGetOtp}
@@ -190,6 +191,7 @@ const handleKeyDown = (e, index) => {
             >
               {loading ? "Sending..." : "Get OTP"}
             </button>
+  
           </>
         )}
 

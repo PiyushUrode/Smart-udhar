@@ -10,7 +10,7 @@
   import Button from "../../common/Button.jsx";
   import axios from "axios";
   import Cookies from "js-cookie";
-  import { toast } from "react-toastify";
+
   import { useParams, useNavigate } from "react-router-dom";
   import { ProfileService } from "../../api/profileservice.js";
   import { AuthService } from "../../api/authservice.js";
