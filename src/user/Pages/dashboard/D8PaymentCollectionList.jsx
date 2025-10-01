@@ -8,21 +8,16 @@ import { RiBankCardFill } from "react-icons/ri";
 import { FaChartPie } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { FaRegChartBar } from "react-icons/fa6";
-import { FiEdit, FiTrash2 } from "react-icons/fi"; 
-import { Invoice } from "../../api/Invoice.js"; 
+import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { Invoice } from "../../api/Invoice.js";
 import jsPDF from "jspdf";
-
-import autoTable from "jspdf-autotable"; // ✅ import as a function
+import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
-
 
 import React, { useState, useEffect } from "react";
 
-
-
 const D8PaymentCollectionList = () => {
-
-    const [invoices, setInvoices] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [search, setSearch] = useState("");
   const [summary, setSummary] = useState({
     today: 0,
@@ -98,7 +93,7 @@ const D8PaymentCollectionList = () => {
     navigate("/dashboard/payment-collection", { state: { invoice } });
   };
 
-  // ✅ Search filter (name + phone)
+  // ✅ Search filter
   const filteredData = invoices.filter((entry) => {
     const query = search.toLowerCase();
     return (
@@ -107,35 +102,33 @@ const D8PaymentCollectionList = () => {
     );
   });
 
-  // ✅ Pagination logic
+  // ✅ Pagination
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const currentData = filteredData.slice(indexOfFirstRow, indexOfLastRow);
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
   // ✅ Export PDF
-  // ✅ Export PDF
-const exportPDF = () => {
-  const doc = new jsPDF();
-  doc.text("Payment Collection List", 14, 10);
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Payment Collection List", 14, 10);
 
-  autoTable(doc, {
-    head: [["Customer Name", "Mobile", "Amount", "Due Date", "Promise", "Status"]],
-    body: filteredData.map((entry) => [
-      entry.name || "-",
-      entry.phone || "-",
-      entry.dueBalance ?? entry.balance ?? 0,
-      entry.milestones?.[0]?.dueDate
-        ? new Date(entry.milestones[0].dueDate).toLocaleDateString("en-IN")
-        : "-",
-      entry.milestones?.[0]?.amount || "-",
-      entry.paymentStatus || "Pending",
-    ]),
-  });
+    autoTable(doc, {
+      head: [["Customer Name", "Mobile", "Amount", "Due Date", "Promise", "Status"]],
+      body: filteredData.map((entry) => [
+        entry.name || "-",
+        entry.phone || "-",
+        entry.dueBalance ?? entry.balance ?? 0,
+        entry.milestones?.[0]?.dueDate
+          ? new Date(entry.milestones[0].dueDate).toLocaleDateString("en-IN")
+          : "-",
+        entry.milestones?.[0]?.amount || "-",
+        entry.paymentStatus || "Pending",
+      ]),
+    });
 
-  doc.save("PaymentCollectionList.pdf");
-};
-
+    doc.save("PaymentCollectionList.pdf");
+  };
 
   // ✅ Export Excel
   const exportExcel = () => {
@@ -162,229 +155,162 @@ const exportPDF = () => {
         Payment Collection List
       </h1>
 
-      {/* Flex container for table and collection section */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        
-
-        {/* Left side - Table */}
-        <div className="flex-1">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center p-4 mb-4 gap-4">
-            <div className="relative w-full md:max-w-2xl flex-1">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by User ID, Name, or phone"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
-            </div>
+      {/* ✅ Collection Summary at the top */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Today's Collection */}
+        <div className="border border-green-200 rounded-lg p-4 flex flex-row justify-between items-center">
+          <div>
+            <p className="text-gray-500 font-robotoM text-sm">Today's Collection</p>
+            <p className="text-[#16A34A] font-robotoSb text-2xl">₹{summary.today}</p>
           </div>
+          <div className="p-3 bg-[#DCFCE7] rounded-xl">
+            <RiBankCardFill size={20} color="#16A34A" />
+          </div>
+        </div>
 
-          <div className="overflow-auto">
-            <table className="w-full min-w-[600px] text-left bg-white rounded-md shadow border-separate border-spacing-y-2">
-              <thead className="bg-gray-200 text-[#6B7280] text-xs font-robotoM">
-                <tr>
-                  <th className="p-3">Customer Name</th>
-                  <th className="p-3">Mobile Number</th>
-                  <th className="p-3">Total Amount</th>
-                  <th className="p-3">Due Date</th>
-                  <th className="p-3">Promise Amount</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Edit</th>
-                </tr>
-              </thead>
-<tbody>
-  {filteredData.length > 0 ? (
-    filteredData.map((entry, index) => {
-      // pick the next milestone (if any)
-      const nextMilestone =
-        entry.milestones?.find(m => m.status !== "Paid") || null;
+        {/* Total Collection */}
+        <div className="border border-blue-200 rounded-lg p-4 flex flex-row justify-between items-center">
+          <div>
+            <p className="text-gray-500 font-robotoM text-sm">Total Collection</p>
+            <p className="text-[#2563EB] font-robotoSb text-2xl">₹{summary.total}</p>
+          </div>
+          <div className="p-3 bg-[#DBEAFE] rounded-xl">
+            <FaRegChartBar size={20} color="#2563EB" />
+          </div>
+        </div>
 
-      return (
-        <tr
-          key={index}
-          className=" border-2 shadow-md rounded-xl font-robotoR text-[12px] sm:text-[14px] md:text-[16px] text-[#111827]"
-        >
-          {/* Customer Name */}
-          <td className="p-3 whitespace-nowrap">
-            {entry.name || "-"}
-          </td>
+        {/* Top Collections */}
+        <div className="border border-yellow-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-600 mb-2">Top Collections</h3>
+          <ul className="space-y-2 text-sm">
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-[#374151]">
+                <span className="w-3 h-3 rounded-full bg-[#3B82F6]"></span> This week
+              </span>
+              <span className="font-interM text-[#1F2937]">₹{summary.topCollections.week}</span>
+            </li>
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-[#374151]">
+                <span className="w-3 h-3 rounded-full bg-[#22C55E]"></span> This month
+              </span>
+              <span className="font-interM text-[#1F2937]">₹{summary.topCollections.month}</span>
+            </li>
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-[#374151]">
+                <span className="w-3 h-3 rounded-full bg-[#EAB308]"></span> This year
+              </span>
+              <span className="font-interM text-[#1F2937]">₹{summary.topCollections.year}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
 
-          {/* phone Number */}
-          <td className="p-3 whitespace-nowrap">
-            {entry.phone || "-"}
-          </td>
+      {/* ✅ Search */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center p-4 mb-4 gap-4 hidden">
+        <div className="relative w-full md:max-w-2xl flex-1">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by User ID, Name, or phone"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+        </div>
+      </div>
 
-          {/* Pending Amount */}
-          <td className="p-3 whitespace-nowrap">
-₹{entry.dueBalance ?? entry.balance ?? 0}
+      {/* ✅ Full Width Table */}
+      <div className="overflow-auto">
+        <table className="w-full min-w-[600px] text-left bg-white rounded-md shadow border-separate border-spacing-y-2 text-nowrap overflow-hidden">
+          <thead className="bg-gray-200 text-[#6B7280] text-xs font-robotoM">
+            <tr>
+              <th className="p-3">Customer Name</th>
+              <th className="p-3">Mobile Number</th>
+              <th className="p-3">Total Amount</th>
+              <th className="p-3">Due Date</th>
+              <th className="p-3">Promise Amount</th>
+              <th className="p-3">Status</th>
+              <th className="p-3">Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.length > 0 ? (
+              currentData.map((entry, index) => {
+                const nextMilestone =
+                  entry.milestones?.find((m) => m.status !== "Paid") || null;
 
-          </td>
+                return (
+                  <tr
+                    key={index}
+                    className="border-2 shadow-md rounded-xl font-robotoR text-[12px] sm:text-[14px] md:text-[16px] text-[#111827]"
+                  >
+                    <td className="p-3 whitespace-nowrap">{entry.name || "-"}</td>
+                    <td className="p-3 whitespace-nowrap">{entry.phone || "-"}</td>
+                    <td className="p-3 whitespace-nowrap">
+                      ₹{entry.dueBalance ?? entry.balance ?? 0}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {nextMilestone?.dueDate
+                        ? new Date(nextMilestone.dueDate).toLocaleDateString("en-IN")
+                        : "-"}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {nextMilestone?.amount || "-"}
+                    </td>
+                    <td className="p-3 font-medium whitespace-nowrap">
+                      {entry.paymentStatus || "Pending"}
+                    </td>
+                    <td className="p-3 border-y text-center space-x-2">
+                      <button
+                        className="text-[#2563EB] hover:text-blue-700"
+                        onClick={() => handleEdit(entry)}
+                      >
+                        <FiEdit className="w-5 h-5" />
+                      </button>
+                      <button
+                        className="text-[#DC2626] hover:text-red-700"
+                        onClick={() => handleDelete(entry._id)}
+                      >
+                        <FiTrash2 className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="7" className="text-center p-4 text-gray-500">
+                  No invoices found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
 
-          {/* Due Date */}
-          <td className="p-3 whitespace-nowrap">
-            {nextMilestone?.dueDate
-              ? new Date(nextMilestone.dueDate).toLocaleDateString("en-IN")
-              : "-"}
-          </td>
-
-          {/* Next Milestone */}
-          <td className="p-3 whitespace-nowrap">
-            <div className="flex items-center gap-2">
-              {nextMilestone?.amount || "-"}
-              {/* <FaEdit color="#EB2525" /> */}
-            </div>
-          </td>
-
-          {/* Status */}
-          <td className="p-3 font-medium whitespace-nowrap">
-            {entry.paymentStatus || "Pending"}
-          </td>
-
-                    {/* Next Milestone */}
- <td className="p-3 border-y text-center space-x-2">
-                    <button
-                      className="text-[#2563EB] hover:text-blue-700"
-                      onClick={() => handleEdit(entry)}
-                    >
-                      <FiEdit className="w-5 h-5" />
-                    </button>
-                    <button
-                      className="text-[#DC2626] hover:text-red-700"
-                      onClick={() => handleDelete(entry._id)}
-                    >
-                      <FiTrash2 className="w-5 h-5" />
-                    </button>
-
-                  </td>
-          
-        </tr>
-      );
-    })
-  ) : (
-    <tr>
-      <td colSpan="6" className="text-center p-4 text-gray-500">
-        No invoices found
-      </td>
-    </tr>
-  )}
-</tbody>
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <p className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages || 1}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
  
-
-
-            </table>
-
-             <div className="flex justify-between items-center mt-4">
-        <p className="text-sm text-gray-600">
-          Page {currentPage} of {totalPages || 1}
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-          </div>
-
-          
-
-
-
-
-
-        </div>
-
-        {/* Right side - Collection Summary */}
-        <div className="w-full lg:w-80 flex-shrink-0">
-          <div className="bg-white border rounded-lg shadow p-4">
-            <div className="flex flex-row gap-5 items-center py-2  align-middle">  
-         < FaChartPie size={20} color="#22C55E" />
-            <h2 className="text-lg font-interSb text-[#1F2937] ">Collection</h2>
-            </div>
-            {/* Today's Collection */}
-            <div className=" border border-green-200 rounded-lg p-4 mb-4 flex flex-row  justify-between align-middle items-center">
-      <div>
-                <p className="text-gray-500 font-robotoM text-sm">Today's Collection</p>
-<p className="text-[#16A34A] font-robotoSb text-2xl ">₹{summary.today}</p>
-
-
-      </div>
-              <div className=" p-3 bg-[#DCFCE7] rounded-xl"> 
-
-              <RiBankCardFill  size={20} color="#16A34A" />
-</div>
-            </div>
-
-            {/* Total Collection */}
-            <div className=" border border-blue-200 rounded-lg p-4 mb-4 flex flex-row  justify-between align-middle items-center">
-<div>
-                <p className="text-gray-500  font-robotoM text-sm">Total Collection</p>
-<p className="text-[#2563EB] font-robotoSb text-2xl ">₹{summary.total}</p>
-
-</div>
-<div className=" p-3 bg-[#DBEAFE] rounded-xl"> 
-
-              <FaRegChartBar size={20} color="#2563EB" />
-</div>
-            </div>
-
-            {/* Top Collections */}
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Top Collections</h3>
-<ul className="space-y-2 text-sm">
-  <li className="flex items-center justify-between">
-    <span className="flex items-center gap-2 font-interR text-[#374151]">
-      <span className="w-3 h-3 rounded-full bg-[#3B82F6]"></span> This week
-    </span>
-    <span className="font-interM text-[#1F2937]">₹{summary.topCollections.week}</span>
-  </li>
-  <li className="flex items-center justify-between">
-    <span className="flex items-center gap-2 font-interR text-[#374151]">
-      <span className="w-3 h-3 rounded-full bg-[#22C55E]"></span> This month
-    </span>
-    <span className="font-interM text-[#1F2937]">₹{summary.topCollections.month}</span>
-  </li>
-  <li className="flex items-center justify-between">
-    <span className="flex items-center gap-2 font-interR text-[#374151]">
-      <span className="w-3 h-3 rounded-full bg-[#EAB308]"></span> This year
-    </span>
-    <span className="font-interM text-[#1F2937]">₹{summary.topCollections.year}</span>
-  </li>
-</ul>
-
-            </div>
-
-            {/* Download buttons */}
-            <div className="flex flex-col mt-5 border-t-2">      
-                     <div> 
-              <h1 className="text-sm font-interM text-[#374151] py-5 leading-tight tracking-tight"> Downloadable Reports</h1>
-            </div>
-            <div className="flex gap-3">
-              <button  onClick={exportPDF}  className="flex-1 flex items-center justify-center gap-2 bg-[#FEF2F2] text-[#DC2626] font-interM px-3 py-2 rounded-md shadow hover:bg-red-200  hover:text-white">
-                <FaFilePdf color="#DC2626" /> PDF
-              </button>
-              <button   onClick={exportExcel} className="flex-1 flex items-center justify-center gap-2 bg-[#F0FDF4] text-[#16A34A] font-interM px-3 py-2 rounded-md shadow hover:bg-green-600 hover:text-white ">
-                <FaFileExcel /> Excel
-              </button>
-            </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div>
     </div>
   );
 };

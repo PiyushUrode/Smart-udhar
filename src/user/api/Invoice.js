@@ -131,10 +131,10 @@ async createInvoice(payload) {
     console.log("✅ [InvoiceService] Created invoice:", data);
     return { success: true, invoice: data?.data || data };
   } catch (err) {
-    console.error("❌ Create invoice API error:", err.response?.data || err);
+    console.error("❌ Create invoice API error:", err?.message);
     return {
       success: false,
-      message: err.response?.data?.message || "Failed to create invoice",
+      message: err?.message || "Failed to create invoice",
     };
   }
 }
@@ -253,12 +253,29 @@ async getInvoiceById(invoiceId) {
 
   // ✅ 3. Get all invoices (for a store)
 // ----------------- Get all invoices (for a store) -----------------
-async getAllInvoices() {
+// async getAllInvoices(page = 1, limit = 1000) {
+//   try {
+//     const { token, store_id, storeProfile_id } = getAuthContext();
+
+//     const { data } = await axiosClient.get(
+//       `/store-invoice/find-all/${store_id}/${storeProfile_id}?page=${page}&limit=${limit}`,
+//       { headers: authHeaders(token) }
+//     );
+
+//     return { success: true, ...data }; 
+//     // data already has total, currentPage, totalPages, data[]
+//   } catch (err) {
+//     console.error("❌ Get all invoices error:", err.response?.data || err);
+//     return { success: false, data: [], totalPages: 1 };
+//   }
+// },
+
+async getAllInvoices(page = 1, limit = 1000) {
   try {
     const { token, store_id, storeProfile_id } = getAuthContext();
 
     const { data } = await axiosClient.get(
-      `/store-invoice/find-all/${store_id}/${storeProfile_id}`,
+      `/store-invoice/find-all/${store_id}/${storeProfile_id}?page=${page}&limit=${limit}`,
       { headers: authHeaders(token) }
     );
 

@@ -16,15 +16,17 @@ import { FaBox } from "react-icons/fa6";
 import { IoIosSearch } from "react-icons/io";
 import { FaSearch } from "react-icons/fa";
 import { CiCalendarDate } from "react-icons/ci";
-import { Invoice  } from "../../api/Invoice.js";
+import { Invoice } from "../../api/Invoice.js";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
-import {ProfileService} from "../../api/profileservice.js"
+import { ProfileService } from "../../api/profileservice.js";
 // NEW: date picker + date-fns
 import DatePicker from "react-datepicker";
 import { parse, format, isValid } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
-export default function D7CreateInvoice({ onCustomerSelect  }) {
+import Button from "../../common/Button.jsx";
+
+export default function D7CreateInvoice({ onCustomerSelect }) {
   const navigate = useNavigate();
   // ----------------- STATES -----------------
 
@@ -36,7 +38,6 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
   const [storeProfile, setStoreProfile] = useState(null);
   const [isDownloadMode, setIsDownloadMode] = useState(false);
 
-
   // Payment
   const [showStep3, setShowStep3] = useState(false);
   const [showStep4, setShowStep4] = useState(false);
@@ -44,9 +45,22 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [transactionId, setTransactionId] = useState("");
 
+  // State for the custom notification/pop-up component
+
+  const [popupType, setPopupType] = useState(null); // 'success', 'error', 'processing'
+
+  const [message, setMessage] = useState("");
+
+
   // NOTE: storing milestone.dueDate as string in `dd/MM/yyyy` formatasdjsjd
   const [milestones, setMilestones] = useState([
-    { id: Date.now(), name: "Promise1", amount: "", dueDate: format(new Date(), "dd/MM/yyyy"), status: "Pending" },
+    {
+      id: Date.now(),
+      name: "Promise1",
+      amount: "",
+      dueDate: format(new Date(), "dd/MM/yyyy"),
+      status: "Pending",
+    },
   ]);
 
   // Additional Charges
@@ -96,9 +110,6 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
     fetchCustomers();
   }, []);
 
-
-
-
   const filteredCustomers = searchTerm
     ? customers.filter((cust) => {
         const name = cust?.name?.toLowerCase() || "";
@@ -128,8 +139,9 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
     const fetchProducts = async () => {
       try {
         const res = await Invoice.getProducts();
-        const productList = res?.products || res?.data?.products || res?.data || [];
-        const validProducts = productList.filter(p => p && (p._id || p.id));
+        const productList =
+          res?.products || res?.data?.products || res?.data || [];
+        const validProducts = productList.filter((p) => p && (p._id || p.id));
         setProducts(validProducts);
       } catch (err) {
         console.error("❌ Failed to fetch products", err);
@@ -139,23 +151,22 @@ export default function D7CreateInvoice({ onCustomerSelect  }) {
     fetchProducts();
   }, []);
 
-const handleSelectProduct = (rowId, product) => {
-  setRows((prev) =>
-    prev.map((row) =>
-      row.id === rowId
-        ? {
-            ...row,
-            productId: product._id || product.id,
-            price: product.sales_price || 0,
-            unit: product.unit || "pcs",
-            tax: product.tax || 0,
-            price_type: product.price_type || "without", // ✅ use backend value
-          }
-        : row
-    )
-  );
-};
-
+  const handleSelectProduct = (rowId, product) => {
+    setRows((prev) =>
+      prev.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              productId: product._id || product.id,
+              price: product.sales_price || 0,
+              unit: product.unit || "pcs",
+              tax: product.tax || 0,
+              price_type: product.price_type || "without", // ✅ use backend value
+            }
+          : row
+      )
+    );
+  };
 
   const handleAddRow = () => {
     setRows([
@@ -181,7 +192,10 @@ const handleSelectProduct = (rowId, product) => {
         row.id === id
           ? {
               ...row,
-              [field]: field === "qty" || field === "price" ? Number(value) || 0 : value,
+              [field]:
+                field === "qty" || field === "price"
+                  ? Number(value) || 0
+                  : value,
             }
           : row
       )
@@ -236,19 +250,23 @@ const handleSelectProduct = (rowId, product) => {
 
   const handlePreview = () => {
     if (!selectedCustomer?._id) {
-      alert("Please select a customer!");
+      setPopupType("error");
+      setMessage("Please select a customer!");
       return;
     }
     if (!paymentMode) {
-      alert("Please select a payment mode!");
+      setPopupType("error");
+      setMessage("Please select a payment mode!");
       return;
     }
     if (rows.some((r) => !r.productId || r.qty <= 0)) {
-      alert("Please add at least one valid product!");
+      setPopupType("error");
+      setMessage("Please add at least one valid product!");
       return;
     }
 
-    const { subtotal, totalTax, total, totalReceived, dueBalance } = invoiceSummary;
+    const { subtotal, totalTax, total, totalReceived, dueBalance } =
+      invoiceSummary;
 
     const payload = {
       customerId: selectedCustomer._id,
@@ -271,9 +289,15 @@ const handleSelectProduct = (rowId, product) => {
       totalReceived,
       dueBalance,
       paymentStatus:
-        totalReceived === total ? "Paid" : totalReceived > 0 ? "Partial" : "Unpaid",
+        totalReceived === total
+          ? "Paid"
+          : totalReceived > 0
+          ? "Partial"
+          : "Unpaid",
       products: rows.map((p) => {
-        const prod = products.find((x) => x._id === p.productId || x.id === p.productId) || {};
+        const prod =
+          products.find((x) => x._id === p.productId || x.id === p.productId) ||
+          {};
         return {
           productId: p.productId,
           name: prod?.name || prod?.product_name || "Unnamed",
@@ -307,10 +331,14 @@ const handleSelectProduct = (rowId, product) => {
     if (
       paymentMode === "debt" &&
       Math.abs(
-        milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0) - dueBalance
+        milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0) -
+          dueBalance
       ) > 0.01
     ) {
-      alert(`Milestones total must equal Due Balance (${dueBalance.toFixed(2)})!`);
+      setMessage(
+        `Milestones total must equal Due Balance (${dueBalance.toFixed(2)})!`
+      );
+      setPopupType("error");
       return;
     }
 
@@ -324,7 +352,8 @@ const handleSelectProduct = (rowId, product) => {
       const res = await Invoice.createInvoice(previewInvoice);
 
       if (res.success) {
-        alert("✅ Invoice created successfully!");
+        setMessage("✅ Invoice created successfully!");
+        setPopupType("success");
         setShowPreview(false);
         setPreviewInvoice(null);
 
@@ -361,61 +390,62 @@ const handleSelectProduct = (rowId, product) => {
           setTotalCollection(refreshed.totalCollection || 0);
         }
       } else {
-        alert("❌ Failed to create invoice");
+        setMessage(res.message || "❌ Failed to create invoice");
+        setPopupType("error");
       }
     } catch (err) {
       console.error("❌ Error:", err);
-      alert("Error creating invoice");
+      setMessage(err.message || "Error creating invoice");
+      setPopupType("error");
     }
   };
 
-const calculateTotal = (row) => {
-  const subtotal = (row.qty || 0) * (row.price || 0);
+  const calculateTotal = (row) => {
+    const subtotal = (row.qty || 0) * (row.price || 0);
 
-  if (row.price_type === "fixed") {
-    // ✅ Price already includes tax → no extra calculation
-    return subtotal;
-  } else {
-    // ✅ Price without tax → add tax
-    const taxAmount = (subtotal * (row.tax || 0)) / 100;
-    return subtotal + taxAmount;
-  }
-};
-
+    if (row.price_type === "fixed") {
+      // ✅ Price already includes tax → no extra calculation
+      return subtotal;
+    } else {
+      // ✅ Price without tax → add tax
+      const taxAmount = (subtotal * (row.tax || 0)) / 100;
+      return subtotal + taxAmount;
+    }
+  };
 
   // ----------------- Main Invoice Summary Calculation -----------------
   const calculateInvoiceSummary = () => {
-  const subtotal = rows.reduce((sum, row) => sum + row.qty * row.price, 0);
+    const subtotal = rows.reduce((sum, row) => sum + row.qty * row.price, 0);
 
-  const totalTax = rows.reduce((sum, row) => {
-    if (row.price_type === "fixed") return sum; // ✅ skip tax for inclusive products
-    const rowSubtotal = row.qty * row.price;
-    return sum + (rowSubtotal * (row.tax || 0)) / 100;
-  }, 0);
+    const totalTax = rows.reduce((sum, row) => {
+      if (row.price_type === "fixed") return sum; // ✅ skip tax for inclusive products
+      const rowSubtotal = row.qty * row.price;
+      return sum + (rowSubtotal * (row.tax || 0)) / 100;
+    }, 0);
 
-  const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
-  const packingCharges = Number(additionalCharges.packingCharges) || 0;
-  const discount = Number(additionalCharges.discount) || 0;
-  const other = Number(additionalCharges.other) || 0;
+    const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
+    const packingCharges = Number(additionalCharges.packingCharges) || 0;
+    const discount = Number(additionalCharges.discount) || 0;
+    const other = Number(additionalCharges.other) || 0;
 
-  const total = subtotal + totalTax + deliveryFee + packingCharges - discount + other;
+    const total =
+      subtotal + totalTax + deliveryFee + packingCharges - discount + other;
 
-  const totalReceived = Number(partialCashAmount) || 0;
-  const dueBalance = total - totalReceived;
+    const totalReceived = Number(partialCashAmount) || 0;
+    const dueBalance = total - totalReceived;
 
-  setInvoiceSummary({
-    subtotal,
-    totalTax,
-    total,
-    totalReceived,
-    dueBalance,
-    deliveryFee,
-    packingCharges,
-    discount,
-    other,
-  });
-};
-
+    setInvoiceSummary({
+      subtotal,
+      totalTax,
+      total,
+      totalReceived,
+      dueBalance,
+      deliveryFee,
+      packingCharges,
+      discount,
+      other,
+    });
+  };
 
   useEffect(() => {
     calculateInvoiceSummary();
@@ -447,7 +477,8 @@ const calculateTotal = (row) => {
 
   const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
     if (!previewRef.current) {
-      alert("Preview not ready for PDF.");
+      setMessage("Preview not ready for PDF.");
+      setPopupType("error");
       return;
     }
 
@@ -483,7 +514,10 @@ const calculateTotal = (row) => {
 
         while (heightLeft > 0) {
           pageCanvas.width = canvas.width;
-          pageCanvas.height = Math.min(canvas.height, Math.floor((canvas.width * (pageHeight - 40)) / imgWidth));
+          pageCanvas.height = Math.min(
+            canvas.height,
+            Math.floor((canvas.width * (pageHeight - 40)) / imgWidth)
+          );
           pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
           pageCtx.drawImage(
             canvas,
@@ -498,7 +532,14 @@ const calculateTotal = (row) => {
           );
           const pageData = pageCanvas.toDataURL("image/png");
           if (pdf.internal.getNumberOfPages() > 0) pdf.addPage();
-          pdf.addImage(pageData, "PNG", 20, 20, imgWidth, (pageCanvas.height * imgWidth) / pageCanvas.width);
+          pdf.addImage(
+            pageData,
+            "PNG",
+            20,
+            20,
+            imgWidth,
+            (pageCanvas.height * imgWidth) / pageCanvas.width
+          );
           heightLeft -= pageCanvas.height;
         }
       }
@@ -506,11 +547,13 @@ const calculateTotal = (row) => {
       pdf.save(fileName);
     } catch (err) {
       console.error("PDF generation error:", err);
-      alert("Failed to create PDF.");
+      setPopupType("error");
+      setMessage("Failed to create PDF.");
+      
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const storeProfile_id = localStorage.getItem("storeProfile_id");
@@ -532,30 +575,16 @@ useEffect(() => {
     fetchProfile();
   }, []);
 
+  // start
 
-
-// start
-
-
-
-
-// end
-
-
-
-
-
-
-
-
-
-
-
+  // end
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <h1 className="text-2xl font-robotoB text-[#1F2937] mb-4">Create New Invoice</h1>
+        <h1 className="text-2xl font-robotoB text-[#1F2937] mb-4">
+          Create New Invoice
+        </h1>
 
         {/* Steps 1 to 6 (same as before) */}
         <div className="space-y-6">
@@ -586,8 +615,9 @@ useEffect(() => {
                 />
                 <IoIosSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60" />
               </div>
-              <button className="bg-green-600 font-robotoR hover:bg-green-700 text-white px-5 py-3 rounded-lg text-md whitespace-nowrap"
-                          onClick={() => navigate("/dashboard/add-customer")}
+              <button
+                className="bg-green-600 font-robotoR hover:bg-green-700 text-white px-5 py-3 rounded-lg text-md whitespace-nowrap"
+                onClick={() => navigate("/dashboard/add-customer")}
               >
                 + Add New Customer
               </button>
@@ -627,11 +657,15 @@ useEffect(() => {
                     {selectedCustomer.mobile}
                   </p>
                   <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">Credit Score:</strong>{" "}
+                    <strong className="text-black font-robotoM">
+                      Credit Score:
+                    </strong>{" "}
                     {selectedCustomer.creditScore || "N/A"}
                   </p>
-                   <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">Address:</strong>{" "}
+                  <p className="font-robotoR">
+                    <strong className="text-black font-robotoM">
+                      Address:
+                    </strong>{" "}
                     {selectedCustomer.address || "N/A"}
                   </p>
                 </div>
@@ -642,656 +676,800 @@ useEffect(() => {
           {/* Step 2: Add Products/Services */}
           <div className="max-w-7xl mx-auto  my-5 md:mt-10 bg-white  gap-6">
             <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-lg font-robotoB shadow-customCard p-4 sm:p-6 w-full max-w-6xl space-y-4">
+                <h2 className="flex items-center gap-3 text-base sm:text-lg font-robotoSb text-gray-800">
+                  <div className="bg-[#2563EB] p-2 sm:p-3 rounded-full flex items-center justify-center">
+                    <FaBox color="white" size={16} />
+                  </div>
+                  Step 2: Add Products/Services
+                </h2>
 
-<div className="bg-white rounded-lg font-robotoB shadow-customCard p-4 sm:p-6 w-full max-w-6xl space-y-4">
-  <h2 className="flex items-center gap-3 text-base sm:text-lg font-robotoSb text-gray-800">
-    <div className="bg-[#2563EB] p-2 sm:p-3 rounded-full flex items-center justify-center">
-      <FaBox color="white" size={16} />
-    </div>
-    Step 2: Add Products/Services
-  </h2>
+                <div className="w-full">
+                  {/* Header only for desktop */}
+                  <div className="hidden sm:grid grid-cols-7 gap-4 text-sm font-semibold text-gray-700 border-b py-3">
+                    <div className="col-span-2">Product/Service</div>
+                    <div>Qty</div>
+                    <div>Unit</div>
+                    <div>Price</div>
+                    <div>Tax</div>
+                    <div>Total</div>
+                  </div>
 
-  <div className="w-full">
-    {/* Header only for desktop */}
-    <div className="hidden sm:grid grid-cols-7 gap-4 text-sm font-semibold text-gray-700 border-b py-3">
-      <div className="col-span-2">Product/Service</div>
-      <div>Qty</div>
-      <div>Unit</div>
-      <div>Price</div>
-      <div>Tax</div>
-      <div>Total</div>
-    </div>
+                  {/* Rows */}
+                  {rows.map((row) => (
+                    <div
+                      key={row.id}
+                      className="grid grid-cols-2 sm:grid-cols-7 gap-3 sm:gap-4 items-center py-3 border-b sm:border-0"
+                    >
+                      {/* Product */}
+                      <div className="col-span-2">
+                        <Select
+                          className="text-sm"
+                          placeholder="Select Product..."
+                          isClearable
+                          isSearchable
+                          menuPortalTarget={document.body}
+                          filterOption={
+                            (option, inputValue) =>
+                              inputValue
+                                ? option.label
+                                    .toLowerCase()
+                                    .includes(inputValue.toLowerCase())
+                                : option.data.index < 3 // show top 3 if nothing typed
+                          }
+                          options={
+                            Array.isArray(products)
+                              ? products
+                                  .filter((p) => p && (p._id || p.id))
+                                  .map((p, index) => ({
+                                    value: p._id || p.id,
+                                    label:
+                                      p.name || p.product_name || "Unnamed",
+                                    index,
+                                  }))
+                              : []
+                          }
+                          value={
+                            row.productId
+                              ? (() => {
+                                  const selected = products?.find(
+                                    (p) =>
+                                      p &&
+                                      (p._id === row.productId ||
+                                        p.id === row.productId)
+                                  );
+                                  return selected
+                                    ? {
+                                        value: row.productId,
+                                        label:
+                                          selected.name ||
+                                          selected.product_name ||
+                                          "Unnamed",
+                                      }
+                                    : null;
+                                })()
+                              : null
+                          }
+                          onChange={(selectedOption) => {
+                            const selectedProduct = products?.find(
+                              (p) =>
+                                p &&
+                                (p._id === selectedOption?.value ||
+                                  p.id === selectedOption?.value)
+                            );
+                            handleSelectProduct(
+                              row.id,
+                              selectedProduct || null
+                            );
+                          }}
+                          styles={{
+                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                            control: (base, state) => ({
+                              ...base,
+                              minHeight: 32,
+                              borderColor: state.isFocused
+                                ? "#2563eb"
+                                : "#d1d5db",
+                              boxShadow: state.isFocused
+                                ? "0 0 0 1px #2563eb"
+                                : "none",
+                              "&:hover": { borderColor: "#2563eb" },
+                              borderRadius: 8,
+                            }),
+                            option: (base, { isFocused, isSelected }) => ({
+                              ...base,
+                              backgroundColor: isFocused
+                                ? "#f3f4f6"
+                                : isSelected
+                                ? "#2563eb"
+                                : "white",
+                              color: isSelected ? "white" : "#111827",
+                              fontSize: 12,
+                              cursor: "pointer",
+                              padding: "8px 12px",
+                            }),
+                            singleValue: (base) => ({
+                              ...base,
+                              color: "#111827",
+                              fontWeight: 500,
+                            }),
+                            menu: (base) => ({
+                              ...base,
+                              marginTop: 2,
+                              borderRadius: 8,
+                              boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                              overflowX: "hidden",
+                            }),
+                            placeholder: (base) => ({
+                              ...base,
+                              color: "#9CA3AF",
+                              fontSize: 14,
+                            }),
+                          }}
+                        />
+                      </div>
 
-    {/* Rows */}
-    {rows.map((row) => (
-      <div
-        key={row.id}
-        className="grid grid-cols-2 sm:grid-cols-7 gap-3 sm:gap-4 items-center py-3 border-b sm:border-0"
-      >
-        {/* Product */}
-       <div className="col-span-2">
- 
-<Select
-  className="text-sm"
-  placeholder="Select Product..."
-  isClearable
-  isSearchable
-  menuPortalTarget={document.body}
-  filterOption={(option, inputValue) =>
-    inputValue
-      ? option.label.toLowerCase().includes(inputValue.toLowerCase())
-      : option.data.index < 3 // show top 3 if nothing typed
-  }
-  options={Array.isArray(products)
-    ? products
-        .filter(p => p && (p._id || p.id))
-        .map((p, index) => ({
-          value: p._id || p.id,
-          label: p.name || p.product_name || "Unnamed",
-          index,
-        }))
-    : []
-  }
-  value={
-    row.productId
-      ? (() => {
-          const selected = products?.find(
-            p => p && (p._id === row.productId || p.id === row.productId)
-          );
-          return selected
-            ? { value: row.productId, label: selected.name || selected.product_name || "Unnamed" }
-            : null;
-        })()
-      : null
-  }
-  onChange={selectedOption => {
-    const selectedProduct = products?.find(
-      p => p && (p._id === selectedOption?.value || p.id === selectedOption?.value)
-    );
-    handleSelectProduct(row.id, selectedProduct || null);
-  }}
-  styles={{
-    menuPortal: base => ({ ...base, zIndex: 9999 }),
-    control: (base, state) => ({
-      ...base,
-      minHeight: 32,
-      borderColor: state.isFocused ? "#2563eb" : "#d1d5db",
-      boxShadow: state.isFocused ? "0 0 0 1px #2563eb" : "none",
-      "&:hover": { borderColor: "#2563eb" },
-      borderRadius: 8,
-    }),
-    option: (base, { isFocused, isSelected }) => ({
-      ...base,
-      backgroundColor: isFocused ? "#f3f4f6" : isSelected ? "#2563eb" : "white",
-      color: isSelected ? "white" : "#111827",
-      fontSize: 12,
-      cursor: "pointer",
-      padding: "8px 12px",
-    }),
-    singleValue: base => ({
-      ...base,
-      color: "#111827",
-      fontWeight: 500,
-    }),
-    menu: base => ({
-      ...base,
-      marginTop: 2,
-      borderRadius: 8,
-      boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-      overflowX: "hidden",
-    }),
-    placeholder: base => ({
-      ...base,
-      color: "#9CA3AF",
-      fontSize: 14,
-    }),
-  }}
+                      {/* Qty */}
+                      <div>
+                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
+                          Qty
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={row.qty}
+                          onChange={(e) =>
+                            handleChange(row.id, "qty", e.target.value)
+                          }
+                          className="w-full border px-2 py-1 rounded bg-white"
+                        />
+                      </div>
 
-  />
+                      {/* Unit */}
+                      <div>
+                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
+                          Unit
+                        </label>
+                        <input
+                          placeholder="Unit"
+                          value={row.unit}
+                          onChange={(e) =>
+                            handleChange(row.id, "unit", e.target.value)
+                          }
+                          className="w-full border px-2 py-1 rounded bg-white"
+                        />
+                      </div>
 
-  
-</div>
+                      {/* Price */}
+                      <div>
+                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
+                          Price
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="0.00"
+                          value={row.price}
+                          onChange={(e) =>
+                            handleChange(row.id, "price", e.target.value)
+                          }
+                          className="w-full border px-2 py-1 rounded bg-white"
+                        />
+                      </div>
 
+                      {/* Tax */}
+                      <div>
+                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
+                          Tax
+                        </label>
+                        <input
+                          type="text"
+                          value={`${row.tax}%`}
+                          readOnly
+                          className="w-full border px-2 py-1 rounded bg-white"
+                        />
+                      </div>
 
-        {/* Qty */}
-        <div>
-          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Qty</label>
-          <input
-            type="number"
-            min="1"
-            value={row.qty}
-            onChange={(e) => handleChange(row.id, "qty", e.target.value)}
-            className="w-full border px-2 py-1 rounded bg-white"
-          />
-        </div>
+                      {/* Total */}
+                      <div>
+                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
+                          Total
+                        </label>
+                        <div className="flex items-center gap-2">
+                          ₹{calculateTotal(row).toFixed(2)}
+                          <button
+                            onClick={() => handleRemoveRow(row.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-        {/* Unit */}
-        <div>
-          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Unit</label>
-          <input
-            placeholder="Unit"
-            value={row.unit}
-            onChange={(e) => handleChange(row.id, "unit", e.target.value)}
-            className="w-full border px-2 py-1 rounded bg-white"
-          />
-        </div>
+                {/* Add Row button */}
+                <button
+                  onClick={handleAddRow}
+                  className="text-bluecol font-robotoM text-sm sm:text-md mt-2"
+                >
+                  + Add Row
+                </button>
+              </div>
 
-        {/* Price */}
-        <div>
-          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Price</label>
-          <input
-            type="number"
-            placeholder="0.00"
-            value={row.price}
-            onChange={(e) => handleChange(row.id, "price", e.target.value)}
-            className="w-full border px-2 py-1 rounded bg-white"
-          />
-        </div>
-
-        {/* Tax */}
-        <div>
-          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Tax</label>
-          <input
-            type="text"
-            value={`${row.tax}%`}
-            readOnly
-            className="w-full border px-2 py-1 rounded bg-white"
-          />
-        </div>
-
-        {/* Total */}
-        <div>
-          <label className="sm:hidden text-xs text-gray-600 font-robotoM">Total</label>
-          <div className="flex items-center gap-2">
-            ₹{calculateTotal(row).toFixed(2)}
-            <button
-              onClick={() => handleRemoveRow(row.id)}
-              className="text-red-500 hover:text-red-700"
-            >
-              <FaTrash />
-            </button>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-
-  {/* Add Row button */}
-  <button
-    onClick={handleAddRow}
-    className="text-bluecol font-robotoM text-sm sm:text-md mt-2"
-  >
-    + Add Row
-  </button>
-</div>
-
-
-
-
-
-          {/* Step 5: Additional Charges */}
-       {/* Step 5: Additional Charges */}
-<div className="bg-white rounded-lg shadow-customCard p-4">
-  <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-    <div className="bg-[#2563EB] p-2.5 rounded-full">
-      <FaPlus color="white" size={14} />
-    </div>
-    Step 3: Additional Charges
-  </h2>
-<div className="grid grid-cols-2 gap-3 font-robotoR text-md">
-  <div>
-    <label className="block text-sm mb-1 font-robotoM">Delivery Fee</label>
-    <input
-      className="w-full border px-2 py-1 rounded bg-white 
+              {/* Step 5: Additional Charges */}
+              {/* Step 5: Additional Charges */}
+              <div className="bg-white rounded-lg shadow-customCard p-4">
+                <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
+                  <div className="bg-[#2563EB] p-2.5 rounded-full">
+                    <FaPlus color="white" size={14} />
+                  </div>
+                  Step 3: Additional Charges
+                </h2>
+                <div className="grid grid-cols-2 gap-3 font-robotoR text-md">
+                  <div>
+                    <label className="block text-sm mb-1 font-robotoM">
+                      Delivery Fee
+                    </label>
+                    <input
+                      className="w-full border px-2 py-1 rounded bg-white 
       "
-      placeholder="0.00"
-      type="number"
-      min="0"                // ❌ Negative values block
-      inputMode="decimal"    // ✅ Mobile keyboards show numeric with dot
-      value={additionalCharges.deliveryFee}
-      onChange={(e) =>
-        handleAdditionalChange(
-          "deliveryFee",
-          e.target.value < 0 ? 0 : e.target.value // ❌ Prevents manual negative typing
-        )
-      }
-    />
-  </div>
+                      placeholder="0.00"
+                      type="number"
+                      min="0" // ❌ Negative values block
+                      inputMode="decimal" // ✅ Mobile keyboards show numeric with dot
+                      value={additionalCharges.deliveryFee}
+                      onChange={(e) =>
+                        handleAdditionalChange(
+                          "deliveryFee",
+                          e.target.value < 0 ? 0 : e.target.value // ❌ Prevents manual negative typing
+                        )
+                      }
+                    />
+                  </div>
 
-  <div>
-    <label className="block text-sm mb-1 font-robotoM">Packing Charges</label>
-    <input
-      className="w-full border px-2 py-1 rounded bg-white 
+                  <div>
+                    <label className="block text-sm mb-1 font-robotoM">
+                      Packing Charges
+                    </label>
+                    <input
+                      className="w-full border px-2 py-1 rounded bg-white 
        "
-      placeholder="0.00"
-      type="number"
-      min="0"
-      inputMode="decimal"
-      value={additionalCharges.packingCharges}
-      onChange={(e) =>
-        handleAdditionalChange(
-          "packingCharges",
-          e.target.value < 0 ? 0 : e.target.value
-        )
-      }
-    />
-  </div>
+                      placeholder="0.00"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      value={additionalCharges.packingCharges}
+                      onChange={(e) =>
+                        handleAdditionalChange(
+                          "packingCharges",
+                          e.target.value < 0 ? 0 : e.target.value
+                        )
+                      }
+                    />
+                  </div>
 
-  <div>
-    <label className="block text-sm mb-1 font-robotoM">Discount</label>
-    <input
-      className="w-full border px-2 py-1 rounded bg-white 
+                  <div>
+                    <label className="block text-sm mb-1 font-robotoM">
+                      Discount
+                    </label>
+                    <input
+                      className="w-full border px-2 py-1 rounded bg-white 
      "
-      placeholder="0.00"
-      type="number"
-      min="0"
-      inputMode="decimal"
-      value={additionalCharges.discount}
-      onChange={(e) =>
-        handleAdditionalChange(
-          "discount",
-          e.target.value < 0 ? 0 : e.target.value
-        )
-      }
-    />
-  </div>
+                      placeholder="0.00"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      value={additionalCharges.discount}
+                      onChange={(e) =>
+                        handleAdditionalChange(
+                          "discount",
+                          e.target.value < 0 ? 0 : e.target.value
+                        )
+                      }
+                    />
+                  </div>
 
-  <div>
-    <label className="block text-sm mb-1 font-robotoM">Other</label>
-    <input
-      className="w-full border px-2 py-1 rounded bg-white 
+                  <div>
+                    <label className="block text-sm mb-1 font-robotoM">
+                      Other
+                    </label>
+                    <input
+                      className="w-full border px-2 py-1 rounded bg-white 
 "
-      placeholder="0.00"
-      type="number"
-      min="0"
-      inputMode="decimal"
-      value={additionalCharges.other}
-      onChange={(e) =>
-        handleAdditionalChange(
-          "other",
-          e.target.value < 0 ? 0 : e.target.value
-        )
-      }
-    />
-  </div>
-</div>
-
-</div>
-
-{/* Step 3: Payment Mode */}
-          <div className="bg-white rounded-lg shadow-customCard p-4">
-            <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
-              <div className="bg-[#2563EB] p-2.5 rounded-full">
-                <FaRegCreditCard color="white" size={14} />
+                      placeholder="0.00"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      value={additionalCharges.other}
+                      onChange={(e) =>
+                        handleAdditionalChange(
+                          "other",
+                          e.target.value < 0 ? 0 : e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                </div>
               </div>
-              Step 4: Payment Mode
-            </h2>
-            <div className="flex flex-col sm:flex-row space-x-3">
-              <button
-                onClick={() => handlePaymentMode("cash")}
-                className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol ml-3 my-1 px-4 py-1 rounded font-robotoM text-md"
-              >
-                <GiCash size={18} /> Cash
+
+              {/* Step 3: Payment Mode */}
+              <div className="bg-white rounded-lg shadow-customCard p-4">
+                <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-6">
+                  <div className="bg-[#2563EB] p-2.5 rounded-full">
+                    <FaRegCreditCard color="white" size={14} />
+                  </div>
+                  Step 4: Payment Mode
+                </h2>
+                <div className="flex flex-col sm:flex-row space-x-3">
+                  <button
+                    onClick={() => handlePaymentMode("cash")}
+                    className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol ml-3 my-1 px-4 py-1 rounded font-robotoM text-md"
+                  >
+                    <GiCash size={18} /> Cash
+                  </button>
+                  <button
+                    onClick={() => handlePaymentMode("debt")}
+                    className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol my-1 px-4 py-1 rounded font-robotoM text-md"
+                  >
+                    <FaCalculator size={18} /> Debt
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 4: Payment Method (if Cash) */}
+              {showStep3 && (
+                <div className="bg-white rounded-lg shadow-customCard p-4">
+                  <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
+                    <div className="bg-[#2563EB] p-2.5 rounded-full">
+                      <FaCalculator color="white" size={14} />
+                    </div>
+                    Step 5: Payment Method
+                  </h2>
+
+                  <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
+                    <div>Payment Method</div>
+                    <div>Transaction ID / UTR</div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3">
+                    <input
+                      className="border px-2 py-1 rounded bg-white"
+                      placeholder="Cash/UPI/Cheque/DD"
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    />
+                    <input
+                      className="border px-2 py-1 rounded bg-white"
+                      placeholder="Enter Transaction reference"
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Milestones (if Debt) with Partial Cash */}
+              {showStep4 && (
+                <div className="bg-white rounded-lg shadow-customCard p-4 sm:p-6">
+                  <h2 className="flex items-center gap-2 text-base sm:text-lg font-robotoSb mb-3">
+                    <div className="bg-[#2563EB] p-2.5 rounded-full">
+                      <FaCalculator color="white" size={14} />
+                    </div>
+                    Step 5: Promise Date
+                  </h2>
+
+                  <div className="mt-4 border-t py-4">
+                    <label className="block text-sm mb-1 font-robotoM">
+                      Partial Cash Paid (Mixed Payment)
+                    </label>
+                    <input
+                      type="number"
+                      value={partialCashAmount}
+                      onChange={(e) => setPartialCashAmount(e.target.value)}
+                      className="border px-2 py-1 rounded bg-white w-full"
+                      placeholder="Enter cash amount (optional, rest in debt)"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Remaining Due: ₹{invoiceSummary.dueBalance.toFixed(2)}
+                    </p>
+                  </div>
+
+                  <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
+                    <div>Milestone Name</div>
+                    <div>Amount (₹)</div>
+                    <div>Due Date</div>
+                    <div>Status</div>
+                  </div>
+
+                  {milestones.map((ms, index) => (
+                    <div
+                      key={ms.id}
+                      className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded items-center"
+                    >
+                      <input
+                        className="border px-2 py-1 rounded bg-white"
+                        placeholder="Milestone Name"
+                        value={ms.name}
+                        onChange={(e) => {
+                          const newMilestones = [...milestones];
+                          newMilestones[index].name = e.target.value;
+                          setMilestones(newMilestones);
+                        }}
+                      />
+
+                      <input
+                        className="border px-2 py-1 rounded bg-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        placeholder="0"
+                        type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={ms.amount}
+                        onChange={(e) => {
+                          const newMilestones = [...milestones];
+                          const onlyDigits = e.target.value.replace(/\D/g, "");
+                          newMilestones[index].amount = onlyDigits
+                            ? parseInt(onlyDigits, 10)
+                            : "";
+                          setMilestones(newMilestones);
+                        }}
+                      />
+
+                      <DatePicker
+                        className="w-full h-10 border border-gray-300 px-2 py-1 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        selected={
+                          ms.dueDate
+                            ? parse(ms.dueDate, "dd/MM/yyyy", new Date())
+                            : null
+                        }
+                        onChange={(date) => {
+                          const newMilestones = [...milestones];
+                          newMilestones[index].dueDate = date
+                            ? format(date, "dd/MM/yyyy")
+                            : "";
+                          setMilestones(newMilestones);
+                        }}
+                        dateFormat="dd/MM/yyyy"
+                        // minDate={new Date()}
+                        placeholderText="Select due date"
+                      />
+
+                      <div className="relative flex flex-row gap-2">
+                        <input
+                          className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          placeholder="Status"
+                          value={ms.status}
+                          readOnly
+                        />
+
+                        {/* 🔹 Delete button */}
+                        <button
+                          onClick={() => {
+                            const newMilestones = milestones.filter(
+                              (_, i) => i !== index
+                            );
+                            setMilestones(newMilestones);
+                          }}
+                          className="text-red-500 hover:text-red-700 flex justify-center items-center"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    onClick={handleAddMilestone}
+                    className="text-bluecol font-robotoR text-sm sm:text-md mt-2"
+                  >
+                    + Add Milestone
+                  </button>
+                </div>
+              )}
+
+              {/* Step 6: Add Note */}
+              <div className="bg-white rounded-lg shadow-lg shadow-[#0000001A] p-4 shadow-customCard">
+                <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
+                  <div className="bg-[#2563EB] p-2.5 rounded-full">
+                    <FaEdit color="white" size={14} />
+                  </div>
+                  Step 6: Add Note (Optional)
+                </h2>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="border w-full px-3 py-2 rounded font-robotoR text-md bg-white"
+                  rows="3"
+                  placeholder="Terms & Conditions, Special instructions, Internal notes..."
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-start gap-4 p-4">
+              <button className="bg-gray-600 text-white font-robotoR text-md px-4 py-2 rounded">
+                Save as Draft
               </button>
               <button
-                onClick={() => handlePaymentMode("debt")}
-                className="flex justify-center items-center gap-2 border border-bluecol hover:bg-bluecol hover:text-white text-bluecol my-1 px-4 py-1 rounded font-robotoM text-md"
+                onClick={handlePreview}
+                className="flex justify-center items-center gap-2 bg-bluecol text-white font-robotoM text-md px-4 py-2 rounded"
               >
-                <FaCalculator size={18} /> Debt
+                <LuNewspaper size={24} />
+                Generate Invoice
               </button>
             </div>
           </div>
-
-          {/* Step 4: Payment Method (if Cash) */}
-          {showStep3 && (
-            <div className="bg-white rounded-lg shadow-customCard p-4">
-              <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-                <div className="bg-[#2563EB] p-2.5 rounded-full">
-                  <FaCalculator color="white" size={14} />
-                </div>
-                Step 5: Payment Method
-              </h2>
-
-              <div className="grid grid-cols-2 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-                <div>Payment Method</div>
-                <div>Transaction ID / UTR</div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 items-center font-robotoR text-md p-3">
-                <input
-                  className="border px-2 py-1 rounded bg-white"
-                  placeholder="Cash/UPI/Cheque/DD"
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                <input
-                  className="border px-2 py-1 rounded bg-white"
-                  placeholder="Enter Transaction reference"
-                  value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
-                />
-              </div>
-
-
-            </div>
-          )}
-
-          {/* Step 4: Milestones (if Debt) with Partial Cash */}
-          {showStep4 && (
-            <div className="bg-white rounded-lg shadow-customCard p-4 sm:p-6">
-              <h2 className="flex items-center gap-2 text-base sm:text-lg font-robotoSb mb-3">
-                <div className="bg-[#2563EB] p-2.5 rounded-full">
-                  <FaCalculator color="white" size={14} />
-                </div>
-                Step 5: Promise Date
-              </h2>
-
-
- <div className="mt-4 border-t py-4">
-                <label className="block text-sm mb-1 font-robotoM">Partial Cash Paid (Mixed Payment)</label>
-                <input
-                  type="number"
-                  value={partialCashAmount}
-                  onChange={(e) => setPartialCashAmount(e.target.value)}
-                  className="border px-2 py-1 rounded bg-white w-full"
-                  placeholder="Enter cash amount (optional, rest in debt)"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Remaining Due: ₹{invoiceSummary.dueBalance.toFixed(2)}
-                </p>
-              </div>
-
-              <div className="hidden sm:grid grid-cols-4 gap-2 items-center text-sm font-robotoM text-black mb-1 px-1">
-                <div>Milestone Name</div>
-                <div>Amount (₹)</div>
-                <div>Due Date</div>
-                <div>Status</div>
-              </div>
-
-
-
-{milestones.map((ms, index) => (
-  <div
-    key={ms.id}
-    className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-robotoR text-sm sm:text-md border border-gray-200 p-3 rounded items-center"
-  >
-    <input
-      className="border px-2 py-1 rounded bg-white"
-      placeholder="Milestone Name"
-      value={ms.name}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].name = e.target.value;
-        setMilestones(newMilestones);
-      }}
-    />
-
-    <input
-      className="border px-2 py-1 rounded bg-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-      placeholder="0"
-      type="number"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      value={ms.amount}
-      onChange={(e) => {
-        const newMilestones = [...milestones];
-        const onlyDigits = e.target.value.replace(/\D/g, "");
-        newMilestones[index].amount = onlyDigits ? parseInt(onlyDigits, 10) : "";
-        setMilestones(newMilestones);
-      }}
-    />
-
-    <DatePicker
-      className="w-full h-10 border border-gray-300 px-2 py-1 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-      selected={ms.dueDate ? parse(ms.dueDate, "dd/MM/yyyy", new Date()) : null}
-      onChange={(date) => {
-        const newMilestones = [...milestones];
-        newMilestones[index].dueDate = date ? format(date, "dd/MM/yyyy") : "";
-        setMilestones(newMilestones);
-      }}
-      dateFormat="dd/MM/yyyy"
-      // minDate={new Date()}
-      placeholderText="Select due date"
-    />
-
-
-
-
-<div className="relative flex flex-row gap-2">  
-    <input
-      className="w-full h-10 border border-gray-300 pl-4 pr-10 py-2 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-      placeholder="Status"
-      value={ms.status}
-      readOnly
-    />
-
-    {/* 🔹 Delete button */}
-    <button
-      onClick={() => {
-        const newMilestones = milestones.filter((_, i) => i !== index);
-        setMilestones(newMilestones);
-      }}
-      className="text-red-500 hover:text-red-700 flex justify-center items-center"
-    >
-      <FaTrash />
-    </button>
-  </div>
-  </div>
-))}
-
-
-              <button
-                onClick={handleAddMilestone}
-                className="text-bluecol font-robotoR text-sm sm:text-md mt-2"
-              >
-                + Add Milestone
-              </button>
-
-            </div>
-          )}
-
-
-          {/* Step 6: Add Note */}
-<div className="bg-white rounded-lg shadow-lg shadow-[#0000001A] p-4 shadow-customCard">
-  <h2 className="flex items-center gap-2 text-lg font-robotoSb mb-3">
-    <div className="bg-[#2563EB] p-2.5 rounded-full">
-      <FaEdit color="white" size={14} />
-    </div>
-    Step 6: Add Note (Optional)
-  </h2>
-  <textarea
-    value={note}
-    onChange={(e) => setNote(e.target.value)}
-    className="border w-full px-3 py-2 rounded font-robotoR text-md bg-white"
-    rows="3"
-    placeholder="Terms & Conditions, Special instructions, Internal notes..."
-  ></textarea>
-</div>
-
         </div>
-
-        <div className="flex flex-col sm:flex-row justify-start gap-4 p-4">
-          <button className="bg-gray-600 text-white font-robotoR text-md px-4 py-2 rounded">
-            Save as Draft
-          </button>
-          <button     onClick={handlePreview}  className="flex justify-center items-center gap-2 bg-bluecol text-white font-robotoM text-md px-4 py-2 rounded">
-            <LuNewspaper size={24} />
-            Generate Invoice
-          </button>
-        </div>
-      </div>
-      </div>
       </div>
 
       {/* ---------- Invoice Preview Modal ---------- */}
 
       {/* ---------- Invoice Preview Modal ---------- */}
-{showPreview && previewInvoice && (
-  <div className="fixed inset-0 z-50 flex items-start justify-center p-6 bg-black/40">
-    <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
-      {/* header */}
-      <div className="flex justify-between items-center p-4 border-b">
-        <h3 className="text-lg font-robotoSb">Invoice Preview</h3>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => downloadPreviewAsPDF(`invoice-${previewInvoice._id || Date.now()}.pdf`)}
-            className="px-3 py-1 bg-blue-600 text-white rounded"
-          >
-            Download PDF
-          </button>
-          <button
-            onClick={() => {
-              setShowPreview(false);
-              setPreviewInvoice(null);
-            }}
-            className="px-3 py-1 border rounded"
-          >
-            Close
-          </button>
+      {showPreview && previewInvoice && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-6 bg-black/40">
+          <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
+            {/* header */}
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-robotoSb">Invoice Preview</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    downloadPreviewAsPDF(
+                      `invoice-${previewInvoice._id || Date.now()}.pdf`
+                    )
+                  }
+                  className="px-3 py-1 bg-blue-600 text-white rounded"
+                >
+                  Download PDF
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPreview(false);
+                    setPreviewInvoice(null);
+                  }}
+                  className="px-3 py-1 border rounded"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {/* body: the printable invoice area */}
+            <div ref={previewRef} className="p-8 bg-white text-black font-sans">
+              {/* ---- Top: company + invoice details ---- */}
+              <div className="flex justify-between items-start mb-6 border-b pb-4">
+                {/* Company Info */}
+                <div>
+                  <h2 className="text-2xl font-robotoB text-gray-800">
+                    {storeProfile?.businessName || "Your Company Name"}
+                  </h2>
+                  <div className="text-sm text-gray-600">
+                    {storeProfile?.address || "Address line 1"}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {storeProfile?.mobile ? storeProfile.mobile : ""}{" "}
+                    {storeProfile?.email ? `/ ${storeProfile.email}` : ""}
+                  </div>
+                </div>
+
+                {/* Invoice Info */}
+                <div className="text-sm text-gray-700 text-right space-y-1">
+                  <div>
+                    <strong>Invoice ID:</strong>{" "}
+                    {previewInvoice._id || previewInvoice.id}
+                  </div>
+                  <div>
+                    <strong>Date:</strong>{" "}
+                    {new Date(
+                      previewInvoice.createdAt || Date.now()
+                    ).toLocaleDateString()}
+                  </div>
+                  <div>
+                    <strong>Status:</strong>{" "}
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${
+                        (previewInvoice.paymentStatus ||
+                          invoiceSummary.paymentStatus) === "Paid"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {previewInvoice.paymentStatus ||
+                        invoiceSummary.paymentStatus}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer details */}
+              <div className="mb-6 p-4 border rounded bg-gray-50">
+                <h3 className="font-semibold mb-2 text-gray-700">Bill To:</h3>
+                <div className="text-sm text-gray-700">
+                  <strong>Name:</strong>{" "}
+                  {previewInvoice.name || selectedCustomer?.name}
+                </div>
+                <div className="text-sm text-gray-700">
+                  <strong>Mobile:</strong>{" "}
+                  {previewInvoice.phone || selectedCustomer?.mobile}
+                </div>
+                <div className="text-sm text-gray-700">
+                  <strong>Address:</strong>{" "}
+                  {previewInvoice.address || selectedCustomer?.address}
+                </div>
+              </div>
+
+              {/* Products table */}
+              <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="text-left py-2 px-2 border-b">#</th>
+                    <th className="text-left py-2 px-2 border-b">Product</th>
+                    <th className="text-right py-2 px-2 border-b">Qty</th>
+                    <th className="text-right py-2 px-2 border-b">
+                      Unit Price
+                    </th>
+                    <th className="text-right py-2 px-2 border-b">Tax</th>
+                    <th className="text-right py-2 px-2 border-b">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(previewInvoice.products || []).map((p, i) => (
+                    <tr key={i} className="border-b">
+                      <td className="py-2 px-2">{i + 1}</td>
+                      <td className="py-2 px-2">{p.name}</td>
+                      <td className="py-2 px-2 text-right">{p.qty}</td>
+                      <td className="py-2 px-2 text-right">
+                        ₹{Number(p.price).toFixed(2)}
+                      </td>
+                      <td className="py-2 px-2 text-right">{p.tax}%</td>
+                      <td className="py-2 px-2 text-right">
+                        ₹
+                        {Number(
+                          p.total ||
+                            p.qty * p.price + (p.qty * p.price * p.tax) / 100
+                        ).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* totals */}
+              <div className="mt-6 flex justify-end">
+                <div className="w-full max-w-sm bg-gray-50 p-4 rounded border">
+                  <div className="flex justify-between py-1">
+                    <span>Subtotal:</span>
+                    <span>
+                      ₹
+                      {Number(
+                        previewInvoice.subtotal || invoiceSummary.subtotal
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span>Tax:</span>
+                    <span>
+                      ₹
+                      {Number(
+                        previewInvoice.tax || invoiceSummary.totalTax
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span>Delivery:</span>
+                    <span>
+                      ₹
+                      {Number(
+                        previewInvoice.deliveryFee || invoiceSummary.deliveryFee
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span>Discount:</span>
+                    <span>
+                      -₹
+                      {Number(
+                        previewInvoice.discount || invoiceSummary.discount
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                    <span>Total:</span>
+                    <span>
+                      ₹
+                      {Number(
+                        previewInvoice.total || invoiceSummary.total
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <span>Paid:</span>
+                    <span>
+                      ₹
+                      {Number(
+                        previewInvoice.totalReceived ||
+                          invoiceSummary.totalReceived
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Due:</span>
+                    <span>
+                      ₹
+                      {Number(
+                        previewInvoice.dueBalance || invoiceSummary.dueBalance
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* notes & payment details */}
+              <div className="mt-6 text-sm">
+                <div>
+                  <strong>Payment Mode:</strong>{" "}
+                  {previewInvoice.paymentMode || paymentMode}
+                </div>
+                <div>
+                  <strong>Payment Method / Txn:</strong>{" "}
+                  {previewInvoice.paymentMethod || paymentMethod}{" "}
+                  {previewInvoice.transactionId
+                    ? ` / ${previewInvoice.transactionId}`
+                    : ""}
+                </div>
+                {previewInvoice.milestones &&
+                  previewInvoice.milestones.length > 0 && (
+                    <div className="mt-3">
+                      <strong>Milestones:</strong>
+                      <ul className="list-disc ml-6">
+                        {previewInvoice.milestones.map((m, idx) => (
+                          <li key={idx} className="mt-1">
+                            {m.milestoneName} — ₹
+                            {Number(m.amount || 0).toFixed(2)}{" "}
+                            {m.dueDate
+                              ? `(Due: ${new Date(
+                                  m.dueDate
+                                ).toLocaleDateString()})`
+                              : ""}{" "}
+                            — {m.status}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                {previewInvoice.note && (
+                  <div className="mt-4">
+                    <strong>Note:</strong>
+                    <p className="mt-1 text-gray-700">{previewInvoice.note}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 my-6">
+              {!isDownloadMode && (
+                <>
+                  <button
+                    onClick={() => setShowPreview(false)}
+                    className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Submit Invoice
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* body: the printable invoice area */}
-      <div ref={previewRef} className="p-8 bg-white text-black font-sans">
-  {/* ---- Top: company + invoice details ---- */}
-  <div className="flex justify-between items-start mb-6 border-b pb-4">
-    {/* Company Info */}
-    <div>
-      <h2 className="text-2xl font-robotoB text-gray-800">
-        {storeProfile?.businessName || "Your Company Name"}
-      </h2>
-      <div className="text-sm text-gray-600">{storeProfile?.address || "Address line 1"}</div>
-      <div className="text-sm text-gray-600">
-        {storeProfile?.mobile ? storeProfile.mobile : ""}{" "}
-        {storeProfile?.email ? `/ ${storeProfile.email}` : ""}
-      </div>
-    </div>
-
-    {/* Invoice Info */}
-    <div className="text-sm text-gray-700 text-right space-y-1">
-      <div><strong>Invoice ID:</strong> {previewInvoice._id || previewInvoice.id}</div>
-      <div><strong>Date:</strong> {new Date(previewInvoice.createdAt || Date.now()).toLocaleDateString()}</div>
-      <div>
-        <strong>Status:</strong>{" "}
-        <span
-          className={`px-2 py-1 rounded text-xs ${
-            (previewInvoice.paymentStatus || invoiceSummary.paymentStatus) === "Paid"
-              ? "bg-green-100 text-green-800"
-              : "bg-yellow-100 text-yellow-800"
-          }`}
-        >
-          {previewInvoice.paymentStatus || invoiceSummary.paymentStatus}
-        </span>
-      </div>
-    </div>
-  </div>
-
-  {/* Customer details */}
-  <div className="mb-6 p-4 border rounded bg-gray-50">
-    <h3 className="font-semibold mb-2 text-gray-700">Bill To:</h3>
-    <div className="text-sm text-gray-700"><strong>Name:</strong> {previewInvoice.name || selectedCustomer?.name}</div>
-    <div className="text-sm text-gray-700"><strong>Mobile:</strong> {previewInvoice.phone || selectedCustomer?.mobile}</div>
-    <div className="text-sm text-gray-700"><strong>Address:</strong> {previewInvoice.address || selectedCustomer?.address}</div>
-  </div>
-
-  {/* Products table */}
-  <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
-    <thead className="bg-gray-100">
-      <tr>
-        <th className="text-left py-2 px-2 border-b">#</th>
-        <th className="text-left py-2 px-2 border-b">Product</th>
-        <th className="text-right py-2 px-2 border-b">Qty</th>
-        <th className="text-right py-2 px-2 border-b">Unit Price</th>
-        <th className="text-right py-2 px-2 border-b">Tax</th>
-        <th className="text-right py-2 px-2 border-b">Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      {(previewInvoice.products || []).map((p, i) => (
-        <tr key={i} className="border-b">
-          <td className="py-2 px-2">{i + 1}</td>
-          <td className="py-2 px-2">{p.name}</td>
-          <td className="py-2 px-2 text-right">{p.qty}</td>
-          <td className="py-2 px-2 text-right">₹{Number(p.price).toFixed(2)}</td>
-          <td className="py-2 px-2 text-right">{p.tax}%</td>
-          <td className="py-2 px-2 text-right">
-            ₹{Number(p.total || (p.qty * p.price + ((p.qty * p.price * p.tax) / 100))).toFixed(2)}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-
-  {/* totals */}
-  <div className="mt-6 flex justify-end">
-    <div className="w-full max-w-sm bg-gray-50 p-4 rounded border">
-      <div className="flex justify-between py-1"><span>Subtotal:</span><span>₹{Number(previewInvoice.subtotal || invoiceSummary.subtotal).toFixed(2)}</span></div>
-      <div className="flex justify-between py-1"><span>Tax:</span><span>₹{Number(previewInvoice.tax || invoiceSummary.totalTax).toFixed(2)}</span></div>
-      <div className="flex justify-between py-1"><span>Delivery:</span><span>₹{Number(previewInvoice.deliveryFee || invoiceSummary.deliveryFee).toFixed(2)}</span></div>
-      <div className="flex justify-between py-1"><span>Discount:</span><span>-₹{Number(previewInvoice.discount || invoiceSummary.discount).toFixed(2)}</span></div>
-      <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2"><span>Total:</span><span>₹{Number(previewInvoice.total || invoiceSummary.total).toFixed(2)}</span></div>
-      <div className="flex justify-between mt-2"><span>Paid:</span><span>₹{Number(previewInvoice.totalReceived || invoiceSummary.totalReceived).toFixed(2)}</span></div>
-      <div className="flex justify-between"><span>Due:</span><span>₹{Number(previewInvoice.dueBalance || invoiceSummary.dueBalance).toFixed(2)}</span></div>
-    </div>
-  </div>
-
-  {/* notes & payment details */}
-  <div className="mt-6 text-sm">
-    <div><strong>Payment Mode:</strong> {previewInvoice.paymentMode || paymentMode}</div>
-    <div><strong>Payment Method / Txn:</strong> {previewInvoice.paymentMethod || paymentMethod} {previewInvoice.transactionId ? ` / ${previewInvoice.transactionId}` : ""}</div>
-    {previewInvoice.milestones && previewInvoice.milestones.length > 0 && (
-      <div className="mt-3">
-        <strong>Milestones:</strong>
-        <ul className="list-disc ml-6">
-          {previewInvoice.milestones.map((m, idx) => (
-            <li key={idx} className="mt-1">
-              {m.milestoneName} — ₹{Number(m.amount || 0).toFixed(2)} {m.dueDate ? `(Due: ${new Date(m.dueDate).toLocaleDateString()})` : ""} — {m.status}
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-    {previewInvoice.note && (
-      <div className="mt-4">
-        <strong>Note:</strong>
-        <p className="mt-1 text-gray-700">{previewInvoice.note}</p>
-      </div>
-    )}
-  </div>
-
-
-
-
-</div>
-<div className="flex justify-end gap-3 my-6">
-  {!isDownloadMode && (
-    <>
-      <button
-        onClick={() => setShowPreview(false)}
-        className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSubmit}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Submit Invoice
-      </button>
-    </>
-  )}
-</div>
-
-
-    </div>
-  </div>
-)}
-
+      )}
 
       {/* Sidebar */}
       <div className="bg-white shadow-customCard  border rounded-lg p-4 ">
         <h2 className="text-lg font-robotoSb mb-4">Invoice Summary</h2>
-<ul className="text-sm font-robotoR text-black space-y-3">
+        <ul className="text-sm font-robotoR text-black space-y-3">
           <li className="flex justify-between">
             <span>Subtotal:</span>
             <span>₹{invoiceSummary.subtotal.toFixed(2)}</span>
@@ -1321,42 +1499,51 @@ useEffect(() => {
             <span>₹{invoiceSummary.total.toFixed(2)}</span>
           </li>
         </ul>
+        {/* Previous Invoices Section */}
+        <div className="mt-6">
+          <h3 className="text-[22px] font-robotoSb mb-2">Previous Invoices</h3>
 
-{/* Previous Invoices Section */}
-<div className="mt-6">
-  <h3 className="text-[22px] font-robotoSb mb-2">Previous Invoices</h3>
+          {invoices.length === 0 ? (
+            <p className="text-gray-500 text-sm">No invoices found.</p>
+          ) : (
+            invoices.map((inv, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center shadow-customCard border-2 rounded-lg border-[#E5E7EB] text-sm p-2 mb-2"
+              >
+                <div>
+                  <p className="font-robotoSb text-[16px]">{inv.name}</p>
+                  <p className="text-gray-500 font-robotoR text-sm">
+                    Last Paid:{" "}
+                    {inv.updatedAt
+                      ? new Date(inv.updatedAt).toLocaleDateString()
+                      : new Date(inv.createdAt).toLocaleDateString()}
+                  </p>
+                  <p className="text-red-500 font-robotoM text-xs">
+                    Due: ₹{inv.dueBalance?.toFixed(2) || 0}
+                  </p>
+                </div>
 
-  {invoices.length === 0 ? (
-    <p className="text-gray-500 text-sm">No invoices found.</p>
-  ) : (
-    invoices.map((inv, index) => (
-      <div
-        key={index}
-        className="flex justify-between items-center shadow-customCard border-2 rounded-lg border-[#E5E7EB] text-sm p-2 mb-2"
-      >
-        <div>
-          <p className="font-robotoSb text-[16px]">{inv.name}</p>
-          <p className="text-gray-500 font-robotoR text-sm">
-            Last Paid: {inv.updatedAt ? new Date(inv.updatedAt).toLocaleDateString() : new Date(inv.createdAt).toLocaleDateString()}
-          </p>
-          <p className="text-red-500 font-robotoM text-xs">
-            Due: ₹{inv.dueBalance?.toFixed(2) || 0}
-          </p>
+                <button
+                  onClick={() => console.log("View Invoice:", inv._id)}
+                  className="bg-[#E6FEE2] text-[#16A34A] px-2 py-1 rounded-full font-robotoM text-xs"
+                >
+                  View Invoice
+                </button>
+              </div>
+            ))
+          )}
         </div>
-
-        <button
-          onClick={() => console.log("View Invoice:", inv._id)}
-          className="bg-[#E6FEE2] text-[#16A34A] px-2 py-1 rounded-full font-robotoM text-xs"
-        >
-          View Invoice
-        </button>
-      </div>
-    ))
-  )}
-</div>
-
+        {/* 🟢 The requested Button component integration for pop-up messages */}
+             {" "}
+        {popupType && (
+          <Button
+            type={popupType}
+            message={message}
+            onClose={() => setPopupType(null)}
+          />
+        )}
       </div>
     </div>
-
   );
 }
