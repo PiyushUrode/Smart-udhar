@@ -10,6 +10,7 @@ import Cookies from "js-cookie"; // to fetch token / storeId from cookie
 import DatePicker from "react-datepicker";
 import { format, parse } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
+import StatusButton  from "../../common/Button.jsx";
 
 
 const D10Expenses = () => {
@@ -17,6 +18,8 @@ const D10Expenses = () => {
   const [selectedFilter, setSelectedFilter] = useState("Monthly"); // default
 const [loading, setLoading] = useState(false);
 const [expenses, setExpenses] = useState([]);
+const [status, setStatus] = useState(null); // null | "processing" | "success" | "error" | "complete"
+
   const handleFilterChange = (option) => {
     setSelectedFilter(option);
     setShowFilterDropdown(false);
@@ -144,12 +147,14 @@ const [formData, setFormData] = useState({
 const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
+  setStatus("processing"); // show processing popup
+
   try {
     const result = await ExpenseService.createExpense(formData);
     if (result.success) {
-      console.log("✅ Expense created:", result.expense);
+      setStatus("success"); // ✅ success popup
 
-      // ✅ Reset form fields
+      // Reset form
       setFormData({
         date: "",
         expenseCategory: "",
@@ -162,16 +167,18 @@ const handleSubmit = async (e) => {
         expenseImage: "",
       });
 
-      fetchExpenses(); // refresh list + summary
+      fetchExpenses();
     } else {
-      console.error("❌ Error creating expense:", result.error);
+      setStatus("error"); // ❌ error popup
     }
   } catch (err) {
     console.error("❌ Unexpected error:", err);
+    setStatus("error");
   } finally {
     setLoading(false);
   }
 };
+
 
 
 
@@ -190,23 +197,20 @@ const handleSubmit = async (e) => {
             <div className="grid md:grid-cols-2 gap-6">
              <div>
   <label className="font-medium mb-1 block">Date</label>
-  <DatePicker
-    className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
-    selected={
-      formData.date
-        ? parse(formData.date, "dd/MM/yyyy", new Date()) // string → Date
-        : null
-    }
-    onChange={(date) =>
-      setFormData({
-        ...formData,
-        date: date ? format(date, "dd/MM/yyyy") : "", // Date → string
-      })
-    }
-    dateFormat="dd/MM/yyyy"        // ✅ DD/MM/YYYY format force
-    placeholderText="DD/MM/YYYY"   // 👈 Placeholder
-    isClearable                    // optional: allow clearing
-  />
+<DatePicker
+  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+  selected={formData.date ? new Date(formData.date) : null} // keep Date object
+  onChange={(date) =>
+    setFormData({
+      ...formData,
+      date: date || "", // ✅ save raw Date object
+    })
+  }
+  dateFormat="dd/MM/yyyy"
+  placeholderText="DD/MM/YYYY"
+  isClearable
+/>
+
 </div>
 
               <div>
@@ -249,7 +253,7 @@ const handleSubmit = async (e) => {
                 <div className="relative">
                   <span className="absolute left-3 top-2.5 text-gray-500">₹</span>
                   <input
-                    type="text"
+                    type="number"
                     name="amount"
                     placeholder="0.00"
                     value={formData.amount}
@@ -295,24 +299,29 @@ className="appearance-none h-5 w-5 border border-gray-300 rounded-sm
          </div>
 
             {/* Payment Mode */}
-            <div>
-              <label className="font-medium mb-1 block">Payment Mode</label>
-              <div className="flex gap-6 mt-1">
-                {paymentModes.map((mode) => (
-                  <label key={mode} className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="paymentMode"
-                      value={mode}
-                      checked={formData.paymentMode === mode}
-                      onChange={handleChange}
-                      required
-                    />
-                    {mode}
-                  </label>
-                ))}
-              </div>
-            </div>
+          {/* Payment Mode */}
+<div>
+  <label className="font-medium mb-1 block">Payment Mode</label>
+  <div className="flex gap-6 mt-1">
+    {paymentModes.map((mode) => (
+      <label key={mode} className="flex items-center gap-2">
+        <input
+          type="radio"
+          name="paymentMode"
+          value={mode}
+          checked={formData.paymentMode === mode}
+          // ✅ direct setter for radio
+          onChange={() =>
+            setFormData((prev) => ({ ...prev, paymentMode: mode }))
+          }
+          required
+        />
+        {mode}
+      </label>
+    ))}
+  </div>
+</div>
+
 
             {/* Notes */}
             <div>
@@ -356,6 +365,22 @@ className="appearance-none h-5 w-5 border border-gray-300 rounded-sm
                 {loading ? "Saving..." : "+ Add Expense"}
               </button>
             </div>
+            {status && (
+  <StatusButton
+    type={status}
+    onClose={() => setStatus(null)}
+    message={
+      status === "success"
+        ? "Your expense has been saved successfully."
+        : status === "error"
+        ? "Something went wrong. Please try again."
+        : status === "processing"
+        ? "We’re saving your expense, please wait..."
+        : "Please complete required fields."
+    }
+  />
+)}
+
           </form>
         </div>
 

@@ -10,7 +10,7 @@
   import Button from "../../common/Button.jsx";
   import axios from "axios";
   import Cookies from "js-cookie";
-  import { toast } from "react-toastify";
+
   import { useParams, useNavigate } from "react-router-dom";
   import { ProfileService } from "../../api/profileservice.js";
   import { AuthService } from "../../api/authservice.js";
@@ -217,13 +217,13 @@
       <div className="bg-[#FAFAFA] py-10 px-4">
         <div className="max-w-3xl mx-auto bg-[#FFFFFF] rounded-xl shadow-[0px_10px_15px_0px_#0000001A] p-0 md:p-4">
           <div className="flex flex-row justify-center items-center align-middle justify-between max-w-3xl p-2 md:pr-10 w-full">
-            <div className="text-[#374151] text-sm lg:text-xl font-robotoB py-3 px-1 rounded-t-xl">
+            <div className="text-[#374151] text-base md:text-xl lg:text-2xl font-robotoB py-3 px-1 rounded-t-xl">
               Business Profile
             </div>
           </div>
 
           <div className="flex flex-row justify-center items-center align-middle justify-between max-w-3xl p-2 pr-10 bg-lightbluecol w-full rounded-xl">
-            <div className="text-white text-base md:text-lg font-semibold py-3 px-6 rounded-t-xl">
+            <div className="text-white text-base md:text-lg  font-semibold py-3 px-6 rounded-t-xl">
               Basic Information
             </div>
           </div>

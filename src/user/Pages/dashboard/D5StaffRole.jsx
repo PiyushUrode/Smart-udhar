@@ -199,7 +199,7 @@ useEffect(() => {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <StatCard label="Total Staff" value={members.length} type="staff" />
-        <StatCard label="Active Roles" value={"4"} type="roles" />
+        <StatCard label="Active Roles" value={"0"} type="roles" />
         <StatCard
           label="Online Now"
           value={members.filter((m) => m.online).length}

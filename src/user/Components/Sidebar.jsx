@@ -318,7 +318,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
                       to={item.path}
                       end
                       className={({ isActive }) =>
-                        `mb-0 font-robotoR text-base p-2 flex items-center  gap-3    cursor-pointer block transition-colors ${
+                        `mb-1 font-robotoR text-base p-2 flex items-center     gap-3    cursor-pointer block transition-colors ${
                           isActive
                             ? "bg-white text-[#2563EB] "
                             : "text-white hover:bg-white hover:text-[#2563EB]"
