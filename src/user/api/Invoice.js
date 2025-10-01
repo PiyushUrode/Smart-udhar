@@ -131,10 +131,10 @@ async createInvoice(payload) {
     console.log("✅ [InvoiceService] Created invoice:", data);
     return { success: true, invoice: data?.data || data };
   } catch (err) {
-    console.error("❌ Create invoice API error:", err.response?.data || err);
+    console.error("❌ Create invoice API error:", err?.message);
     return {
       success: false,
-      message: err.response?.data?.message || "Failed to create invoice",
+      message: err?.message || "Failed to create invoice",
     };
   }
 }
