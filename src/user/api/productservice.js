@@ -84,32 +84,74 @@ export const ProductService = {
    * Fetch all products/services
    */
 // productservice.js
-async fetchProducts({ page = 1, limit = 5, search = "" } = {}) {
-  try {
-    const { token, store_id, storeProfile_id } = getAuthContext();
+// async fetchProducts({ page = 1, limit = 5, search = "" } = {}) {
+//   try {
+//     const { token, store_id, storeProfile_id } = getAuthContext();
 
-    const qs = `?${new URLSearchParams({ page, limit, ...(search && { search }) })}`;
+//     const qs = `?${new URLSearchParams({ page, limit, ...(search && { search }) })}`;
 
-    const { data } = await axiosClient.get(
-      `/store-product/find-all/${store_id}/${storeProfile_id}${qs}`,
-      { headers: authHeaders(token) }
-    );
+//     const { data } = await axiosClient.get(
+//       `/store-product/find-all/${store_id}/${storeProfile_id}${qs}`,
+//       { headers: authHeaders(token) }
+//     );
 
-    const products =
-      data?.data?.products ||
-      data?.products ||
-      data?.data ||
-      (Array.isArray(data) ? data : []);
+//     const products =
+//       data?.data?.products ||
+//       data?.products ||
+//       data?.data ||
+//       (Array.isArray(data) ? data : []);
 
-    const total = data?.total || products.length; // ✅ total products
+//     const total = data?.total || products.length; // ✅ total products
 
-    return { success: data?.success ?? true, products, total };
-  } catch (err) {
-    console.error("❌ fetchProducts error:", err);
-    return { success: false, products: [], total: 0 };
-  }
-}
-,
+//     return { success: data?.success ?? true, products, total };
+//   } catch (err) {
+//     console.error("❌ fetchProducts error:", err);
+//     return { success: false, products: [], total: 0 };
+//   }
+// },
+ async fetchProducts({ page = 1, limit = 5, search = "" } = {}) {
+    try {
+      const { token, store_id, storeProfile_id } = getAuthContext();
+
+      let url = "";
+
+      if (search) {
+        // ✅ Hit search API with single 'search' parameter
+        const params = new URLSearchParams({
+          store_id,
+          storeProfile_id,
+          name:search,           
+          page,
+          limit,
+        });
+
+        url = `/store-product/search?${params.toString()}`;
+      } else {
+        // ✅ Hit find-all API
+        const qs = new URLSearchParams({ page, limit });
+        url = `/store-product/find-all/${store_id}/${storeProfile_id}?${qs.toString()}`;
+      }
+
+      const { data } = await axiosClient.get(url, {
+        headers: authHeaders(token),
+      });
+
+      const products =
+        data?.products ||
+        data?.data?.products ||
+        data?.data ||
+        (Array.isArray(data) ? data : []);
+
+      const total = data?.total || products.length;
+
+      return { success: data?.success ?? true, products, total };
+    } catch (err) {
+      console.error("❌ fetchProducts error:", err);
+      return { success: false, products: [], total: 0 };
+    }
+  },
+
+
   /**
    * Fetch product by ID
    */
@@ -306,7 +348,7 @@ async uploadExcel(file) {
   /**
    * Search products
    */
-  async searchProducts(query) {
+  async searchProductsByName(query) {
     try {
       const { token, store_id, storeProfile_id } = getAuthContext();
       const { data } = await axiosClient.get(
