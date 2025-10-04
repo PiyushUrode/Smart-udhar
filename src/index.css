@@ -153,6 +153,8 @@ body {
 }
 
 /* Full dashboard wrapper */
+/* dashboard layout css */
+
 .dashboard-layout {
   display: flex;
   flex-direction: column;
@@ -219,7 +221,7 @@ body {
   background: #fafafa;
   padding: 1rem;
 }
-
+/* dashboard layout css end */
 
 
 

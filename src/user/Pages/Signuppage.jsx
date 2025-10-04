@@ -1,4 +1,4 @@
-// src/pages/SignupPage.jsx
+ // src/pages/SignupPage.jsx
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthService } from "../api/authservice.js";
@@ -45,9 +45,11 @@ const validatePhone = (value) => {
   return true;
 };
 
-// Send OTP
+// Utility: Phone validation
+
+// Step 1: Send OTP (Signup)
 const handleGetOtp = async () => {
-  if (!validatePhone(phone)) return; // ❌ invalid -> stop
+  if (!validatePhone(phone)) return; // stop if invalid
   if (loading) return;
 
   setLoading(true);
@@ -55,13 +57,24 @@ const handleGetOtp = async () => {
     console.log("[Signup] Sending OTP to:", phone);
     const res = await AuthService.register(phone);
 
-    toast.success(res.message || "OTP sent!");
+    // ✅ Success
+    toast.success(res.message || "OTP sent successfully!");
     if (res?.mobile_otp) {
       toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 5000 });
     }
 
+    setOtp("");   // clear old OTP
     setStep("otp");
+    setError(""); // clear error if success
   } catch (err) {
+    console.error("[Signup] OTP error:", err);
+
+    // ✅ Custom handling if already registered
+    if (err?.response?.data?.message?.toLowerCase().includes("already")) {
+      setError("This number is already registered. Please Login instead.");
+    } else {
+      setError(err.message || "Failed to send OTP");
+    }
     toast.error(err.message || "Failed to send OTP");
   } finally {
     setLoading(false);
@@ -234,6 +247,19 @@ const handleGetOtp = async () => {
                 >
                   {loading ? "Verifying..." : "Confirm OTP"}
                 </button>
+
+
+                      <div className=" text-sm text-gray-600">
+  Didn’t receive the OTP?{" "}
+  <button
+    type="button"
+    onClick={handleGetOtp}
+    disabled={loading}
+    className="text-blue-600 underline hover:opacity-80"
+  >
+    Resend OTP
+  </button>
+</div>
               </>
             )}
 

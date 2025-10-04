@@ -134,6 +134,7 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
   return (
     <>
       {/* Header */}
+      <div className="border px-5 md:px-10 py-10">  
       <div className="mx-auto py-2 px-2 md:mt-5">
         <div className="flex justify-between items-center bg-white px-5 py-5 rounded shadow">
           <h1 className="text-base md:text-xl lg:text-2xl font-semibold text-[#1F2937] font-robotoB">
@@ -149,7 +150,7 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
       </div>
 
       {/* Table */}
-      <div className="flex text-xs pl-2 py-3 items-center gap-3">
+      <div className="flex text-xs mx-auto py-2 px-2 pl-3  items-center gap-3">
         <div className="  p-1 h-0 w-1 aspect-[1/1] rounded-full bg-green-600 font-semibold">
               {/* dot */}
             </div> Active
@@ -159,6 +160,7 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
             </div> Deactivate
          
          </div>
+
       <div className="mx-auto py-2 px-2 ">
         <div className="overflow-x-auto p-2 lg:p-5 bg-white rounded shadow ">
           {loading ? (
@@ -250,6 +252,7 @@ if (lastActiveId && data.some(b => String(b._id) === String(lastActiveId))) {
             </table>
           )}
         </div>
+      </div>
       </div>
     </>
   );

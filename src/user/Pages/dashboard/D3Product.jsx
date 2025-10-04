@@ -849,7 +849,7 @@ export default function D3Product() {
   // 💻 Component Render
   // =================================================================
   return (
-    <div className="max-w-4xl mx-auto mt-5 md:mt-10 pb-7 bg-white rounded-lg shadow-customCard">
+    <div className="max-w-5xl mx-auto  px-5 md:px-10 py-10  bg-white rounded-lg shadow-customCard">
 
       {/* Removed: <ToastContainer /> */}
       <div className="bg-blue-600 text-white px-6 py-3 rounded-t-md text-lg font-semibold">

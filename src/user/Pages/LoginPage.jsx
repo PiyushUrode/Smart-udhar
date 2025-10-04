@@ -28,32 +28,42 @@ const LoginPage = () => {
   }, [step]);
 
   // Step 1: Send OTP
-  const handleGetOtp = async () => {
-    if (phone.length !== 10) {
-      return setError("Enter a valid 10-digit number");
+  
+const handleGetOtp = async () => {
+  if (!phone) {
+    return setError("Please enter your mobile number");
+  }
+  if (phone.length !== 10) {
+    return setError("Enter a valid 10-digit number");
+  }
+
+  if (loading) return;
+  setLoading(true);
+
+  try {
+    console.log("[login] Sending OTP to:", phone);
+    const res = await AuthService.loginSendOtp(phone);
+
+    toast.success(res.message || "OTP sent!");
+    if (res?.mobile_otp) {
+      toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 20000 });
     }
 
-    if (loading) return;
-    setLoading(true);
+    setOtp(""); 
+    setStep("otp");
+    setError(""); // clear error if successful
+  } catch (err) {
+    console.error("[login] OTP error:", err);
 
-    try {
-      console.log("[login] Sending OTP to:", phone);
-      const res = await AuthService.loginSendOtp(phone);
-
-      toast.success(res.message || "OTP sent!");
-      if (res?.mobile_otp) {
-        toast.info(`Your OTP is: ${res.mobile_otp}`, { autoClose: 20000 });
-      }
-
-      setOtp(""); // clear old OTP
-      setStep("otp");
-    } catch (err) {
-      console.error("[login] OTP error:", err);
-      toast.error(err.message || "Failed to send OTP");
-    } finally {
-      setLoading(false);
+    if (err?.response?.data?.message?.toLowerCase().includes("invalid number")) {
+      setError("This number is not registered. Please Sign Up below.");
+    } else {
+      setError(err.message || "Failed to send OTP");
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Step 2: Verify OTP
   const handleVerifyOtp = async () => {
@@ -139,7 +149,7 @@ const handleKeyDown = (e, index) => {
   </header>
 
   {/* Main */}
-  <main className="flex flex-col md:flex-row items-center justify-center px-5 md:px-12 lg:px-16 py-10 md:py-20 max-w-[1079px] mx-auto w-full ">
+  <main className="flex flex-col md:flex-row items-center justify-center px-5 md:px-12 lg:px-16 py-10 md:py-16 max-w-[1079px] mx-auto w-full ">
     {/* Left Side Image */}
     <div className="hidden md:block flex-1 text-center">
       <img src={lockImage} alt="Illustration" className="w-full h-auto rounded-l-lg" />
@@ -147,7 +157,7 @@ const handleKeyDown = (e, index) => {
 
     {/* Right Form */}
     <div className="flex-1 flex justify-center  ">
-      <div className="bg-white rounded-xl shadow-md max-w-[554px] w-full p-4  md:p-14 py-10 flex flex-col gap-6 text-center">
+      <div className="bg-white rounded-xl shadow-md max-w-[554px] w-full p-4  md:p-14 py-10 flex flex-col gap-7 text-center">
         {/* Icon */}
         <div className="flex justify-center ">
           <img src={icon} alt="icon" className="w-9 h-9" />
@@ -232,8 +242,22 @@ const handleKeyDown = (e, index) => {
             >
               {loading ? "Verifying..." : "Confirm"}
             </button>
+            <div className=" text-sm text-gray-600">
+  Didn’t receive the OTP?{" "}
+  <button
+    type="button"
+    onClick={handleGetOtp}
+    disabled={loading}
+    className="text-blue-600 underline hover:opacity-80"
+  >
+    Resend OTP
+  </button>
+</div>
           </>
         )}
+
+
+
 
         {/* Terms */}
         <div className="mt-6 text-sm text-gray-600">
