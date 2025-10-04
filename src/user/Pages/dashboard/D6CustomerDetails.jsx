@@ -143,9 +143,9 @@ const CustomerDetailsForm = () => {
         ) : (
           <table className="min-w-full text-sm border-separate border-spacing-0 border-[#E5E7EB] border-y border-x-2 rounded-lg shadow-customSoft">
             <thead>
-              <tr className="bg-[#F9FAFB] text-left text-lightblack">
+              <tr className="bg-[#F9FAFB] text-left text-lightblack text-nowrap">
                 <th className="p-3 font-semibold py-5">S.No</th>
-                <th className="p-3 font-semibold py-5">Unique ID (Custom)</th>
+                <th className="p-3 font-semibold py-5">Unique ID</th>
                 <th className="p-3 font-semibold py-5">Name</th>
                 <th className="p-3 font-semibold py-5">Mobile</th>
                 <th className="p-3 font-semibold py-5">Email</th>

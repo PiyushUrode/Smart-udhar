@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState } from "react";
 import DashboardGuards from "./user/layouts/DashboardGuards.jsx";
 import DashboardLayout from "./user/layouts/DashboardLayout.jsx";
+import AuthGuard from "./user/layouts/AuthGuard.jsx";
 import Homepage from "./user/Pages/Homepage.jsx";
 import LoginPage from "./user/Pages/LoginPage.jsx";
 import SignUpPage from "./user/Pages/Signuppage.jsx";
@@ -74,7 +75,13 @@ function App() {
         />
         <Route path="/signup" element={<SignUpPage />} />
 
-        <Route path="/dashboard/*" element={<DashboardLayout />}>
+        <Route path="/dashboard/*" element={
+          <AuthGuard>
+ <DashboardGuards>   {/* <-- store_id check */}
+        <DashboardLayout />
+      </DashboardGuards>
+</AuthGuard>
+         }>
           <Route index element={<D1DashboardHome />} />
 
           {/* Ye pages hamesha accessible (guard ke bahar) */}

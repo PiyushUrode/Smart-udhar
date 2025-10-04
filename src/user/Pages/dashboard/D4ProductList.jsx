@@ -376,7 +376,9 @@ const D4ProductList = () => {
       const payload = { quantity: updatedQty };
       const { success } = await ProductService.updateProduct(
         selectedProduct._id,
-        payload
+        payload,
+        null,
+        selectedProduct.product_type
       );
       if (!success) throw new Error("Failed to update stock");
 
@@ -487,14 +489,14 @@ const D4ProductList = () => {
           </span>
           <input
             type="text"
-            placeholder="Search by name or category"
+            placeholder="Search by name"
             className="w-full pl-8 pr-2 py-2 border rounded bg-gray-100 text-sm"
             value={searchQuery}
             onChange={handleSearch}
             onFocus={() => setShowSuggestions(suggestions.length > 0)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           />
-          {showSuggestions && suggestions.length > 0 && (
+          {/* {showSuggestions && suggestions.length > 0 && (
             <ul className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg max-h-60 overflow-y-auto">
               {suggestions.map((item) => (
                 <li
@@ -511,7 +513,7 @@ const D4ProductList = () => {
                 </li>
               ))}
             </ul>
-          )}
+          )} */}
         </div>
       </div>
 

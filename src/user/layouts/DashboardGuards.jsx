@@ -7,8 +7,21 @@ function DashboardGuards({ children }) {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState(null);
 
-useEffect(() => {
+  useEffect(() => {
     try {
+      // ✅ Step 1: Login check (मान लो तुम token cookie रखते हो login के बाद)
+      const token = Cookies.get("auth_token");  // <-- Login के बाद set करना होगा
+      if (!token) {
+        setError("🚫 Please login to access dashboard.");
+        setChecking(false);
+
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000);
+        return;
+      }
+
+      // ✅ Step 2: Business Profile check
       const storeId = Cookies.get("store_id");
       const profileId = localStorage.getItem("storeProfile_id");
 
@@ -22,6 +35,7 @@ useEffect(() => {
         return;
       }
 
+      // ✅ Everything fine
       setChecking(false);
     } catch (err) {
       setError("Unexpected error. Please login again.");
