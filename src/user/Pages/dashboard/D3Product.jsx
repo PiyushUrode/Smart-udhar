@@ -92,7 +92,7 @@ const ProductForm = ({
         <div className="flex flex-row gap-4 pb-2 w-full max-w-full">
           <input
             name="quantity"
-            type="number"
+            type="text"
             min="1"
             required
             placeholder="Qty"
@@ -132,7 +132,7 @@ const ProductForm = ({
         <div className="w-full">
           <input
             name="min_quantity"
-            type="number"
+            type="text"
             min="1"
             required
             placeholder="0"
@@ -158,7 +158,7 @@ const ProductForm = ({
         </label>
         <input
           name="sales_price"
-          type="number"
+          type="text"
           min="0"
           step="0.01"
           required
@@ -180,7 +180,7 @@ const ProductForm = ({
         </label>
         <input
           name="purchase_price"
-          type="number"
+          type="text"
           min="0"
           step="0.01"
           required
@@ -376,7 +376,7 @@ const ServiceForm = ({
         <div className="flex flex-row gap-4 pb-2 w-full max-w-full">
           <input
             name="quantity"
-            type="number"
+            type="text"
             min="1"
             required
             placeholder="Qty"
@@ -416,7 +416,7 @@ const ServiceForm = ({
         <div className="w-full">
           <input
             name="sales_price"
-            type="number"
+            type="text"
             min="0"
             step="0.01"
             required
@@ -745,23 +745,25 @@ export default function D3Product() {
       if (taxRate > 0) {
         if (activeTab === "product") {
           // 'without' means the sales_price entered is exclusive of tax, so calculate the inclusive price
-          if (payload.price_type === "without") {
-            const inclusivePrice = sales + (sales * taxRate) / 100;
-            payload.sales_price = inclusivePrice.toFixed(2);
-          }
+          // if (payload.price_type === "without") {
+          //   const inclusivePrice = sales + (sales * taxRate) / 100;
+          //   payload.sales_price = inclusivePrice.toFixed(2);
+          // }
           // 'fixed' means the sales_price is already inclusive, so no calculation needed
         }
 
         if (activeTab === "service") {
           // 'false' means the sales_price entered is exclusive of GST, so calculate the inclusive price
-          if (payload.gstInclusive === "false") {
-            const inclusivePrice = sales + (sales * taxRate) / 100;
-            payload.sales_price = inclusivePrice.toFixed(2);
-          }
+          // if (payload.gstInclusive === "false") {
+          //   const inclusivePrice = sales + (sales * taxRate) / 100;
+          //   payload.sales_price = inclusivePrice.toFixed(2);
+          // }
           // 'true' means the sales_price is already inclusive, so no calculation needed
         }
       }
 
+      console.log("Final payload before API call:", payload, "File:", file);
+      
       // Product type mapping for the API call
       const productType = activeTab === "product" ? "inventory" : "service";
 

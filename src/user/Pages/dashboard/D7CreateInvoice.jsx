@@ -29,6 +29,7 @@ import Button from "../../common/Button.jsx";
 export default function D7CreateInvoice({ onCustomerSelect }) {
   const navigate = useNavigate();
   // ----------------- STATES -----------------
+  const [selectedFormat, setSelectedFormat] = useState("classic");
 
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,10 +48,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
 
   // State for the custom notification/pop-up component
 
-  const [popupType, setPopupType] = useState(null); // 'success', 'error', 'processing'
+  const [popupType, setPopupType] = useState(null); // 'success', 'error', 'processing'
 
-  const [message, setMessage] = useState("");
-
+  const [message, setMessage] = useState("");
 
   // NOTE: storing milestone.dueDate as string in `dd/MM/yyyy` formatasdjsjd
   const [milestones, setMilestones] = useState([
@@ -549,7 +549,6 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
       console.error("PDF generation error:", err);
       setPopupType("error");
       setMessage("Failed to create PDF.");
-      
     }
   };
 
@@ -674,7 +673,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
           </div>
 
           {/* Step 2: Add Products/Services */}
-          <div className="max-w-7xl mx-auto  my-5 md:mt-10 bg-white  gap-6">
+          <div className="max-w-7xl mx-auto  my-5 md:mt-10 bg-white  gap-6 overflow-hidden">
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-lg font-robotoB shadow-customCard p-4 sm:p-6 w-full max-w-6xl space-y-4">
                 <h2 className="flex items-center gap-3 text-base sm:text-lg font-robotoSb text-gray-800">
@@ -685,206 +684,202 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                 </h2>
 
                 <div className="w-full">
-                  {/* Header only for desktop */}
-                  <div className="hidden sm:grid grid-cols-7 gap-4 text-sm font-semibold text-gray-700 border-b py-3">
-                    <div className="col-span-2">Product/Service</div>
-                    <div>Qty</div>
-                    <div>Unit</div>
-                    <div>Price</div>
-                    <div>Tax</div>
-                    <div>Total</div>
-                  </div>
-
                   {/* Rows */}
                   {rows.map((row) => (
-                    <div
-                      key={row.id}
-                      className="grid grid-cols-2 sm:grid-cols-7 gap-3 sm:gap-4 items-center py-3 border-b sm:border-0"
-                    >
-                      {/* Product */}
-                      <div className="col-span-2">
-                        <Select
-                          className="text-sm"
-                          placeholder="Select Product..."
-                          isClearable
-                          isSearchable
-                          menuPortalTarget={document.body}
-                          filterOption={
-                            (option, inputValue) =>
+                    <>
+                      <div
+                        key={row.id}
+                        className="grid grid-cols-2 sm:grid-cols-6 gap-3 sm:gap-4 items-end py-3 border-b sm:border-0"
+                      >
+                        {/* Product */}
+                        <div className="col-span-2 md:col-span-6">
+                          <label className="text-xs text-gray-600 font-robotoM ">
+                            Product/Service
+                          </label>
+                          <Select
+                            className="text-sm w-[100%] md:w-[50%]"
+                            placeholder="Select Product..."
+                            isClearable
+                            isSearchable
+                            menuPortalTarget={document.body}
+                            filterOption={(option, inputValue) =>
                               inputValue
                                 ? option.label
                                     .toLowerCase()
                                     .includes(inputValue.toLowerCase())
-                                : option.data.index < 3 // show top 3 if nothing typed
-                          }
-                          options={
-                            Array.isArray(products)
-                              ? products
-                                  .filter((p) => p && (p._id || p.id))
-                                  .map((p, index) => ({
-                                    value: p._id || p.id,
-                                    label:
-                                      p.name || p.product_name || "Unnamed",
-                                    index,
-                                  }))
-                              : []
-                          }
-                          value={
-                            row.productId
-                              ? (() => {
-                                  const selected = products?.find(
-                                    (p) =>
-                                      p &&
-                                      (p._id === row.productId ||
-                                        p.id === row.productId)
-                                  );
-                                  return selected
-                                    ? {
-                                        value: row.productId,
-                                        label:
-                                          selected.name ||
-                                          selected.product_name ||
-                                          "Unnamed",
-                                      }
-                                    : null;
-                                })()
-                              : null
-                          }
-                          onChange={(selectedOption) => {
-                            const selectedProduct = products?.find(
-                              (p) =>
-                                p &&
-                                (p._id === selectedOption?.value ||
-                                  p.id === selectedOption?.value)
-                            );
-                            handleSelectProduct(
-                              row.id,
-                              selectedProduct || null
-                            );
-                          }}
-                          styles={{
-                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                            control: (base, state) => ({
-                              ...base,
-                              minHeight: 32,
-                              borderColor: state.isFocused
-                                ? "#2563eb"
-                                : "#d1d5db",
-                              boxShadow: state.isFocused
-                                ? "0 0 0 1px #2563eb"
-                                : "none",
-                              "&:hover": { borderColor: "#2563eb" },
-                              borderRadius: 8,
-                            }),
-                            option: (base, { isFocused, isSelected }) => ({
-                              ...base,
-                              backgroundColor: isFocused
-                                ? "#f3f4f6"
-                                : isSelected
-                                ? "#2563eb"
-                                : "white",
-                              color: isSelected ? "white" : "#111827",
-                              fontSize: 12,
-                              cursor: "pointer",
-                              padding: "8px 12px",
-                            }),
-                            singleValue: (base) => ({
-                              ...base,
-                              color: "#111827",
-                              fontWeight: 500,
-                            }),
-                            menu: (base) => ({
-                              ...base,
-                              marginTop: 2,
-                              borderRadius: 8,
-                              boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                              overflowX: "hidden",
-                            }),
-                            placeholder: (base) => ({
-                              ...base,
-                              color: "#9CA3AF",
-                              fontSize: 14,
-                            }),
-                          }}
-                        />
-                      </div>
+                                : option.data.index < 3
+                            }
+                            options={
+                              Array.isArray(products)
+                                ? products
+                                    .filter((p) => p && (p._id || p.id))
+                                    .map((p, index) => ({
+                                      value: p._id || p.id,
+                                      label:
+                                        p.name || p.product_name || "Unnamed",
+                                      index,
+                                    }))
+                                : []
+                            }
+                            value={
+                              row.productId
+                                ? (() => {
+                                    const selected = products?.find(
+                                      (p) =>
+                                        p &&
+                                        (p._id === row.productId ||
+                                          p.id === row.productId)
+                                    );
+                                    return selected
+                                      ? {
+                                          value: row.productId,
+                                          label:
+                                            selected.name ||
+                                            selected.product_name ||
+                                            "Unnamed",
+                                        }
+                                      : null;
+                                  })()
+                                : null
+                            }
+                            onChange={(selectedOption) => {
+                              const selectedProduct = products?.find(
+                                (p) =>
+                                  p &&
+                                  (p._id === selectedOption?.value ||
+                                    p.id === selectedOption?.value)
+                              );
+                              handleSelectProduct(
+                                row.id,
+                                selectedProduct || null
+                              );
+                            }}
+                            styles={{
+                              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                              control: (base, state) => ({
+                                ...base,
+                                minHeight: 36,
+                                borderColor: state.isFocused
+                                  ? "#2563eb"
+                                  : "#d1d5db",
+                                boxShadow: state.isFocused
+                                  ? "0 0 0 1px #2563eb"
+                                  : "none",
+                                "&:hover": { borderColor: "#2563eb" },
+                                borderRadius: 8,
+                              }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isFocused
+                                  ? "#f3f4f6"
+                                  : isSelected
+                                  ? "#2563eb"
+                                  : "white",
+                                color: isSelected ? "white" : "#111827",
+                                fontSize: 12,
+                                cursor: "pointer",
+                                padding: "8px 12px",
+                              }),
+                              singleValue: (base) => ({
+                                ...base,
+                                color: "#111827",
+                                fontWeight: 500,
+                              }),
+                              menu: (base) => ({
+                                ...base,
+                                marginTop: 2,
+                                borderRadius: 8,
+                                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                                overflowX: "hidden",
+                              }),
+                              placeholder: (base) => ({
+                                ...base,
+                                color: "#9CA3AF",
+                                fontSize: 14,
+                              }),
+                            }}
+                          />
+                        </div>
 
-                      {/* Qty */}
-                      <div>
-                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
-                          Qty
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={row.qty}
-                          onChange={(e) =>
-                            handleChange(row.id, "qty", e.target.value)
-                          }
-                          className="w-full border px-2 py-1 rounded bg-white"
-                        />
-                      </div>
+                        {/* Qty */}
+                        <div className="col-span-1 md:col-span-3">
+                          <label className="text-xs text-gray-600 font-robotoM">
+                            Qty
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={row.qty}
+                            onChange={(e) =>
+                              handleChange(row.id, "qty", e.target.value)
+                            }
+                            className="w-full h-9 border border-gray-300 px-2 rounded-md focus:border-blue-500 focus:ring-blue-500 outline-none text-sm"
+                          />
+                        </div>
 
-                      {/* Unit */}
-                      <div>
-                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
-                          Unit
-                        </label>
-                        <input
-                          placeholder="Unit"
-                          value={row.unit}
-                          onChange={(e) =>
-                            handleChange(row.id, "unit", e.target.value)
-                          }
-                          className="w-full border px-2 py-1 rounded bg-white"
-                        />
-                      </div>
+                        {/* Unit */}
+                        <div className="col-span-1 md:col-span-3">
+                          <label className="text-xs text-gray-600 font-robotoM">
+                            Unit
+                          </label>
+                          <input
+                            placeholder="Unit"
+                            value={row.unit}
+                            onChange={(e) =>
+                              handleChange(row.id, "unit", e.target.value)
+                            }
+                            className="w-full h-9 border-2 border-gray-300 px-2 rounded-md focus:border-blue-500 focus:ring-blue-500 outline-none text-sm"
+                          />
+                        </div>
 
-                      {/* Price */}
-                      <div>
-                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
-                          Price
-                        </label>
-                        <input
-                          type="number"
-                          placeholder="0.00"
-                          value={row.price}
-                          onChange={(e) =>
-                            handleChange(row.id, "price", e.target.value)
-                          }
-                          className="w-full border px-2 py-1 rounded bg-white"
-                        />
-                      </div>
+                        {/* Price */}
+                        <div className="col-span-1 md:col-span-2">
+                          <label className="text-xs text-gray-600 font-robotoM">
+                            Price
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="0.00"
+                            value={row.price}
+                            onChange={(e) =>
+                              handleChange(row.id, "price", e.target.value)
+                            }
+                            className="w-full h-9 border border-gray-300 px-2 rounded-md focus:border-blue-500 focus:ring-blue-500 outline-none text-sm"
+                          />
+                        </div>
 
-                      {/* Tax */}
-                      <div>
-                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
-                          Tax
-                        </label>
-                        <input
-                          type="text"
-                          value={`${row.tax}%`}
-                          readOnly
-                          className="w-full border px-2 py-1 rounded bg-white"
-                        />
-                      </div>
+                        {/* Tax */}
+                        <div className="col-span-1 md:col-span-2">
+                          <label className="text-xs text-gray-600 font-robotoM">
+                            Tax
+                          </label>
+                          <input
+                            type="text"
+                            value={`${row.tax}%`}
+                            readOnly
+                            className="w-full h-9 border border-gray-300 px-2 rounded-md bg-gray-50 text-sm"
+                          />
+                        </div>
 
-                      {/* Total */}
-                      <div>
-                        <label className="sm:hidden text-xs text-gray-600 font-robotoM">
-                          Total
-                        </label>
-                        <div className="flex items-center gap-2">
-                          ₹{calculateTotal(row).toFixed(2)}
-                          <button
-                            onClick={() => handleRemoveRow(row.id)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <FaTrash />
-                          </button>
+                        {/* Total */}
+                        <div className="col-span-1 md:col-span-2">
+                          <label className="text-xs text-gray-600 font-robotoM">
+                            Total
+                          </label>
+                          <div className="flex items-center justify-between w-full h-9 border-2 border-gray-300 px-2 rounded-md bg-gray-50 text-sm">
+                            <span>₹{calculateTotal(row).toFixed(2)}</span>
+                            <button
+                              onClick={() => handleRemoveRow(row.id)}
+                              className="text-red-500 hover:text-red-700 ml-2"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
+
+                      <hr />
+                    </>
                   ))}
                 </div>
 
@@ -1204,6 +1199,8 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
       {/* ---------- Invoice Preview Modal ---------- */}
 
       {/* ---------- Invoice Preview Modal ---------- */}
+      {/* ---------- Invoice Preview Modal (with 3 format options) ---------- */}
+
       {showPreview && previewInvoice && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-6 bg-black/40">
           <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
@@ -1211,6 +1208,17 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
             <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-lg font-robotoSb">Invoice Preview</h3>
               <div className="flex items-center gap-2">
+                {/* Format selector */}
+                <select
+                  value={selectedFormat}
+                  onChange={(e) => setSelectedFormat(e.target.value)}
+                  className="border rounded px-2 py-1 text-sm text-gray-700"
+                >
+                  <option value="classic">Classic</option>
+                  <option value="modern">Modern</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+
                 <button
                   onClick={() =>
                     downloadPreviewAsPDF(
@@ -1226,224 +1234,365 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                     setShowPreview(false);
                     setPreviewInvoice(null);
                   }}
-                  className="px-3 py-1 border rounded"
+                  className="px-3 py-3  border rounded"
                 >
                   Close
                 </button>
               </div>
             </div>
 
-            {/* body: the printable invoice area */}
+            {/* body: printable area with format switch */}
             <div ref={previewRef} className="p-8 bg-white text-black font-sans">
-              {/* ---- Top: company + invoice details ---- */}
-              <div className="flex justify-between items-start mb-6 border-b pb-4">
-                {/* Company Info */}
-                <div>
-                  <h2 className="text-2xl font-robotoB text-gray-800">
-                    {storeProfile?.businessName || "Your Company Name"}
-                  </h2>
-                  <div className="text-sm text-gray-600">
-                    {storeProfile?.address || "Address line 1"}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {storeProfile?.mobile ? storeProfile.mobile : ""}{" "}
-                    {storeProfile?.email ? `/ ${storeProfile.email}` : ""}
-                  </div>
-                </div>
-
-                {/* Invoice Info */}
-                <div className="text-sm text-gray-700 text-right space-y-1">
-                  <div>
-                    <strong>Invoice ID:</strong>{" "}
-                    {previewInvoice._id || previewInvoice.id}
-                  </div>
-                  <div>
-                    <strong>Date:</strong>{" "}
-                    {new Date(
-                      previewInvoice.createdAt || Date.now()
-                    ).toLocaleDateString()}
-                  </div>
-                  <div>
-                    <strong>Status:</strong>{" "}
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        (previewInvoice.paymentStatus ||
-                          invoiceSummary.paymentStatus) === "Paid"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {previewInvoice.paymentStatus ||
-                        invoiceSummary.paymentStatus}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Customer details */}
-              <div className="mb-6 p-4 border rounded bg-gray-50">
-                <h3 className="font-semibold mb-2 text-gray-700">Bill To:</h3>
-                <div className="text-sm text-gray-700">
-                  <strong>Name:</strong>{" "}
-                  {previewInvoice.name || selectedCustomer?.name}
-                </div>
-                <div className="text-sm text-gray-700">
-                  <strong>Mobile:</strong>{" "}
-                  {previewInvoice.phone || selectedCustomer?.mobile}
-                </div>
-                <div className="text-sm text-gray-700">
-                  <strong>Address:</strong>{" "}
-                  {previewInvoice.address || selectedCustomer?.address}
-                </div>
-              </div>
-
-              {/* Products table */}
-              <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="text-left py-2 px-2 border-b">#</th>
-                    <th className="text-left py-2 px-2 border-b">Product</th>
-                    <th className="text-right py-2 px-2 border-b">Qty</th>
-                    <th className="text-right py-2 px-2 border-b">
-                      Unit Price
-                    </th>
-                    <th className="text-right py-2 px-2 border-b">Tax</th>
-                    <th className="text-right py-2 px-2 border-b">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(previewInvoice.products || []).map((p, i) => (
-                    <tr key={i} className="border-b">
-                      <td className="py-2 px-2">{i + 1}</td>
-                      <td className="py-2 px-2">{p.name}</td>
-                      <td className="py-2 px-2 text-right">{p.qty}</td>
-                      <td className="py-2 px-2 text-right">
-                        ₹{Number(p.price).toFixed(2)}
-                      </td>
-                      <td className="py-2 px-2 text-right">{p.tax}%</td>
-                      <td className="py-2 px-2 text-right">
-                        ₹
-                        {Number(
-                          p.total ||
-                            p.qty * p.price + (p.qty * p.price * p.tax) / 100
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* totals */}
-              <div className="mt-6 flex justify-end">
-                <div className="w-full max-w-sm bg-gray-50 p-4 rounded border">
-                  <div className="flex justify-between py-1">
-                    <span>Subtotal:</span>
-                    <span>
-                      ₹
-                      {Number(
-                        previewInvoice.subtotal || invoiceSummary.subtotal
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Tax:</span>
-                    <span>
-                      ₹
-                      {Number(
-                        previewInvoice.tax || invoiceSummary.totalTax
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Delivery:</span>
-                    <span>
-                      ₹
-                      {Number(
-                        previewInvoice.deliveryFee || invoiceSummary.deliveryFee
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Discount:</span>
-                    <span>
-                      -₹
-                      {Number(
-                        previewInvoice.discount || invoiceSummary.discount
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
-                    <span>Total:</span>
-                    <span>
-                      ₹
-                      {Number(
-                        previewInvoice.total || invoiceSummary.total
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between mt-2">
-                    <span>Paid:</span>
-                    <span>
-                      ₹
-                      {Number(
-                        previewInvoice.totalReceived ||
-                          invoiceSummary.totalReceived
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Due:</span>
-                    <span>
-                      ₹
-                      {Number(
-                        previewInvoice.dueBalance || invoiceSummary.dueBalance
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* notes & payment details */}
-              <div className="mt-6 text-sm">
-                <div>
-                  <strong>Payment Mode:</strong>{" "}
-                  {previewInvoice.paymentMode || paymentMode}
-                </div>
-                <div>
-                  <strong>Payment Method / Txn:</strong>{" "}
-                  {previewInvoice.paymentMethod || paymentMethod}{" "}
-                  {previewInvoice.transactionId
-                    ? ` / ${previewInvoice.transactionId}`
-                    : ""}
-                </div>
-                {previewInvoice.milestones &&
-                  previewInvoice.milestones.length > 0 && (
-                    <div className="mt-3">
-                      <strong>Milestones:</strong>
-                      <ul className="list-disc ml-6">
-                        {previewInvoice.milestones.map((m, idx) => (
-                          <li key={idx} className="mt-1">
-                            {m.milestoneName} — ₹
-                            {Number(m.amount || 0).toFixed(2)}{" "}
-                            {m.dueDate
-                              ? `(Due: ${new Date(
-                                  m.dueDate
-                                ).toLocaleDateString()})`
-                              : ""}{" "}
-                            — {m.status}
-                          </li>
-                        ))}
-                      </ul>
+              {/* ========== CLASSIC FORMAT ========== */}
+              {selectedFormat === "classic" && (
+                <>
+                  {/* ---- Top: company + invoice details ---- */}
+                  <div className="flex justify-between items-start mb-6 border-b pb-4">
+                    {/* Company Info */}
+                    <div>
+                      <h2 className="text-2xl font-robotoB text-gray-800">
+                        {storeProfile?.businessName || "Your Company Name"}
+                      </h2>
+                      <div className="text-sm text-gray-600">
+                        {storeProfile?.address || "Address line 1"}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {storeProfile?.mobile ? storeProfile.mobile : ""}{" "}
+                        {storeProfile?.email ? `/ ${storeProfile.email}` : ""}
+                      </div>
                     </div>
-                  )}
-                {previewInvoice.note && (
-                  <div className="mt-4">
-                    <strong>Note:</strong>
-                    <p className="mt-1 text-gray-700">{previewInvoice.note}</p>
+
+                    {/* Invoice Info */}
+                    <div className="text-sm text-gray-700 text-right space-y-1">
+                      <div>
+                        <strong>Invoice ID:</strong>{" "}
+                        {previewInvoice._id || previewInvoice.id}
+                      </div>
+                      <div>
+                        <strong>Date:</strong>{" "}
+                        {new Date(
+                          previewInvoice.createdAt || Date.now()
+                        ).toLocaleDateString()}
+                      </div>
+                      <div>
+                        <strong>Status:</strong>{" "}
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            (previewInvoice.paymentStatus ||
+                              invoiceSummary.paymentStatus) === "Paid"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {previewInvoice.paymentStatus ||
+                            invoiceSummary.paymentStatus}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Customer details */}
+                  <div className="mb-6 p-4 border rounded bg-gray-50">
+                    <h3 className="font-semibold mb-2 text-gray-700">
+                      Bill To:
+                    </h3>
+                    <div className="text-sm text-gray-700">
+                      <strong>Name:</strong>{" "}
+                      {previewInvoice.name || selectedCustomer?.name}
+                    </div>
+                    <div className="text-sm text-gray-700">
+                      <strong>Mobile:</strong>{" "}
+                      {previewInvoice.phone || selectedCustomer?.mobile}
+                    </div>
+                    <div className="text-sm text-gray-700">
+                      <strong>Address:</strong>{" "}
+                      {previewInvoice.address || selectedCustomer?.address}
+                    </div>
+                  </div>
+
+                  {/* Products table */}
+                  <table className="w-full text-sm border border-gray-300 rounded overflow-hidden">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="text-left py-2 px-2 border-b">#</th>
+                        <th className="text-left py-2 px-2 border-b">
+                          Product
+                        </th>
+                        <th className="text-right py-2 px-2 border-b">Qty</th>
+                        <th className="text-right py-2 px-2 border-b">
+                          Unit Price
+                        </th>
+                        <th className="text-right py-2 px-2 border-b">Tax</th>
+                        <th className="text-right py-2 px-2 border-b">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(previewInvoice.products || []).map((p, i) => (
+                        <tr key={i} className="border-b">
+                          <td className="py-2 px-2">{i + 1}</td>
+                          <td className="py-2 px-2">{p.name}</td>
+                          <td className="py-2 px-2 text-right">{p.qty}</td>
+                          <td className="py-2 px-2 text-right">
+                            ₹{Number(p.price).toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right">{p.tax}%</td>
+                          <td className="py-2 px-2 text-right">
+                            ₹
+                            {Number(
+                              p.total ||
+                                p.qty * p.price +
+                                  (p.qty * p.price * p.tax) / 100
+                            ).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* totals */}
+                  <div className="mt-6 flex justify-end">
+                    <div className="w-full max-w-sm bg-gray-50 p-4 rounded border">
+                      <div className="flex justify-between py-1">
+                        <span>Subtotal:</span>
+                        <span>
+                          ₹
+                          {Number(
+                            previewInvoice.subtotal || invoiceSummary.subtotal
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span>Tax:</span>
+                        <span>
+                          ₹
+                          {Number(
+                            previewInvoice.tax || invoiceSummary.totalTax
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span>Delivery:</span>
+                        <span>
+                          ₹
+                          {Number(
+                            previewInvoice.deliveryFee ||
+                              invoiceSummary.deliveryFee
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span>Discount:</span>
+                        <span>
+                          -₹
+                          {Number(
+                            previewInvoice.discount || invoiceSummary.discount
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                        <span>Total:</span>
+                        <span>
+                          ₹
+                          {Number(
+                            previewInvoice.total || invoiceSummary.total
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <span>Paid:</span>
+                        <span>
+                          ₹
+                          {Number(
+                            previewInvoice.totalReceived ||
+                              invoiceSummary.totalReceived
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Due:</span>
+                        <span>
+                          ₹
+                          {Number(
+                            previewInvoice.dueBalance ||
+                              invoiceSummary.dueBalance
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* notes */}
+                  <div className="mt-6 text-sm">
+                    <div>
+                      <strong>Payment Mode:</strong>{" "}
+                      {previewInvoice.paymentMode || paymentMode}
+                    </div>
+                    <div>
+                      <strong>Payment Method / Txn:</strong>{" "}
+                      {previewInvoice.paymentMethod || paymentMethod}{" "}
+                      {previewInvoice.transactionId
+                        ? ` / ${previewInvoice.transactionId}`
+                        : ""}
+                    </div>
+                    {previewInvoice.note && (
+                      <div className="mt-4">
+                        <strong>Note:</strong>
+                        <p className="mt-1 text-gray-700">
+                          {previewInvoice.note}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* ========== MODERN FORMAT ========== */}
+              {selectedFormat === "modern" && (
+                <div className="text-gray-800 font-sans">
+                  <div className="text-center mb-6">
+                    <h1 className="text-3xl font-bold text-blue-700">
+                      {storeProfile?.businessName}
+                    </h1>
+                    <p className="text-sm text-gray-600">
+                      {storeProfile?.address}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {storeProfile?.mobile} / {storeProfile?.email}
+                    </p>
+                  </div>
+
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-semibold">INVOICE</h2>
+                    <p className="text-gray-500">#{previewInvoice._id}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(previewInvoice.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  <table className="w-full border-collapse text-sm">
+                    <thead className="bg-blue-50 border-b border-blue-200">
+                      <tr>
+                        <th className="py-2 px-2 text-left">Item</th>
+                        <th className="py-2 px-2 text-right">Qty</th>
+                        <th className="py-2 px-2 text-right">Price</th>
+                        <th className="py-2 px-2 text-right">Tax</th>
+                        <th className="py-2 px-2 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(previewInvoice.products || []).map((p, i) => (
+                        <tr key={i} className={i % 2 === 0 ? "bg-gray-50" : ""}>
+                          <td className="py-2 px-2">{p.name}</td>
+                          <td className="py-2 px-2 text-right">{p.qty}</td>
+                          <td className="py-2 px-2 text-right">
+                            ₹{p.price.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-2 text-right">{p.tax}%</td>
+                          <td className="py-2 px-2 text-right">
+                            ₹{(p.qty * p.price * (1 + p.tax / 100)).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div className="flex justify-end mt-6">
+                    <div className="w-1/2 border-t pt-4 space-y-2 text-right">
+                      <div>Subtotal: ₹{invoiceSummary.subtotal.toFixed(2)}</div>
+                      <div>Tax: ₹{invoiceSummary.totalTax.toFixed(2)}</div>
+                      <div>
+                        Delivery: ₹{invoiceSummary.deliveryFee.toFixed(2)}
+                      </div>
+                      <div>
+                        Discount: -₹{invoiceSummary.discount.toFixed(2)}
+                      </div>
+                      <div className="font-bold text-lg border-t pt-2">
+                        Total: ₹{invoiceSummary.total.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 bg-gray-100 p-4 text-sm text-gray-600 rounded">
+                    <p>
+                      <strong>Payment Mode:</strong>{" "}
+                      {previewInvoice.paymentMode}
+                    </p>
+                    <p>
+                      <strong>Note:</strong>{" "}
+                      {previewInvoice.note || "Thank you for your business!"}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* ========== MINIMAL FORMAT ========== */}
+              {selectedFormat === "minimal" && (
+                <div className="p-6 text-xs text-gray-800">
+                  <h2 className="text-xl font-bold">
+                    {storeProfile.businessName}
+                  </h2>
+                  <p>{storeProfile.address}</p>
+                  <p>
+                    {storeProfile.mobile} | {storeProfile.email}
+                  </p>
+                  <hr className="my-2" />
+                  <p>
+                    <strong>Invoice:</strong> #{previewInvoice._id}
+                  </p>
+                  <p>
+                    <strong>Date:</strong>{" "}
+                    {new Date(previewInvoice.createdAt).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Customer:</strong> {previewInvoice.name}
+                  </p>
+
+                  <table className="w-full mt-3 border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left">Item</th>
+                        <th className="text-right">Qty</th>
+                        <th className="text-right">Price</th>
+                        <th className="text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(previewInvoice.products || []).map((p, i) => (
+                        <tr key={i} className="border-b">
+                          <td>{p.name}</td>
+                          <td className="text-right">{p.qty}</td>
+                          <td className="text-right">₹{p.price.toFixed(2)}</td>
+                          <td className="text-right">
+                            ₹{(p.qty * p.price * (1 + p.tax / 100)).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div className="mt-3 text-right">
+                    <div>Subtotal: ₹{invoiceSummary.subtotal.toFixed(2)}</div>
+                    <div>Tax: ₹{invoiceSummary.totalTax.toFixed(2)}</div>
+                    <div>
+                      Total: <strong>₹{invoiceSummary.total.toFixed(2)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <p>
+                      <strong>Payment:</strong> {previewInvoice.paymentMode}
+                    </p>
+                    {previewInvoice.note && (
+                      <p>
+                        <strong>Note:</strong> {previewInvoice.note}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* footer buttons */}
             <div className="flex justify-end gap-3 my-6">
               {!isDownloadMode && (
                 <>
@@ -1455,7 +1604,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 mr-4 bg-blue-600 text-white rounded hover:bg-blue-700"
                   >
                     Submit Invoice
                   </button>
