@@ -44,177 +44,142 @@ const D2BasicDetails = () => {
     store_id: "", // ✅ not array
   });
 
-  const validateForm = () => {
-    const newErrors = {};
+// Handle input change
+const handleChange = (e) => {
+  let { name, value } = e.target;
 
-    // Minimal required fields
-    const requiredFields = [
-      "businessName",
-      "address",
-      "pincode",
-      "mobile",
-      "email",
-      "industry",
-    ];
+  // Clean mobile immediately
+  if (name === "mobile") {
+    // Remove +91 or leading 0 automatically
+    value = value.replace(/^(\+91|0)/, "");
+    // Remove any non-digit characters
+    value = value.replace(/\D/g, "");
+  }
 
-    // Optional fields
-    const optionalFields = [
-      "gstNumber",
-      "fbURL",
-      "twitterURL",
-      "linkedInURL",
-      "instagramURL",
-      "websiteURL",
-    ];
+  // Auto-format GST & Email
+  if (name === "gstNumber") value = value.toUpperCase();
+  if (name === "email") value = value.toLowerCase();
 
-    // Check if user has filled anything (optional or required)
-    const hasAnyInput = [...requiredFields, ...optionalFields].some(
-      (field) => formData[field] && formData[field].toString().trim() !== ""
-    );
+  setFormData({ ...formData, [name]: value });
+};
 
-    if (hasAnyInput) {
-      // Run required fields check
-      requiredFields.forEach((field) => {
-        if (!formData[field] || formData[field].toString().trim() === "") {
-          newErrors[field] = `${field} is required`;
-        }
-      });
-    }
+// Handle blur (run validation on leaving field)
+const handleBlur = (e) => {
+  validateForm();
+};
 
-    // Business Name: 3-50 chars, letters, numbers, &.- allowed
-    if (
-      formData.businessName &&
-      !/^[a-zA-Z0-9\s&.-]{3,50}$/.test(formData.businessName)
-    ) {
-      newErrors.businessName = "Business name must be 3-50 chars";
-    }
+// Validate Form
+const validateForm = () => {
+  const newErrors = {};
 
-    // Pincode: 6 digits, first not 0
-    if (formData.pincode && !/^[1-9][0-9]{5}$/.test(formData.pincode)) {
-      newErrors.pincode = "Pincode must be 6 digits";
-    }
+  // Minimal required fields
+  const requiredFields = ["businessName","address","pincode","mobile","email","industry"];
+  const optionalFields = ["gstNumber","fbURL","twitterURL","linkedInURL","instagramURL","websiteURL"];
 
-    // Mobile: 10 digits, starting with 6-9
-    if (formData.mobile && !/^[6-9]\d{9}$/.test(formData.mobile)) {
-      newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
-    }
+  // Create a clean copy of formData for validation
+  const dataToValidate = { ...formData };
 
-    // Email
-    if (
-      formData.email &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.toLowerCase())
-    ) {
-      newErrors.email = "Invalid Email format";
-    }
+  // Ensure mobile is cleaned before validation
+  if (dataToValidate.mobile) {
+    dataToValidate.mobile = dataToValidate.mobile.replace(/^(\+91|0)/, "").replace(/\D/g, "");
+  }
 
-    // Industry
-    if (
-      formData.industry &&
-      formData.industry !== "Select Industry" &&
-      !/^[a-zA-Z\s]{2,30}$/.test(formData.industry)
-    ) {
-      newErrors.industry = "Industry must be 2-30 letters only";
-    }
+  // Check if user has filled anything
+  const hasAnyInput = [...requiredFields, ...optionalFields].some(
+    (field) => dataToValidate[field] && dataToValidate[field].toString().trim() !== ""
+  );
 
-    // Optional fields validation if user typed something
-    if (
-      formData.gstNumber &&
-      !/^[0-9A-Z]{15}$/.test(formData.gstNumber.toUpperCase())
-    ) {
-      newErrors.gstNumber = "Invalid GST number format (27ABCDE1234F1Z5)";
-    }
-
-    const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/\S*)?$/;
-    optionalFields.forEach((field) => {
-      if (formData[field] && !urlPattern.test(formData[field])) {
-        newErrors[field] = `Enter a valid ${field} URL ()`;
+  if (hasAnyInput) {
+    // Required fields validation
+    requiredFields.forEach((field) => {
+      if (!dataToValidate[field] || dataToValidate[field].toString().trim() === "") {
+        newErrors[field] = `${field} is required`;
       }
     });
+  }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Business Name: 3-50 chars
+  if (dataToValidate.businessName && !/^[a-zA-Z0-9\s&.-]{3,50}$/.test(dataToValidate.businessName)) {
+    newErrors.businessName = "Business name must be 3-50 chars";
+  }
 
-  // Clean mobile before validating
-  let mobile = formData.mobile?.trim() || "";
+  // Pincode: 6 digits
+  if (dataToValidate.pincode && !/^[1-9][0-9]{5}$/.test(dataToValidate.pincode)) {
+    newErrors.pincode = "Pincode must be 6 digits";
+  }
 
-  // Remove +91 or 91 from start
-  mobile = mobile.replace(/^(\+91|91)/, /^0+/, "");
+  // Mobile: 10 digits, starting 6-9
+  if (dataToValidate.mobile && !/^[6-9]\d{9}$/.test(dataToValidate.mobile)) {
+    newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
+  }
 
-  // Remove leading 0 if present
+  // Email
+  if (dataToValidate.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dataToValidate.email.toLowerCase())) {
+    newErrors.email = "Invalid Email format";
+  }
 
-  const handleBlur = (e) => {
-    validateForm(); // validate on leaving field
-  };
+  // Industry
+  if (dataToValidate.industry && dataToValidate.industry !== "Select Industry" && !/^[a-zA-Z\s]{2,30}$/.test(dataToValidate.industry)) {
+    newErrors.industry = "Industry must be 2-30 letters only";
+  }
 
-  const handleChange = (e) => {
-    let { name, value } = e.target;
+  // GST validation
+  if (dataToValidate.gstNumber && !/^[0-9A-Z]{15}$/.test(dataToValidate.gstNumber.toUpperCase())) {
+    newErrors.gstNumber = "Invalid GST number format (27ABCDE1234F1Z5)";
+  }
 
-    // Auto-format rules
-    if (name === "gstNumber") {
-      value = value.toUpperCase(); // GST always uppercase
+  // Optional URLs
+  const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/\S*)?$/;
+  optionalFields.forEach((field) => {
+    if (dataToValidate[field] && !urlPattern.test(dataToValidate[field])) {
+      newErrors[field] = `Enter a valid ${field} URL`;
     }
-    if (name === "email") {
-      value = value.toLowerCase(); // email always lowercase
+  });
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+// Handle Submit
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Clean mobile before validation & submission
+  setFormData((prev) => ({
+    ...prev,
+    mobile: prev.mobile?.replace(/^(\+91|0)/, "").replace(/\D/g, ""),
+  }));
+
+  // Run validation
+  if (!validateForm()) {
+    console.warn("⚠️ Validation Failed:", errors);
+    setPopupType("error");
+    return;
+  }
+
+  // API Call
+  try {
+    setPopupType("processing");
+
+    let res;
+    if (id) {
+      // UPDATE profile
+      res = await ProfileService.updateProfile(id, formData, signatureImage, logoImage);
+      console.log("✅ Profile Updated Successfully!");
+    } else {
+      // CREATE profile
+      res = await ProfileService.createProfile(formData, signatureImage, logoImage);
+      console.log("✅ Profile Created Successfully!");
     }
 
-    setFormData({ ...formData, [name]: value });
-  };
+    setPopupType("success");
+    navigate("/dashboard/bussinessList");
+  } catch (err) {
+    console.error("❌ handleSubmit Error:", err.message);
+    setPopupType("error");
+  }
+};
 
-  const handleFileChange = (e, type) => {
-    if (type === "signature") setSignatureImage(e.target.files[0]);
-    if (type === "logo") setLogoImage(e.target.files[0]);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // ✅ Step 1: Run validateForm function
-    if (!validateForm()) {
-      console.warn("⚠️ Validation Failed:", errors);
-      setPopupType("error");
-      return;
-    }
-
-    // ✅ Step 2: API Call
-    try {
-      setPopupType("processing");
-
-      let res;
-      if (id) {
-        // 🔄 UPDATE profile
-        res = await ProfileService.updateProfile(
-          id,
-          formData,
-          signatureImage,
-          logoImage
-        );
-        console.log("✅ Profile Updated Successfully!");
-      } else {
-        // 🆕 CREATE profile
-        res = await ProfileService.createProfile(
-          formData,
-          signatureImage,
-          logoImage
-        );
-        console.log("✅ Profile Created Successfully!");
-      }
-
-      // 🕵️‍♂️ Debugging Console Logs
-      console.log(
-        "📌 Store ID:",
-        res?.data?.store_id || res?.store_id || "Not Found"
-      );
-      console.log("📌 Profile ID:", res?.data?.id || res?.id || "Not Found");
-
-      // ✅ Step 3: Success
-      setPopupType("success");
-      navigate("/dashboard/bussinessList");
-    } catch (err) {
-      console.error("❌ handleSubmit Error:", err.message);
-      setPopupType("error");
-    }
-  };
 
   useEffect(() => {
     const fetchData = async () => {
