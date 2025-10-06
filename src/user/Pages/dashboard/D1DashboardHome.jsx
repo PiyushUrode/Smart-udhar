@@ -457,9 +457,9 @@ useEffect(() => {
       </div>
 
       {/* ✅ Chart */}
-      <div className="grid grid-cols-1">
-        <div className="bg-white p-4 shadow-customSoft rounded-lg">
-          <div className="flex justify-between mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 w-full ">
+        <div className="bg-white p-3 sm:p-4 md:p-5 shadow-customSoft rounded-lg w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
             <h2 className="text-lg font-semibold text-gray-800">
               Sales & Collection Overview
             </h2>
@@ -467,12 +467,18 @@ useEffect(() => {
               Last 6 Months
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={graphData}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
+          <ResponsiveContainer width="100%" height={400} minHeight={200} 
+          className="sm:!h-[300px] md:!h-[350px] lg:!h-[400px]"
+          >
+  <BarChart
+        data={graphData}
+        margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+        // className="mt-10 mr-0 m-20 mb-20"
+      >
+   <XAxis dataKey="month" className="text-xs md:text-sm" />
+        <YAxis className="text-[10px] md:text-sm" />
+        <Tooltip />
+        <Legend wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="sales" fill="#0f9afe" radius={[10, 10, 0, 0]} />
               <Bar dataKey="collection" fill="#00e0a3" radius={[14, 14, 0, 0]} />
             </BarChart>

@@ -4,7 +4,7 @@ import axios from "axios"; // ← API के लिए
 import Cookies from "js-cookie"; // ← Token के लिए
 import { NavLink } from "react-router-dom";
 import "../../index.css";
-
+import { useNavigate } from "react-router-dom";
 import {
   FaTachometerAlt,
   FaBuilding,
@@ -178,6 +178,11 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
 
   const store_id = Cookies.get("store_id");
   const token = Cookies.get("authToken");
+  const navigate = useNavigate();
+
+  const handleNavigate = () => {
+    navigate("/dashboard/bussinessList");
+  };
 
   // Fetch businesses function (BusinessList से inspired)
   const fetchBusinesses = async () => {
@@ -242,21 +247,16 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
     if (isOpen && !isMobile) {
       // Only show name when open and not mobile
       return (
-        <div className="text-white font-bold text-sm mb-1 flex gap-2 items-center">
+        <div className="text-white font-bold text-sm mb-1 flex gap-2 items-center"  onClick={handleNavigate}>
           <FaBuilding size={20} />
-          <h1 className="text-white font-robotoB text-lg  leading-[20px]   tracking-[0] activateanimation truncate">
-            {(() => {
-              const words = activeBusinessName
-                ?.split(" ")
-                .filter((word) => word); // Split and filter out empty strings
-              const fullName = words?.join(" ") || ""; // Full name without extra spaces
-              const firstWord = words?.[0] || ""; // First word
-              // Check if there are multiple words or if the full name is too long (e.g., > 15 characters)
-              return words?.length > 2 || fullName.length > 15
-                ? `${firstWord} ...`
-                : fullName;
-            })()}
-          </h1>
+       <h1
+  className="text-white font-robotoB text-lg leading-[20px] cursor-pointer tracking-[0] activateanimation truncate"
+>
+  {activeBusinessName?.length > 15
+    ? activeBusinessName.slice(0, 15) + "..."
+    : activeBusinessName}
+</h1>
+
         </div>
       );
     } else {
@@ -270,7 +270,10 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile }) => {
         isOpen ? "w-56" : "w-16"
       } flex flex-col`}
     >
-      <div className="flex flex-row justify-between items-center justify-center align-middle px-3 py-2">
+      <div className="flex flex-row justify-between items-center justify-center align-middle px-3 py-2" 
+      
+       onClick={handleNavigate}
+      >
         {!isMobile && renderHeader()}
 
         {isMobile && (

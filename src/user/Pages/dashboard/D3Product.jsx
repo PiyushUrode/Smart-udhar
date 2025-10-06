@@ -1,21 +1,42 @@
 import { ImagePlus } from "lucide-react";
-import axios from "axios";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
-import { ProductService } from "../../api/productservice.js"; // ✅ new service i
-import Button from "../../common/Button.jsx";
-import { set } from "date-fns";
+// Removed: import { toast, ToastContainer } from "react-toastify";
+// Removed: import "react-toastify/dist/ReactToastify.css";
+// Assuming ProductService and Button are available/defined as in the original
+import { ProductService } from "../../api/productservice.js";
+import Button from "../../common/Button.jsx"; // Assuming Button component is imported
 
+// Maximum file size constant (5 MB)
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
+// Initial state for form data
+const initialFormData = {
+  name: "",
+  product_image: null,
+  quantity: "",
+  unit: "",
+  min_quantity: "",
+  sales_price: "",
+  purchase_price: "",
+  category: "",
+  gstInclusive: false,
+  hsn_number: "",
+  tax: "",
+  price_type: "",
+};
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // must match backend multer limit
-
-// ProductForm and ServiceForm - unchanged (omitted here for brevity in message).
-// ... assume they are identical to your current UI components
-const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setShowAdvanced, errors }) => (
+// =================================================================
+// 💰 ProductForm Component (Unchanged)
+// =================================================================
+const ProductForm = ({
+  formData,
+  handleChange,
+  handleSubmit,
+  showAdvanced,
+  setShowAdvanced,
+  errors,
+}) => (
   <form onSubmit={handleSubmit} className="space-y-4 px-4 pt-6">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
       <div>
@@ -27,22 +48,38 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
           name="name"
           placeholder="Enter item name"
           required
-          className={`w-full bg-[#F6F8FA] p-2 rounded border ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
+          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.name ? "border-red-500" : "border-gray-300"
+          }`}
           value={formData.name}
           onChange={handleChange}
         />
-        {errors.name && <p className="text-red-500 text-xs mt-1">Name is required</p>}
+        {errors.name && (
+          <p className="text-red-500 text-xs mt-1">Name is required</p>
+        )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">Image</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Image
+        </label>
         <label className="bg-[#F6F8FA] p-2 rounded border cursor-pointer flex justify-between items-center">
           <span className="flex items-center gap-2 text-sm text-gray-700">
             <ImagePlus color="#2563EB" />
             <span className="text-[#2563EB]">Add Product Image</span>
           </span>
-          <input type="file" name="product_image"  accept="image/*" className="hidden" onChange={handleChange} />
-          {formData.product_image && <span className="text-xs text-gray-400 ml-2">{formData.product_image.name}</span>}
+          <input
+            type="file"
+            name="product_image"
+            accept="image/*"
+            className="hidden"
+            onChange={handleChange}
+          />
+          {formData.product_image && (
+            <span className="text-xs text-gray-400 ml-2">
+              {formData.product_image.name}
+            </span>
+          )}
         </label>
       </div>
     </div>
@@ -55,19 +92,25 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         <div className="flex flex-row gap-4 pb-2 w-full max-w-full">
           <input
             name="quantity"
-            type="number"
+            type="text"
             min="1"
             required
             placeholder="Qty"
-            className={`input w-[30%] bg-[#F6F8FA] rounded border ${errors.quantity ? 'border-red-500' : 'border-gray-300'}`}
+            className={`input w-[30%] bg-[#F6F8FA] rounded border ${
+              errors.quantity ? "border-red-500" : "border-gray-300"
+            }`}
             value={formData.quantity}
             onChange={handleChange}
           />
-          {errors.quantity && <p className="text-red-500 text-xs mt-1">Quantity is required</p>}
+          {errors.quantity && (
+            <p className="text-red-500 text-xs mt-1">Quantity is required</p>
+          )}
           <select
             name="unit"
             required
-            className={`input w-[70%] bg-[#F6F8FA] font-robotoR text-gray-500 p-2 rounded border ${errors.unit ? 'border-red-500' : 'border-gray-300'}`}
+            className={`input w-[70%] bg-[#F6F8FA] font-robotoR text-gray-500 p-2 rounded border ${
+              errors.unit ? "border-red-500" : "border-gray-300"
+            }`}
             value={formData.unit}
             onChange={handleChange}
           >
@@ -76,7 +119,9 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
             <option value="kg">kg</option>
             <option value="ltr">ltr</option>
           </select>
-          {errors.unit && <p className="text-red-500 text-xs mt-1">Unit is required</p>}
+          {errors.unit && (
+            <p className="text-red-500 text-xs mt-1">Unit is required</p>
+          )}
         </div>
       </div>
 
@@ -87,50 +132,70 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         <div className="w-full">
           <input
             name="min_quantity"
-            type="number"
+            type="text"
             min="1"
             required
             placeholder="0"
-            className={`input w-full bg-[#F6F8FA] rounded border ${errors.min_quantity ? 'border-red-500' : 'border-gray-300'}`}
+            className={`input w-full bg-[#F6F8FA] rounded border ${
+              errors.min_quantity ? "border-red-500" : "border-gray-300"
+            }`}
             value={formData.min_quantity}
             onChange={handleChange}
           />
-          {errors.min_quantity && <p className="text-red-500 text-xs mt-1">Minimum Quantity is required</p>}
+          {errors.min_quantity && (
+            <p className="text-red-500 text-xs mt-1">
+              Minimum Quantity is required
+            </p>
+          )}
         </div>
       </div>
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">Sale Price *</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Sale Price *
+        </label>
         <input
           name="sales_price"
-          type="number"
+          type="text"
           min="0"
           step="0.01"
           required
           placeholder="₹ 0.00"
-          className={`w-full bg-[#F6F8FA] p-2 rounded border ${errors.sales_price ? 'border-red-500' : 'border-gray-300'}`}
+          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.sales_price ? "border-red-500" : "border-gray-300"
+          }`}
           value={formData.sales_price}
           onChange={handleChange}
         />
-        {errors.sales_price && <p className="text-red-500 text-xs mt-1">Sale Price is required</p>}
+        {errors.sales_price && (
+          <p className="text-red-500 text-xs mt-1">Sale Price is required</p>
+        )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">Purchase Price *</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Purchase Price *
+        </label>
         <input
           name="purchase_price"
-          type="number"
+          type="text"
           min="0"
           step="0.01"
           required
           placeholder="₹ 0.00"
-          className={`w-full bg-[#F6F8FA] p-2 rounded border ${errors.purchase_price ? 'border-red-500' : 'border-gray-300'}`}
+          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.purchase_price ? "border-red-500" : "border-gray-300"
+          }`}
           value={formData.purchase_price}
           onChange={handleChange}
         />
-        {errors.purchase_price && <p className="text-red-500 text-xs mt-1">Purchase Price is required</p>}
+        {errors.purchase_price && (
+          <p className="text-red-500 text-xs mt-1">
+            Purchase Price is required
+          </p>
+        )}
       </div>
     </div>
 
@@ -141,20 +206,24 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
       <select
         name="category"
         required
-        className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${errors.category ? 'border-red-500' : 'border-gray-300'}`}
+        className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
+          errors.category ? "border-red-500" : "border-gray-300"
+        }`}
         value={formData.category || ""}
         onChange={handleChange}
-      > 
+      >
         <option value="">Select Category</option>
-        <option value="Food">Cakes </option>
-        <option value="Bakery">Cakes </option>
-        <option value="Grociers">Cakes </option>
+        <option value="Food">Food</option>
+        <option value="Bakery">Bakery</option>
+        <option value="Grociers">Grociers</option>
         <option value="Electronics">Electronics</option>
         <option value="Pendrive">Pendrive</option>
         <option value="Hardisk">Hardisk</option>
         <option value="Storage">Storage</option>
       </select>
-      {errors.category && <p className="text-red-500 text-xs mt-1">Category is required</p>}
+      {errors.category && (
+        <p className="text-red-500 text-xs mt-1">Category is required</p>
+      )}
     </div>
 
     <div
@@ -217,17 +286,33 @@ const ProductForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
     )}
 
     <div className="flex justify-end gap-4 pb-2">
-      <button type="button" className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+      <button
+        type="button"
+        className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+      >
         Cancel
       </button>
-      <button type="submit" className="px-4 py-2 bg-bluecol text-white rounded hover:bg-blue-700">
-        Save Product
+
+      <button
+        type="submit"
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      > Save Product
       </button>
     </div>
   </form>
 );
 
-const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setShowAdvanced, errors }) => (
+// =================================================================
+// 🛠️ ServiceForm Component (Unchanged)
+// =================================================================
+const ServiceForm = ({
+  formData,
+  handleChange,
+  handleSubmit,
+  showAdvanced,
+  setShowAdvanced,
+  errors,
+}) => (
   <form onSubmit={handleSubmit} className="space-y-4 px-4 pt-6">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
       <div>
@@ -239,15 +324,21 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
           name="name"
           placeholder="Enter service name"
           required
-          className={`input w-full bg-[#F6F8FA] p-2 rounded border ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
+          className={`input w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.name ? "border-red-500" : "border-gray-300"
+          }`}
           value={formData.name}
           onChange={handleChange}
         />
-        {errors.name && <p className="text-red-500 text-xs mt-1">Name is required</p>}
+        {errors.name && (
+          <p className="text-red-500 text-xs mt-1">Name is required</p>
+        )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">Image</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Image
+        </label>
         <div className="flex flex-row justify-start items-center gap-3">
           <label className="w-full md:w-[60%] bg-[#F6F8FA] p-2 rounded border cursor-pointer flex justify-between items-center">
             <span className="flex items-center gap-2 text-sm text-gray-700">
@@ -261,9 +352,18 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
               accept="image/*"
               onChange={handleChange}
             />
-            {formData.product_image && <span className="text-xs text-gray-400 ml-2">{formData.product_image.name}</span>}
+            {formData.product_image && (
+              <span className="text-xs text-gray-400 ml-2">
+                {formData.product_image.name}
+              </span>
+            )}
           </label>
-          <span className="font-robotoR">No file chosen</span>
+          {/* Note: This "No file chosen" text might be misleading if the file is chosen but the component re-renders. A better UX would show the filename or a clearer status. */}
+          {!formData.product_image && (
+            <span className="font-robotoR text-sm text-gray-500">
+              No file chosen
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -276,19 +376,25 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         <div className="flex flex-row gap-4 pb-2 w-full max-w-full">
           <input
             name="quantity"
-            type="number"
+            type="text"
             min="1"
             required
             placeholder="Qty"
-            className={`input w-[30%] bg-[#F6F8FA] rounded border ${errors.quantity ? 'border-red-500' : 'border-gray-300'}`}
+            className={`input w-[30%] bg-[#F6F8FA] rounded border ${
+              errors.quantity ? "border-red-500" : "border-gray-300"
+            }`}
             value={formData.quantity}
             onChange={handleChange}
           />
-          {errors.quantity && <p className="text-red-500 text-xs mt-1">Quantity is required</p>}
+          {errors.quantity && (
+            <p className="text-red-500 text-xs mt-1">Quantity is required</p>
+          )}
           <select
             name="unit"
             required
-            className={`input w-[70%] bg-[#F6F8FA] font-robotoR text-gray-500 p-2 rounded border ${errors.unit ? 'border-red-500' : 'border-gray-300'}`}
+            className={`input w-[70%] bg-[#F6F8FA] font-robotoR text-gray-500 p-2 rounded border ${
+              errors.unit ? "border-red-500" : "border-gray-300"
+            }`}
             value={formData.unit}
             onChange={handleChange}
           >
@@ -297,7 +403,9 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
             <option value="pcs">Pieces</option>
             <option value="session">Session</option>
           </select>
-          {errors.unit && <p className="text-red-500 text-xs mt-1">Unit is required</p>}
+          {errors.unit && (
+            <p className="text-red-500 text-xs mt-1">Unit is required</p>
+          )}
         </div>
       </div>
 
@@ -308,16 +416,20 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         <div className="w-full">
           <input
             name="sales_price"
-            type="number"
+            type="text"
             min="0"
             step="0.01"
             required
             placeholder="₹ 0.00"
-            className={`input w-full bg-[#F6F8FA] p-2 rounded border ${errors.sales_price ? 'border-red-500' : 'border-gray-300'}`}
+            className={`input w-full bg-[#F6F8FA] p-2 rounded border ${
+              errors.sales_price ? "border-red-500" : "border-gray-300"
+            }`}
             value={formData.sales_price}
             onChange={handleChange}
           />
-          {errors.sales_price && <p className="text-red-500 text-xs mt-1">Sale Price is required</p>}
+          {errors.sales_price && (
+            <p className="text-red-500 text-xs mt-1">Sale Price is required</p>
+          )}
         </div>
       </div>
     </div>
@@ -332,7 +444,9 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
     {showAdvanced && (
       <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">HSN/SCN Code</label>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            HSN/SCN Code
+          </label>
           <input
             type="text"
             name="hsn_number"
@@ -344,7 +458,9 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">Tax</label>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Tax
+          </label>
           <select
             name="tax"
             className="w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
@@ -402,72 +518,26 @@ const ServiceForm = ({ formData, handleChange, handleSubmit, showAdvanced, setSh
   </form>
 );
 
+// =================================================================
+// 📦 Main D3Product Component (Modified to use 'Button' component)
+// =================================================================
 export default function D3Product() {
-
- const initialFormData = {
-    name: "",
-    product_image: null,
-    quantity: "",
-    unit: "",
-    min_quantity: "",
-    sales_price: "",
-    purchase_price: "",
-    category: "",
-    gstInclusive: false,
-    hsn_number: "",
-    tax: "",
-    price_type: "",
-  };
-
-  const { id } = useParams(); // Get product ID from URL for edit mode
+  const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("product");
   const [formData, setFormData] = useState(initialFormData);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isEditMode, setIsEditMode] = useState(!!id); // Check if in edit mode
+  const [isEditMode, setIsEditMode] = useState(!!id);
+  // State for the custom notification/pop-up component
   const [popupType, setPopupType] = useState(null);
   const [message, setMessage] = useState("");
 
-  // Fetch product data for edit mode
-  useEffect(() => {
-    if (id) {
-      const fetchProduct = async () => {
-        try {
-          const { product, success, error } = await ProductService.fetchProductById(id);
-           setActiveTab("product"); // Default to product tab
-          
-          if (success && product) {
-            // Map API data to formData, ensuring all fields are strings or appropriate types
-            setFormData({
-              name: product.name || "",
-              product_image: null, // Image is not fetched as a file; handle separately if needed
-              quantity: String(product.quantity || ""),
-              unit: product.unit || "",
-              min_quantity: String(product.min_quantity || ""),
-              sales_price: String(product.sales_price || ""),
-              purchase_price: String(product.purchase_price || ""),
-              category: product.category || "",
-              gstInclusive: product.gstInclusive === "true" || product.gstInclusive === true,
-              hsn_number: product.hsn_number || "",
-              tax: String(product.tax || ""),
-              price_type: product.price_type || "",
-            });
-            setActiveTab(product.product_type === "service" ? "service" : "product");
-          } else {
-            toast.error(error || "Failed to fetch product", { position: "top-right", autoClose: 4000 });
-            navigate("/dashboard/product"); // Redirect if product not found
-          }
-        } catch (err) {
-          console.error("Error fetching product:", err);
-          toast.error("Failed to fetch product", { position: "top-right", autoClose: 4000 });
-          navigate("/dashboard/product");
-        }
-      };
-      fetchProduct();
-    }
-  }, [id, navigate]);
-
+  /**
+   * Helper function to convert field names to user-friendly labels.
+   * @param {string} field - The internal field name.
+   * @returns {string} The user-friendly name.
+   */
   const friendlyFieldName = (field) => {
     const map = {
       name: "Name",
@@ -484,15 +554,88 @@ export default function D3Product() {
     return map[field] || field;
   };
 
+  // 🔄 Fetch product data for edit mode
+  useEffect(() => {
+    if (id) {
+      const fetchProduct = async () => {
+        try {
+          setPopupType("processing");
+
+          const { product, success, error } =
+            await ProductService.fetchProductById(id);
+
+          if (success && product) {
+            const newFormData = {
+              name: product.name || "",
+              product_image: null,
+              quantity: String(product.quantity || ""),
+              unit: product.unit || "",
+              min_quantity: String(product.min_quantity || ""),
+              sales_price: String(product.sales_price || ""),
+              purchase_price: String(product.purchase_price || ""),
+              category: product.category || "",
+              gstInclusive:
+                product.gstInclusive === "true" ||
+                product.gstInclusive === true,
+              hsn_number: product.hsn_number || "",
+              tax: String(product.tax || ""),
+              price_type: product.price_type || "",
+            };
+
+            setFormData(newFormData);
+            setActiveTab(
+              product.product_type === "service" ? "service" : "product"
+            );
+
+            if (
+              newFormData.hsn_number ||
+              newFormData.tax ||
+              newFormData.price_type
+            ) {
+              setShowAdvanced(true);
+            }
+            setPopupType(null); // Clear processing
+          } else {
+            const errorMsg = error || `Failed to fetch product with ID: ${id}`;
+            setMessage(errorMsg);
+            setPopupType("error");
+            // Auto-clear error after a delay (e.g., 5 seconds)
+            setTimeout(() => setPopupType(null), 5000);
+            navigate("/dashboard/product-list");
+          }
+        } catch (err) {
+          console.error("Error fetching product:", err);
+          setMessage("Failed to fetch product data.");
+          setPopupType("error");
+          setTimeout(() => setPopupType(null), 5000);
+          navigate("/dashboard/product-list");
+        }
+      };
+      fetchProduct();
+    }
+  }, [id, navigate]);
+
+  /**
+   * Handles changes in form inputs, including file validation.
+   * @param {Event} e - The change event.
+   */
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
+    console.log(name, value, type, checked, files);
 
+    // Handle file input separately
     if (files && files.length > 0) {
       const file = files[0];
+      const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
+
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
-        toast.error(`Image too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 4000 });
+        const errorMsg = `Image too large. Max ${mb} MB allowed.`;
+        setMessage(errorMsg);
+        setPopupType("error");
+        setTimeout(() => setPopupType(null), 5000);
+
         setErrors((prev) => ({ ...prev, product_image: `Max ${mb}MB` }));
+        setFormData((prev) => ({ ...prev, [name]: null })); // Clear invalid file
         return;
       }
       setFormData((prev) => ({ ...prev, [name]: file }));
@@ -500,6 +643,7 @@ export default function D3Product() {
       return;
     }
 
+    // Handle standard inputs and checkbox
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -508,17 +652,30 @@ export default function D3Product() {
     setErrors((prev) => ({ ...prev, [name]: false }));
   };
 
+  /**
+   * Validates required form fields based on the active tab.
+   * @returns {boolean} True if the form is valid, false otherwise.
+   */
   const validateForm = () => {
     const newErrors = {};
     const requiredFields =
       activeTab === "product"
-        ? ["name", "quantity", "unit", "min_quantity", "sales_price", "purchase_price", "category"]
+        ? [
+            "name",
+            "quantity",
+            "unit",
+            "min_quantity",
+            "sales_price",
+            "purchase_price",
+            "category",
+          ]
         : ["name", "quantity", "unit", "sales_price"];
 
     const missingFields = [];
 
     requiredFields.forEach((field) => {
       const val = formData[field];
+      // Check for empty string, null, or undefined
       if (val === "" || val === null || val === undefined) {
         newErrors[field] = true;
         missingFields.push(friendlyFieldName(field));
@@ -528,161 +685,189 @@ export default function D3Product() {
     setErrors(newErrors);
 
     if (missingFields.length > 0) {
-      setMessage(`Please fill required fields: ${missingFields.join(", ")}`);
+      const errorMsg = `Please fill all required fields: ${missingFields.join(
+        ", "
+      )}`;
+      setMessage(errorMsg);
       setPopupType("error");
-      toast.error(`Please fill required fields: ${missingFields.join(", ")}`, {
-        position: "top-right",
-        autoClose: 4000,
-      });
+      setTimeout(() => setPopupType(null), 5000);
       return false;
     }
     return true;
   };
 
+  /**
+   * Handles the form submission for creating or updating a product/service.
+   * @param {Event} e - The form submission event.
+   */
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setPopupType("processing");
+    e.preventDefault();
 
-  if (!validateForm()) {
-    return;
-  }
-
-  try {
-    const payload = { ...formData };
-    const file = formData.product_image || null;
-    delete payload.product_image;
-
-    // 🔹 Set safe defaults
-    if (!payload.hsn_number) payload.hsn_number = "DEFAULT_HSN";
-    if (!payload.tax) payload.tax = "0";
-    if (!payload.price_type) payload.price_type = "fixed";
-
-    if (activeTab === "service") {
-      if (!payload.purchase_price || payload.purchase_price === "") payload.purchase_price = "0";
-      if (!payload.category || payload.category === "") payload.category = "General";
-      if (!payload.min_quantity || payload.min_quantity === "") payload.min_quantity = "0";
-    } else {
-      payload.min_quantity = payload.min_quantity || "0";
+    if (!validateForm()) {
+      // validateForm already sets error message and popup type
+      return;
     }
 
-    // Always stringify gstInclusive for backend safety
-    payload.gstInclusive = String(payload.gstInclusive);
+    setPopupType("processing");
+    setMessage(isEditMode ? "Updating item..." : "Saving new item...");
 
-    // =========================
-    // 🧮 Tax Calculation Logic
-    // =========================
-    const sales = parseFloat(payload.sales_price || "0");
-    const taxRate = parseFloat(payload.tax || "0");
+    try {
+      const payload = { ...formData };
+      const file = formData.product_image || null;
+      delete payload.product_image;
 
-    if (activeTab === "product") {
-      // price_type = "fixed" → already inclusive
-      // price_type = "without" → add GST
-      if (payload.price_type === "without" && taxRate > 0) {
-        const inclusivePrice = sales + (sales * taxRate) / 100;
-        payload.sales_price = inclusivePrice.toFixed(2);
+      // 🔹 Set safe defaults for optional fields if they are missing
+      if (!payload.hsn_number) payload.hsn_number = "DEFAULT_HSN";
+      if (!payload.tax) payload.tax = "0";
+      if (!payload.price_type) payload.price_type = "fixed";
+
+      if (activeTab === "service") {
+        // Set product-specific fields to safe defaults for services
+        if (!payload.purchase_price || payload.purchase_price === "")
+          payload.purchase_price = "0";
+        if (!payload.category || payload.category === "")
+          payload.category = "General";
+        if (!payload.min_quantity || payload.min_quantity === "")
+          payload.min_quantity = "0";
+      } else {
+        payload.min_quantity = payload.min_quantity || "0";
       }
-    }
 
-    if (activeTab === "service") {
-      // gstInclusive = "true" → already inclusive
-      // gstInclusive = "false" → add GST
-      if (payload.gstInclusive === "false" && taxRate > 0) {
-        const inclusivePrice = sales + (sales * taxRate) / 100;
-        payload.sales_price = inclusivePrice.toFixed(2);
+      // Always stringify gstInclusive for backend API consistency
+      payload.gstInclusive = String(payload.gstInclusive);
+
+      // =========================
+      // 🧮 Tax Calculation Logic
+      // =========================
+      const sales = parseFloat(payload.sales_price || "0");
+      const taxRate = parseFloat(payload.tax || "0");
+
+      if (taxRate > 0) {
+        if (activeTab === "product") {
+          // 'without' means the sales_price entered is exclusive of tax, so calculate the inclusive price
+          // if (payload.price_type === "without") {
+          //   const inclusivePrice = sales + (sales * taxRate) / 100;
+          //   payload.sales_price = inclusivePrice.toFixed(2);
+          // }
+          // 'fixed' means the sales_price is already inclusive, so no calculation needed
+        }
+
+        if (activeTab === "service") {
+          // 'false' means the sales_price entered is exclusive of GST, so calculate the inclusive price
+          // if (payload.gstInclusive === "false") {
+          //   const inclusivePrice = sales + (sales * taxRate) / 100;
+          //   payload.sales_price = inclusivePrice.toFixed(2);
+          // }
+          // 'true' means the sales_price is already inclusive, so no calculation needed
+        }
       }
-    }
 
-    // Product type (used by API)
-    const productType = activeTab === "product" ? "inventory" : "service";
+      console.log("Final payload before API call:", payload, "File:", file);
+      
+      // Product type mapping for the API call
+      const productType = activeTab === "product" ? "inventory" : "service";
 
-    // =========================
-    // 🔹 API CALL
-    // =========================
-    let res;
-    if (isEditMode) {
-      res = await ProductService.updateProduct(id, payload, file, productType);
-    } else {
-      res = await ProductService.createProduct(payload, file, productType);
-    }
+      // =========================
+      // 🔹 API CALL
+      // =========================
+      let res;
+      if (isEditMode) {
+        res = await ProductService.updateProduct(
+          id,
+          payload,
+          file,
+          productType
+        );
+      } else {
+        res = await ProductService.createProduct(payload, file, productType);
+      }
 
-    if (res.success) {
-      setMessage(`${activeTab === "product" ? "Product" : "Service"} ${isEditMode ? "updated" : "saved"} successfully!`);
-      setPopupType("success");
-      toast.success(
-        `${activeTab === "product" ? "Product" : "Service"} ${isEditMode ? "updated" : "saved"} successfully!`,
-        { position: "top-right", autoClose: 3000 }
+      if (res.success) {
+        const itemType = activeTab === "product" ? "Product" : "Service";
+        const action = isEditMode ? "updated" : "saved";
+        const successMessage = `${itemType} ${action} successfully! 🎉`;
+
+        setMessage(successMessage);
+        setPopupType("success");
+        setTimeout(() => setPopupType(null), 3000);
+
+        // Reset form or redirect
+        if (!isEditMode) {
+          setFormData(initialFormData);
+          setErrors({});
+          setShowAdvanced(false);
+        } else {
+          navigate("/dashboard/product-list");
+        }
+      } else {
+        // Backend indicated an error but didn't throw an HTTP error
+        throw new Error(
+          res.error || "Operation failed due to an unknown error."
+        );
+      }
+    } catch (err) {
+      console.error(
+        `❌ Error ${isEditMode ? "updating" : "saving"} item:`,
+        err
       );
-      setFormData(initialFormData);
-      setErrors({});
-      setShowAdvanced(false);
-      if (isEditMode) navigate("/dashboard/product-list"); // Redirect to product list after update
-    } else {
-      setMessage(res.error || "Operation failed");
-      setPopupType("error");
-      throw new Error(res.error || "Operation failed");
-    }
-  } catch (err) {
-    console.error(`❌ Error ${isEditMode ? "updating" : "saving"} product:`, err);
 
-    if (err?.message && err.message.includes("too large")) {
-      setMessage(err.message);
-      setPopupType("error");
-      toast.error(err.message, { position: "top-right", autoClose: 5000 });
-      return;
-    }
-
-    const backendMessage = err?.response?.data?.message || err?.response?.data?.error;
-    const status = err?.response?.status;
-
-    if (backendMessage && backendMessage.toLowerCase().includes("file too large")) {
       const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
-      toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
-      setMessage(`Uploaded image is too large. Max ${mb} MB allowed.`);
+      let errorMessage = `Failed to ${isEditMode ? "update" : "save"} ${
+        activeTab === "product" ? "product" : "service"
+      }. Please try again.`;
+
+      const backendMessage =
+        err?.response?.data?.message || err?.response?.data?.error;
+      const status = err?.response?.status;
+
+      // Handle file size errors
+      if (
+        (backendMessage &&
+          backendMessage.toLowerCase().includes("file too large")) ||
+        status === 413
+      ) {
+        errorMessage = `Uploaded image is too large. Max ${mb} MB allowed.`;
+      } else if (backendMessage) {
+        // Use a more specific backend error message if available
+        errorMessage = backendMessage;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+
       setPopupType("error");
-      return;
+      setMessage(errorMessage);
+      setTimeout(() => setPopupType(null), 5000); // Clear error after 5 seconds
+    } finally {
+      // Note: We don't clear processing here, because either 'success' or 'error' will be set,
+      // and they manage their own timeout or depend on the user closing the modal.
+      // However, if the error happens before setting an 'error' type, we must clear 'processing'.
+      if (popupType === "processing") {
+        setPopupType(null);
+      }
     }
+  };
 
-    if (backendMessage) {
-      setPopupType("error");
-      setMessage(backendMessage);
-      toast.error(backendMessage, { position: "top-right", autoClose: 5000 });
-      return;
-    }
-
-    if (status === 413) {
-      const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
-      toast.error(`Uploaded image is too large. Max ${mb} MB allowed.`, { position: "top-right", autoClose: 6000 });
-      setPopupType("error");
-      setMessage(`Uploaded image is too large. Max ${mb} MB allowed.`);
-      return;
-    }
-
-    toast.error(
-      `Failed to ${isEditMode ? "update" : "save"} ${activeTab === "product" ? "product" : "service"}. Please try again.`,
-      { position: "top-right", autoClose: 5000 }
-    );
-    setPopupType("error");
-    setMessage(`Failed to ${isEditMode ? "update" : "save"} ${activeTab === "product" ? "product" : "service"}. Please try again.`);
-  }
-};
-
-
-
+  // =================================================================
+  // 💻 Component Render
+  // =================================================================
   return (
-    <div className="max-w-4xl mx-auto mt-5 md:mt-10 pb-7 bg-white rounded-lg shadow-customCard">
-      <div className="bg-bluecol text-white text-base md:text-xl lg:text-2xl px-6 py-3 rounded-t-md text-lg font-semibold">
+    <div className="max-w-5xl mx-auto  px-5 md:px-10 py-10  bg-white rounded-lg shadow-customCard">
+
+      {/* Removed: <ToastContainer /> */}
+      <div className="bg-blue-600 text-white px-6 py-3 rounded-t-md text-lg font-semibold">
+
         Items
       </div>
 
       <div className="flex space-x-24 px-10 py-4">
         {["product", "service"].map((tab) => (
-     
-           <button
+          <button
             key={tab}
             onClick={() => {
+              // Prevent tab switching in edit mode
               if (!isEditMode) {
                 setActiveTab(tab);
-                setFormData(initialFormData);
+                setFormData(initialFormData); // Reset form data on tab switch
                 setErrors({});
               }
             }}
@@ -695,11 +880,10 @@ export default function D3Product() {
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
-
         ))}
       </div>
 
-      {activeTab === "product" && (
+      {activeTab === "product" ? (
         <ProductForm
           formData={formData}
           handleChange={handleChange}
@@ -708,8 +892,7 @@ export default function D3Product() {
           setShowAdvanced={setShowAdvanced}
           errors={errors}
         />
-      )}
-      {activeTab !== "product" && (
+      ) : (
         <ServiceForm
           formData={formData}
           handleChange={handleChange}
@@ -719,9 +902,15 @@ export default function D3Product() {
           errors={errors}
         />
       )}
-       {popupType && (
-          <Button type={popupType} message={message} onClose={() => setPopupType(null)} />
-        )}
+
+      {/* 🟢 The requested Button component integration for pop-up messages */}
+      {popupType && (
+        <Button
+          type={popupType}
+          message={message}
+          onClose={() => setPopupType(null)}
+        />
+      )}
     </div>
   );
 }

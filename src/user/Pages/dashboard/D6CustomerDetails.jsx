@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { CustomerService } from "../../api/customerService.js";
+import { useCustomerForm } from "../../api/addCustomerService.js";
 import Button from "../../common/Button.jsx";
 
 const CustomerDetailsForm = () => {
@@ -78,7 +79,8 @@ const CustomerDetailsForm = () => {
   }, [page, limit]);
 
   const handleDelete = async (mongoId, displayId) => {
-    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+    if (!window.confirm("Are you sure you want to delete this customer?"))
+      return;
 
     try {
       const deleteRes = await CustomerService.deleteCustomer(mongoId);
@@ -93,7 +95,7 @@ const CustomerDetailsForm = () => {
   };
 
   const handleEdit = (customer) => {
-    navigate("/dashboard/add-customer", { state: { customer } });
+    navigate(`/dashboard/add-customer/${customer.mongoId}`);
   };
 
   const getScoreColor = (score) => {
@@ -141,9 +143,9 @@ const CustomerDetailsForm = () => {
         ) : (
           <table className="min-w-full text-sm border-separate border-spacing-0 border-[#E5E7EB] border-y border-x-2 rounded-lg shadow-customSoft">
             <thead>
-              <tr className="bg-[#F9FAFB] text-left text-lightblack">
+              <tr className="bg-[#F9FAFB] text-left text-lightblack text-nowrap">
                 <th className="p-3 font-semibold py-5">S.No</th>
-                <th className="p-3 font-semibold py-5">Unique ID (Custom)</th>
+                <th className="p-3 font-semibold py-5">Unique ID</th>
                 <th className="p-3 font-semibold py-5">Name</th>
                 <th className="p-3 font-semibold py-5">Mobile</th>
                 <th className="p-3 font-semibold py-5">Email</th>

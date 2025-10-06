@@ -3,19 +3,59 @@ import {
   FaPlus,
   FaTrash,
   FaEdit,
-  FaBoxOpen,
   FaDownload,
   FaFilePdf,
+  FaExclamationTriangle, // Added for warning icon
 } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { ProductService } from "../../api/productservice.js"; // ✅ ProductService
+import { ProductService } from "../../api/productservice.js";
 import product1 from "../../assets/dummyimage/product1.png";
 import * as XLSX from "xlsx";
+import Button from "../../common/Button.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+// =========================================================================
+// ✅ NEW: Delete Confirmation Modal Component
+// =========================================================================
+const DeleteConfirmationModal = ({ productName, onConfirm, onCancel }) => (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+    <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative transform transition-all scale-100 opacity-100">
+      <div className="text-center">
+        <FaExclamationTriangle className="mx-auto h-12 w-12 text-red-500" />
+        <h3 className="mt-4 text-lg font-semibold text-gray-900">
+          Confirm Deletion
+        </h3>
+        <div className="mt-2">
+          <p className="text-sm text-gray-500">
+            Are you sure you want to delete the product:
+            <br />
+            <strong className="text-red-600">{productName}</strong>? This action
+            cannot be undone.
+          </p>
+        </div>
+      </div>
+      <div className="mt-6 flex justify-end gap-3">
+        <button
+          type="button"
+          className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 transition sm:text-sm"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 transition sm:text-sm"
+          onClick={onConfirm}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+);
+// =========================================================================
 
 const D4ProductList = () => {
   const [file, setFile] = useState(null);
@@ -39,6 +79,15 @@ const D4ProductList = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
 
+  // ✅ NEW STATE FOR DELETE CONFIRMATION
+  const [deleteProductId, setDeleteProductId] = useState(null);
+  const [deleteProductName, setDeleteProductName] = useState("");
+  // END NEW STATE
+
+  // State for the custom notification/pop-up component
+  const [popupType, setPopupType] = useState(null); // 'success', 'error', 'processing'
+  const [message, setMessage] = useState("");
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setExcelFile(file);
@@ -56,7 +105,6 @@ const D4ProductList = () => {
       });
       if (!success) throw new Error("Failed to fetch products");
 
-      setItems(products);
       setTotalItems(total); // ✅ total products from backend
       setTotalPages(Math.ceil(total / limit) || 1);
 
@@ -72,7 +120,8 @@ const D4ProductList = () => {
       setTotalPages(Math.ceil(total / limit) || 1); // ✅ pagination
     } catch (err) {
       setError(err.message);
-      toast.error(err.message, { position: "top-right" });
+      setPopupType("error"); // Show error pop-up
+      setMessage(err.message);
       if (err.message.includes("login") || err.message.includes("token")) {
         navigate("/login");
       }
@@ -80,8 +129,6 @@ const D4ProductList = () => {
       setLoading(false);
     }
   };
-
-  // ✅ Stock Update
 
   useEffect(() => {
     fetchItems();
@@ -119,6 +166,8 @@ const D4ProductList = () => {
       }
     } catch (err) {
       console.error(err);
+      setPopupType("error");
+      setMessage(err.message || "Search failed");
       setSuggestions([]);
       setShowSuggestions(false);
     }
@@ -129,63 +178,46 @@ const D4ProductList = () => {
     navigate(`/dashboard/product/${product._id}`, { state: { product } });
   };
 
-  // ✅ Delete
-  const handleDelete = async (_id) => {
-    if (!window.confirm("Are you sure you want to delete this product?"))
-      return;
+  // =========================================================================
+  // ✅ UPDATED: Delete function to show modal
+  // =========================================================================
+  const handleDelete = (_id, name) => {
+    setDeleteProductId(_id);
+    setDeleteProductName(name);
+  };
+
+  // ✅ NEW: Function to execute deletion upon confirmation
+  const confirmDelete = async () => {
+    const _id = deleteProductId;
+    if (!_id) return; // Should not happen
+
+    // Clear modal immediately
+    setDeleteProductId(null);
+    setDeleteProductName("");
+
     try {
+      setPopupType("processing"); // Show processing message
+      setMessage(`Deleting product: ${deleteProductName}...`);
+
       const { success } = await ProductService.deleteProduct(_id);
       if (!success) throw new Error("Failed to delete product");
-      toast.success("Product deleted successfully");
+
+      setPopupType("success"); // ✅ ADDED
+      setMessage("Product deleted successfully"); // ✅ ADDED
       fetchItems();
     } catch (err) {
-      toast.error(err.message || "Delete failed");
+      setPopupType("error"); // ✅ ADDED
+      setMessage(err.message || "Delete failed"); // ✅ ADDED
     }
   };
-
-  // ✅ Excel Export
-  const handleExportExcel = async () => {
-    try {
-      // Get the Excel file as a blob
-      const response = await ProductService.exportProductsExcel({
-        responseType: "blob", // important!
-      });
-
-      // Create a URL for the blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-
-      // Set default file name
-      link.setAttribute("download", "products.xlsx");
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      link.parentNode.removeChild(link);
-      toast.success("Excel exported successfully!");
-    } catch (err) {
-      toast.error("Export failed");
-      console.error(err);
-    }
-  };
-
-  // ✅ PDF Export
-  const handleExportPDF = async () => {
-    const { success, error } = await ProductService.exportProductsPDF();
-    if (success) {
-      toast.success("PDF exported successfully!");
-    } else {
-      toast.error(error || "Export failed");
-    }
-  };
+  // =========================================================================
 
   // ✅ Render Table
   const renderTable = () => {
     const isProductTab = activeTab === "product";
     return (
-      <table className="w-full bg-white rounded-lg shadow-sm text-sm text-nowrap ">
-        <thead className="text-left text-gray-600 font-medium">
+      <table className="w-full bg-white rounded-lg shadow-sm  text-nowrap ">
+        <thead className="text-left text-gray-600 font-medium text-xs md:text-sm">
           <tr>
             <th className="p-3 align-middle">Image</th>
             <th className="p-3 align-middle">Name</th>
@@ -203,7 +235,7 @@ const D4ProductList = () => {
             <tr>
               <td
                 colSpan="9"
-                className="text-center p-3 align-middle align-middle"
+                className="text-center  p-3 align-middle align-middle"
               >
                 Loading...
               </td>
@@ -232,7 +264,10 @@ const D4ProductList = () => {
               .map((item) => {
                 const isLow = (item.quantity || 0) < 10;
                 return (
-                  <tr key={item._id} className="border-t hover:bg-gray-50">
+                  <tr
+                    key={item._id}
+                    className="border-t hover:bg-gray-50 text-xs md:text-sm"
+                  >
                     <td className="p-3 align-middle">
                       <img
                         src={item.product_image ? item.product_image : product1}
@@ -284,18 +319,12 @@ const D4ProductList = () => {
                           <FaEdit /> Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(item._id)}
+                          // ✅ UPDATED: Call handleDelete with ID and Name
+                          onClick={() => handleDelete(item._id, item.name)}
                           className="text-red-600 hover:text-red-800 flex items-center gap-1"
                         >
                           <FaTrash />
                         </button>
-                        {/* <button
-      onClick={() => setShowStockPopup(true) || setSelectedProduct(item)}
-      className="text-black flex items-center gap-1"
-    >
-      <FaBoxOpen />
-    </button> */}
-
                         <button
                           onClick={() => handleFetchHistory(item)}
                           className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
@@ -325,71 +354,108 @@ const D4ProductList = () => {
   };
   const handleUpdateStock = async () => {
     try {
-      if (!selectedProduct) return toast.error("No product selected");
+      if (!selectedProduct) {
+        setPopupType("error");
+        setMessage("No product selected");
+        return;
+      }
+
+      const newStockValue = parseInt(newStock || 0, 10);
+      if (isNaN(newStockValue) || newStockValue <= 0) {
+        setPopupType("error");
+        setMessage("New stock must be a positive number.");
+        return;
+      }
+
+      setPopupType("processing"); // Indicate processing
+      setMessage(`Updating stock for ${selectedProduct.name}...`);
+
       const updatedQty =
-        parseInt(selectedProduct.quantity || 0, 10) +
-        parseInt(newStock || 0, 10);
+        parseInt(selectedProduct.quantity || 0, 10) + newStockValue;
 
       const payload = { quantity: updatedQty };
       const { success } = await ProductService.updateProduct(
         selectedProduct._id,
-        payload
+        payload,
+        null,
+        selectedProduct.product_type
       );
       if (!success) throw new Error("Failed to update stock");
 
-      toast.success("Stock updated successfully");
+      setPopupType("success"); // ✅ ADDED
+      setMessage("Stock updated successfully"); // ✅ ADDED
       setShowStockPopup(false);
       setNewStock(""); // reset
       fetchItems();
     } catch (err) {
-      toast.error(err.message || "Stock update failed");
+      setPopupType("error"); // ✅ ADDED
+      setMessage(err.message || "Stock update failed"); // ✅ ADDED
     }
   };
 
   // ✅ Fetch product history
   const handleFetchHistory = async (product) => {
     try {
+      setPopupType("processing"); // Indicate loading
+      setMessage(`Fetching history for ${product.name}...`);
       const { success, history, error } =
         await ProductService.getProductHistory(product._id);
+
       if (success) {
         setSelectedProduct(product);
         setProductHistory(history);
         setShowHistoryPopup(true);
+        setPopupType(null); // Clear loading message on success
       } else {
-        toast.error(error || "Failed to fetch product history");
+        setPopupType("error"); // ✅ ADDED
+        setMessage(error || "Failed to fetch product history"); // ✅ ADDED
       }
     } catch (err) {
       console.error(err);
-      toast.error("Error fetching product history");
+      setPopupType("error"); // ✅ ADDED
+      setMessage("Error fetching product history"); // ✅ ADDED
     }
   };
 
   const handleImportExcel = async () => {
-    if (!excelFile) return toast.error("Please select an Excel file");
+    if (!excelFile) {
+      setPopupType("error"); // ✅ ADDED
+      setMessage("Please select an Excel file"); // ✅ ADDED
+      return;
+    }
 
     try {
-      const { success, message, count } = await ProductService.uploadExcel(
-        excelFile
-      );
+      setPopupType("processing"); // Indicate processing
+      setMessage("Importing data, please wait...");
+
+      const {
+        success,
+        message: responseMessage,
+        count,
+      } = await ProductService.uploadExcel(excelFile);
 
       if (success) {
-        toast.success(`Imported ${count} products successfully!`);
+        setPopupType("success"); // ✅ ADDED
+        setMessage(`Imported ${count} products successfully!`); // ✅ ADDED
         setExcelFile(null); // reset input
         fetchItems(); // refresh product list
       } else {
-        toast.error(message || "Import failed");
+        setPopupType("error"); // ✅ ADDED
+        setMessage(responseMessage || "Import failed"); // ✅ ADDED
       }
     } catch (err) {
-      toast.error(err.message || "Import failed");
+      setPopupType("error"); // ✅ ADDED
+      setMessage(err.message || "Import failed"); // ✅ ADDED
     }
   };
 
   return (
-    <div className="mx-auto mt-5 p-4">
-      <ToastContainer />
+    <div className="mx-auto md:mt-5 border p-1 md:p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 border-b px-6 py-3">
-        <h1 className="text-base md:text-xl lg:text-2xl font-semibold">Items</h1>
+        <h1 className="text-base md:text-xl lg:text-2xl font-semibold">
+          Items
+        </h1>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
           onClick={() => navigate("/dashboard/product")}
@@ -423,14 +489,14 @@ const D4ProductList = () => {
           </span>
           <input
             type="text"
-            placeholder="Search by name or category"
+            placeholder="Search by name"
             className="w-full pl-8 pr-2 py-2 border rounded bg-gray-100 text-sm"
             value={searchQuery}
             onChange={handleSearch}
             onFocus={() => setShowSuggestions(suggestions.length > 0)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           />
-          {showSuggestions && suggestions.length > 0 && (
+          {/* {showSuggestions && suggestions.length > 0 && (
             <ul className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg max-h-60 overflow-y-auto">
               {suggestions.map((item) => (
                 <li
@@ -447,7 +513,7 @@ const D4ProductList = () => {
                 </li>
               ))}
             </ul>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -458,7 +524,7 @@ const D4ProductList = () => {
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-4">
-        <div>
+        <div className="text-xs md:text-sm">
           Showing {(page - 1) * limit + 1} to{" "}
           {Math.min(page * limit, totalItems)} of {totalItems} items
         </div>
@@ -466,35 +532,22 @@ const D4ProductList = () => {
           <button
             onClick={() => setPage((p) => Math.max(p - 1, 1))}
             disabled={page === 1}
-            className="px-4 py-2 border rounded"
+            className="px-4 py-2 border rounded text-xs md:text-sm "
           >
             Previous
           </button>
           <button
             onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
             disabled={page === totalPages}
-            className="px-4 py-2 border rounded"
+            className="px-4 py-2 border rounded text-xs md:text-sm"
           >
             Next
           </button>
         </div>
       </div>
 
-      {/* Export */}
-      <div className="flex gap-3 align-middle mt-6 p-5 border rounded-md shadow">
-        {/* <button
-          onClick={handleExportExcel}
-          className="flex items-center gap-2 border px-4 py-2 rounded text-blue-600 hover:bg-gray-100"
-        >
-          <FaDownload /> Export Inventory
-        </button>
-        <button
-          onClick={handleExportPDF}
-          className="flex items-center gap-2 border px-4 py-2 rounded text-blue-600 hover:bg-gray-100"
-        >
-          <FaFilePdf /> Download PDF
-        </button> */}
-
+      {/* Export/Import */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center mt-6 p-5 border rounded-md shadow">
         <div className="flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
           {/* File Input */}
           <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
@@ -505,8 +558,8 @@ const D4ProductList = () => {
             >
               <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
             </svg>
-            <span className="text-gray-700 text-sm">
-              {file ? file.name : "Choose Excel/CSV file"}
+            <span className="text-gray-700 text-sm truncate">
+              {excelFile ? excelFile.name : "Choose Excel/CSV file"}
             </span>
             <input
               type="file"
@@ -577,6 +630,8 @@ const D4ProductList = () => {
           </div>
         </div>
       )}
+
+      {/* History Popup */}
       {showHistoryPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg relative transition-all">
@@ -603,7 +658,7 @@ const D4ProductList = () => {
                     {productHistory.length === 0 ? (
                       <tr>
                         <td
-                          colSpan="5"
+                          colSpan="6"
                           className="p-3 text-center text-gray-500"
                         >
                           No updates found
@@ -645,6 +700,27 @@ const D4ProductList = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 🟢 The requested Button component integration for pop-up messages */}
+      {popupType && (
+        <Button
+          type={popupType}
+          message={message}
+          onClose={() => setPopupType(null)}
+        />
+      )}
+
+      {/* ✅ NEW: Render the custom Delete Confirmation Modal */}
+      {deleteProductId && (
+        <DeleteConfirmationModal
+          productName={deleteProductName}
+          onConfirm={confirmDelete}
+          onCancel={() => {
+            setDeleteProductId(null);
+            setDeleteProductName("");
+          }}
+        />
       )}
     </div>
   );
