@@ -28,7 +28,6 @@ import D12Setting from "./user/Pages/dashboard/D12Setting.jsx";
 import D13Notification from "./user/Pages/dashboard/D13Notification.jsx";
 import D14GstCalculator from "./user/Pages/dashboard/D14GstCalculator.jsx";
 import D14GstCalReceipt from "./user/Pages/dashboard/D14GstCalReceipt.jsx";
-import D15Reward from "./user/Pages/dashboard/D15Reward.jsx";
 import D16Commingsoon from "./user/Pages/dashboard/D16Commingsoon.jsx";
 import D17Updates from "./user/Pages/dashboard/D17Updates.jsx";
 import D18Supports from "./user/Pages/dashboard/D18Supports.jsx";
@@ -60,6 +59,7 @@ import CreateSubcription from "./admin/Pages/Subcriptions/CreateSubcription";
 import SubscriptionCategory from "./admin/Pages/Subcriptions/SubscriptionCategory";
 import CustomDropdown from "./admin/Pages/Notification/ManageNotificationTypes.jsx";
 import ProfileCard from "./admin/Pages/profile/profile.jsx";
+import D15Invite from "./user/Pages/dashboard/D15Invite.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true); // adjust as per your logic
@@ -124,7 +124,7 @@ function App() {
                 <Route path="notification" element={<D13Notification />} />
                 <Route path="gst-calculator" element={<D14GstCalculator />} />
                 <Route path="gstreceipt" element={<D14GstCalReceipt />} />
-                <Route path="reward" element={<D15Reward />} />
+                <Route path="invite" element={<D15Invite />} />
                 <Route path="commingsoon" element={<D16Commingsoon />} />
                 <Route path="updates" element={<D17Updates />} />
                 <Route path="supports" element={<D18Supports />} />
