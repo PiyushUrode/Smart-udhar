@@ -118,6 +118,7 @@ export const CustomerService = {
       headers = { ...headers, "Content-Type": "multipart/form-data" };
     } else {
       payload = safePayload(form, store_id, storeProfile_id);
+      
       const required = opts.required || DEFAULT_REQUIRED_CREATE;
       const missing = validateRequired(payload, required);
       if (missing.length) {
@@ -140,6 +141,8 @@ export const CustomerService = {
       customerId: data?.data?.customId || data?.customId,
     };
   },
+
+  
 
   async getCustomerById(id) {
     const { token } = getAuthContext();

@@ -43,7 +43,7 @@ const FAQSection = () => {
       </div>
 
       <div className="faq-right">
-        {faqs.map((faq, index) => (
+        {faqs.map((faq, index) => ( 
           <div
             key={index}
             className={`faq-item ${openIndex === index ? "open" : ""}`}

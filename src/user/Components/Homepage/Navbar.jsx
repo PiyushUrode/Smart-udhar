@@ -57,18 +57,18 @@ const Navbar = () => {
                     <div className="flex   md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
                         <div className=" max-sm:hidden space-x-3">
                             {/* Login Button */}
-                            <button className="px-6 py-3 rounded-full border border-black/10 bg-[#F1F1F1] font-InriaR font-bold text-[16px] shadow-[inset_0px_3px_2.6px_rgba(0,0,0,0.09),inset_0px_-4px_3.6px_#ffffff] transition hover:bg-gray-200">
-                                <Link to= "/login" 
+                            <button className=" rounded-full h-10 border border-black/10 bg-[#F1F1F1] font-InriaR font-bold text-[16px] shadow-[inset_0px_3px_2.6px_rgba(0,0,0,0.09),inset_0px_-4px_3.6px_#ffffff] transition hover:bg-gray-200">
+                                <Link to= "/login"
                                     
-                                    className="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent"
+                                    className="bg-gradient-to-r px-6 py-3 h-full w-full from-blue-600 to-green-500 bg-clip-text text-transparent"
                                 >
                                     Login
                                 </Link>
                             </button>
 
                             {/* SmartUdhar App Button */}
-                            <button   className="px-6 py-3 rounded-full text-white font-InriaR font-bold text-[16px] bg-gradient-to-r from-blue-600 to-green-500 hover:from-blue-500 hover:to-green-400 shadow-[inset_0px_4px_4px_rgba(0,0,0,0.25),inset_0px_-4px_4px_#ffffff82] transition">
-                                <Link to= "/?=smart-udhar-app" >
+                            <button   className=" h-10 rounded-full text-white font-InriaR font-bold text-[16px] bg-gradient-to-r from-blue-600 to-green-500 hover:from-blue-500 hover:to-green-400 shadow-[inset_0px_4px_4px_rgba(0,0,0,0.25),inset_0px_-4px_4px_#ffffff82] transition">
+                                <Link to="/?=smart-udhar-app" className='px-6 py-3' >
                                     SmartUdhar App
                                 </Link>
                             </button>

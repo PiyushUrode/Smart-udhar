@@ -296,7 +296,9 @@ const ProductForm = ({
       <button
         type="submit"
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      > Save Product
+      >
+        {" "}
+        Save Product
       </button>
     </div>
   </form>
@@ -763,7 +765,7 @@ export default function D3Product() {
       }
 
       console.log("Final payload before API call:", payload, "File:", file);
-      
+
       // Product type mapping for the API call
       const productType = activeTab === "product" ? "inventory" : "service";
 
@@ -852,10 +854,8 @@ export default function D3Product() {
   // =================================================================
   return (
     <div className="max-w-5xl mx-auto  px-5 md:px-10 py-10  bg-white rounded-lg shadow-customCard">
-
       {/* Removed: <ToastContainer /> */}
       <div className="bg-blue-600 text-white px-6 py-3 rounded-t-md text-lg font-semibold">
-
         Items
       </div>
 

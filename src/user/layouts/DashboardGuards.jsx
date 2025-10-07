@@ -16,9 +16,9 @@ useEffect(() => {
         setError("⚠️ No active business profile found. Please Login again");
         setChecking(false);
 
-        setTimeout(() => {
+
           navigate("/login");
-        }, 1000);
+
         return;
       }
 
@@ -27,9 +27,9 @@ useEffect(() => {
       setError("Unexpected error. Please login again.");
       setChecking(false);
 
-      setTimeout(() => {
+
         navigate("/login");
-      }, 1000);
+
     }
   }, [navigate]);
 

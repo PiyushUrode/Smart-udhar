@@ -294,7 +294,7 @@ const BestPerformerRow = ({ id, name, score, onTime, purchase, status }) => (
       </div>
     </td>
     <td className="p-3 text-[#166534] font-robotoM">
-      <div className="text-center bg-[#DCFCE7] w-12 h-6 rounded-2xl">{score}</div>
+      <div className="text-center bg-[#DCFCE7] w-12 flex align-middle justify-center items-center h-8 rounded-2xl">{score}</div>
     </td>
     <td className="p-3 font-robotoR text-[16px]">{onTime}</td>
     <td className="p-3 font-robotoR text-[16px]">{purchase}</td>
@@ -313,7 +313,7 @@ const LowPerformerRow = ({ id, name, score, delay, penalties, action }) => (
       </div>
     </td>
     <td className="p-3 text-[#991B1B] font-bold">
-      <div className="text-center bg-[#FEE2E2] w-12 h-6 rounded-2xl">{score}</div>
+      <div className="text-center bg-[#FEE2E2] w-12   rounded-2xl flex align-middle justify-center items-center h-8">{score}</div>
     </td>
     <td className="p-3 font-robotoR text-[16px]">{delay}</td>
     <td className="p-3 font-robotoR text-[16px]">{penalties}</td>

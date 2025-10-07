@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { CustomerService } from "../../api/customerService.js";
 import { useCustomerForm } from "../../api/addCustomerService.js";
 import Button from "../../common/Button.jsx";
+import CustomerDummy from "../../../../public/Download/customer_report.xlsx"
 
 const CustomerDetailsForm = () => {
+
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -62,7 +64,7 @@ const CustomerDetailsForm = () => {
         email: cust.email,
         city: cust.city,
         state: cust.state,
-        score: cust.creditScore ?? 0,
+        score: cust.creditScore ?? 100,
       }));
 
       setCustomers(formatted);
@@ -103,6 +105,13 @@ const CustomerDetailsForm = () => {
     if (score <= 70) return "text-yellow-500";
     return "text-green-600";
   };
+
+    const handeluploadexceldummy = ()=>{
+      const link = document.createElement("a");
+      link.href = CustomerDummy;
+      link.download = "customer-template.xlsx";
+      link.click(); 
+    }
 
   return (
     <div className="p-4 w-full max-w-7xl mt-5 md:mt-10 mx-auto bg-white">
@@ -212,8 +221,40 @@ const CustomerDetailsForm = () => {
         </button>
       </div>
 
-      <div className="flex gap-3 align-middle mt-6 p-5 border rounded-md shadow">
-        <div className="flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
+
+  <div className="w-full max-w-6xl">
+    <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-md border border-gray-200 mt-4 sm:mt-6">
+      
+      {/* Action Area */}
+      <div className="flex flex-col lg:flex-row items-stretch justify-between gap-6">
+        
+        {/* Download Section */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200 w-full">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="text-sm sm:text-base font-medium text-gray-800">Download Template</h4>
+              <p className="text-xs sm:text-sm text-gray-500">Get the Excel format file</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handeluploadexceldummy}
+            className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-green-600 text-white text-sm rounded-lg shadow hover:bg-green-700 transition-all w-full sm:w-auto"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
+            </svg>
+            Download Excel
+          </button>
+        </div>
+
+        {/* Upload Section */}
+       <div className=" w-full flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
           {/* File Input */}
           <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
             <span className="text-gray-700 text-sm">
@@ -244,6 +285,16 @@ const CustomerDetailsForm = () => {
         </div>
       </div>
     </div>
+
+    {popupType && (
+      <Button
+        type={popupType}
+        message={message}
+        onClose={() => setPopupType(null)}
+      />
+    )}
+  </div>
+</div>
   );
 };
 

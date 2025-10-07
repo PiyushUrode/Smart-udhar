@@ -208,7 +208,7 @@ const handleSubmit = async (e) => {
             <div className="border border-dashed border-gray-400 p-6 mt-4 flex flex-col items-center text-center rounded-md">
               <FaCloudUploadAlt size={30} color="#9CA3AF" />
               <label htmlFor="upload" className="cursor-pointer">
-                <div className="text-[#4B5563] text-sm">Drop files here or click to upload</div>
+                <div className="text-[#4B5563] text-xs">Supported formats :JPG , PNG | Max. 2 Mb | Min 224px * 244px</div>
                 <input
                   id="upload"
                   type="file"

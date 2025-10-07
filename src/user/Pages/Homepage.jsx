@@ -13,8 +13,8 @@ import dot from "../assets/homepage/dot.png";
 
 import connectImg from "../assets/homepage/connect.png";
 import whyImage from "../assets/homepage/secure/whayimage.png";
-import howImage from "../assets/homepage/secure/whywebuild.jpg";
-import whoImage from "../assets/homepage/secure/whywebuild.jpg";
+import howImage from "../assets/homepage/secure/how.png";
+import whoImage from "../assets/homepage/secure/who.png";
 import hicon from "../assets/homepage/secure/icon-head.png";
 import icon1 from "../assets/homepage/secure/icon1.png";
 import icon2 from "../assets/homepage/secure/icon2.png";
@@ -171,7 +171,7 @@ const Homepage = () => {
                   className="  xl:max-w-[188px] max-w-20 h-auto"
                 />
               </div>
-              <p className="font-roboto max-md:hidden   text-white  text-sm lg:text-lg  m:text-[18px]">
+              <p className="font-roboto max-md:hidden   text-white  text-sm lg:text-lg  m:text-lg leading-tight">
                 Community
               </p>
             </div>
@@ -189,7 +189,7 @@ const Homepage = () => {
 
       {/* About section Start */}
 
-      <section id="about_us" className="py-20 px-10 bg-[#f6f6f6] text-center">
+      <section id="about_us" className="py-20 px-5 md:px-10 bg-[#f6f6f6] text-center">
         <div className="inline-block">
           <h2 className="flex flex-wrap leading-tight items-center justify-center  text-3xl md:text-5xl  font-robotoM text-black mb-5 gap-[10px]">
             Secure
@@ -198,7 +198,7 @@ const Homepage = () => {
           </h2>
         </div>
 
-        <p className="max-w-[950px] mx-auto mb-10 font-robotoR text-[18px]  leading-tight text-[#595959] px-2">
+        <p className="max-w-[950px] mx-auto mb-10 font-robotoR text-base md:text-lg  leading-tight text-[#595959] px-2">
           Manage credit, track payments, send reminders, and grow your business
           effortlessly with SMARTUDHAR's intelligent accounting tools designed for
           smarter, faster, and more reliable repayment management.
@@ -207,27 +207,27 @@ const Homepage = () => {
         {/* Tabs */}
         <div className="flex justify-center flex-wrap gap-5 mb-16 font-robotoM">
           <button
-            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-[18px] text-center cursor-pointer ${activeTab === "why"
-              ? "bg-[#2563EB] text-white border-2 border-gray-400 font-robotoM"
-              : "bg-white text-black font-robotoR"
+            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer ${activeTab === "why"
+              ? "bg-[#2563EB] text-white   font-robotoM"
+              : "bg-white text-black font-robotoR border-2 border-gray-400"
               }`}
             onClick={() => setActiveTab("why")}
           >
             Why We Built Smart Udhar?
           </button>
           <button
-            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-[18px] text-center cursor-pointer ${activeTab === "how"
-              ? "bg-[#2563EB] text-white border-2 border-gray-400 font-robotoM"
-              : "bg-white text-black font-robotoR"
+            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer ${activeTab === "how"
+              ? "bg-[#2563EB] text-white  font-robotoM"
+              : "bg-white text-black font-robotoR border-2 border-gray-400"
               }`}
             onClick={() => setActiveTab("how")}
           >
             How Smart Udhar Works
           </button>
           <button
-            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-[18px] text-center cursor-pointer ${activeTab === "who"
-              ? "bg-[#2563EB] text-white border-2 border-gray-400 font-robotoM"
-              : "bg-white text-black font-robotoR"
+            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer ${activeTab === "who"
+              ? "bg-[#2563EB] text-white  font-robotoM"
+              : "bg-white text-black font-robotoR border-2 border-gray-400"
               }`}
             onClick={() => setActiveTab("who")}
           >
@@ -236,14 +236,14 @@ const Homepage = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="flex flex-wrap gap-5 justify-center items-start">
+        <div className="flex   lg:flex-row flex-col gap-5 justify-between max-w-[70rem] mx-auto items-center">
           {activeTab === "why" && (
             <>
-              <div className="max-w-[556px] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
+              <div className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
                 <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-5 leading-[120%]">
                   Why We Built Smart Udhar?
                 </h3>
-                <p className="font-robotoR text-[18px] text-[#484848] mb-10 leading-[135%]">
+                <p className="font-robotoR text-lg leading-tight text-[#484848] mb-10 leading-[135%]">
                   Small businesses across India run on trust — but there’s no system
                   to prove that trust. Thousands repay on time, but still struggle to
                   get credit, discounts, or partnerships.
@@ -252,7 +252,7 @@ const Homepage = () => {
                   Smart Udhar is India's first platform to:
                 </h4>
                 <ul className="list-none">
-                  <li className="flex items-center font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="flex items-center font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
                     <img
                       src={icon1}
                       alt="icon1"
@@ -260,7 +260,7 @@ const Homepage = () => {
                     />
                     Track real udhar (credit) transactions.
                   </li>
-                  <li className="flex items-center font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="flex items-center font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
                     <img
                       src={icon2}
                       alt="icon2"
@@ -268,7 +268,7 @@ const Homepage = () => {
                     />
                     Build a verifiable digital credit score
                   </li>
-                  <li className="flex items-center font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="flex items-center font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
                     <img
                       src={icon3}
                       alt="icon3"
@@ -289,13 +289,14 @@ const Homepage = () => {
             </>
           )}
 
+
           {activeTab === "how" && (
             <>
-              <div className="max-w-[556px] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
+              <div className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
                 <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-5">
                   How Smart Udhar Works
                 </h3>
-                <p className="font-robotoR text-[18px] text-[#484848] mb-10">
+                <p className="font-robotoR text-lg leading-tight text-[#484848] mb-10">
                   Smart Udhar enables you to record every credit (udhar) transaction
                   digitally. Whether you're giving credit or receiving it, every entry
                   gets timestamped and securely stored.
@@ -304,34 +305,36 @@ const Homepage = () => {
                   What happens next?
                 </h4>
                 <ul className="list-none">
-                  <li className="font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
                     ⚙️ Your customers are reminded about repayment dates.
                   </li>
-                  <li className="font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
                     ⚙️ You build a digital repayment history.
                   </li>
-                  <li className="font-robotoR text-[18px] text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
                     ⚙️ A credit score is automatically generated.
                   </li>
                 </ul>
               </div>
-              <div className="max-w-[556px]">
+              
+              <div className="max-w-[30rem]">
                 <img
-                  src={howImage}
-                  alt="How Smart Udhar Works"
+                  src={whoImage}
+                  alt="Why Smart Udhar"
                   className="w-full rounded-[20px]"
                 />
               </div>
             </>
           )}
 
+
           {activeTab === "who" && (
             <>
-              <div className="max-w-[556px] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
+              <div className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
                 <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-5">
                   Who It’s For
                 </h3>
-                <p className="font-robotoR text-[18px] text-[#484848] mb-10">
+                <p className="font-robotoR text-lg leading-tight text-[#484848] mb-10">
                   Smart Udhar is built for India’s small and medium businesses that
                   want to grow but face barriers due to lack of credit history or
                   informal systems.
@@ -340,29 +343,34 @@ const Homepage = () => {
                   Perfect for:
                 </h4>
                 <ul className="list-none">
-                  <li className="font-robotoR text-[18px] text-[#484848] mb-[10px]">
+                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px]">
                     👨‍🍳 Kirana Stores, Retail Shops
                   </li>
-                  <li className="font-robotoR text-[18px] text-[#484848] mb-[10px]">
+                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px]">
                     👷‍♂️ Local Service Providers & Distributors
                   </li>
-                  <li className="font-robotoR text-[18px] text-[#484848] mb-[10px]">
+                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px]">
                     👩‍💼 Wholesalers & Small Manufacturers
                   </li>
-                  <li className="font-robotoR text-[18px] text-[#484848] mb-[10px]">
+                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px]">
                     📱 Digital Lenders & Fintech Companies
                   </li>
                 </ul>
               </div>
-              <div className="max-w-[556px]">
+              
+              <div className="max-w-[30rem]">
                 <img
-                  src={whoImage}
-                  alt="Who Smart Udhar Is For"
+                  src={howImage}
+                  alt="Why Smart Udhar"
                   className="w-full rounded-[20px]"
                 />
               </div>
             </>
           )}
+
+        
+
+         
         </div>
       </section>
 
@@ -378,9 +386,9 @@ const Homepage = () => {
           </h2>
         </div>
 
-        <div className="features-row-one">
-          <div className="feature-card-one">
-            <div className="card-left">
+        <div className=" mt-20   features-row-one">
+          <div className=" relative py-10 max-lg:mb-20 max-md:mb-10 feature-card-one">
+            <div className="card-left md:mt-0 mt-52 md:max-w-[60%]">
               <h3>Timely Repayment Alerts</h3>
               <p className="link">Never miss a due date again</p>
               <p>
@@ -389,35 +397,34 @@ const Homepage = () => {
                 and your relationships strong.
               </p>
             </div>
-            <div className="card-right">
+            <div className="card-right  absolute md:right-0 max-md:left-1/2 max-md:transform max-md:-translate-x-1/2  top-[-10%] md:bottom-0 w-[16rem]  ">
               <img src={one} alt="Timely Repayment" className="feature-img" />
             </div>
           </div>
 
-          <div className="feature-card-two">
-            <div className="two-card-left">
+          <div className=" relative max-md:overflow-hidden  md:py-10 feature-card-one">
+            <div className="card-left md:mb-0 mb-60 md:max-w-[60%]">
               <div className="fea-head">
                 <img src={digiicon} alt="" />
                 <h3>Digital Credit Score</h3>
               </div>
-              <p>
+              <p className=" text-base">
                 SMARTUDHAR's Digital Credit Score builds business trust with
                 suppliers, lenders, and platforms using payment behavior.
               </p>
             </div>
-            <div className="two-card-right">
-              <img
-                src={two}
-                alt="Digital Credit Score"
-                className="feature-img score-img"
-              />
+            <div className="card-right  absolute   right-0  max-md:bottom-[-30%] md:bottom-0 w-[15rem]  ">
+              <img src={two} alt="Timely Repayment" className="feature-img" />
             </div>
           </div>
+
+          
         </div>
 
-        <div className="features-row-two">
-          <div className="feature-card-three">
-            <div className="three-card-left">
+        <div className="features-row-two  mt-20 ">
+
+          <div className=" relative md:py-10 max-lg:mt-10 max-md:mt-0 feature-card-one">
+            <div className="card-left md:mb-0 mb-80 md:max-w-[60%]">
               <h3>Smart Ledger & Billing</h3>
               <p className="link">
                 Track every <span className="bold">rupee</span> with ease
@@ -427,17 +434,13 @@ const Homepage = () => {
                 manage your accounts — all in one simple, easy-to-use dashboard.
               </p>
             </div>
-            <div className="three-card-right">
-              <img
-                src={three}
-                alt="Smart Ledger"
-                className="feature-img icon-img"
-              />
+            <div className="card-right  absolute   right-0  max-md:bottom-0  md:bottom-0   w-[19rem]  ">
+              <img src={three} alt="Timely Repayment" className="feature-img" />
             </div>
           </div>
 
-          <div className="feature-card-four">
-            <div className="four-card-left">
+          <div className=" relative py-10 max-lg:mt-16 feature-card-one">
+            <div className="card-left md:mt-0 mt-52 md:max-w-[60%]">
               <h3>Your business reputation, now verified</h3>
               <p className="link">
                 Your business reputation,{" "}
@@ -449,14 +452,13 @@ const Homepage = () => {
                 better business opportunities.
               </p>
             </div>
-            <div className="four-card-right">
-              <img
-                src={four}
-                alt="Business Reputation"
-                className="feature-img"
-              />
+            <div className="card-right  absolute md:right-0 max-md:left-1/2 max-md:transform max-md:-translate-x-1/2  max-md:top-[-10%] md:bottom-0 md:w-[17rem] w-[15rem]  ">
+              <img src={four} alt="Timely Repayment" className="feature-img" />
             </div>
           </div>
+
+          
+ 
         </div>
       </section>
       {/* Why Smart Udhar End */}
@@ -480,7 +482,7 @@ const Homepage = () => {
             Track payments, send reminders, manage udhar, invoices, and credit
             scores - all-in-one app to grow your business faster.
           </p>
-          <div className="store-buttons">
+          <div className="store-buttons gap-7">
             <a href="#" className="store-btn">
               <img src={apple} alt="Apple Store" />
             </a>
@@ -490,7 +492,7 @@ const Homepage = () => {
           </div>
         </div>
         <div className="smart-right">
-          <img src={app} alt="App Screenshot 1" className="phone-img" />
+          <img src={app} alt="App Screenshot 1" className=" " />
         </div>
       </section>
       {/* App section end */}

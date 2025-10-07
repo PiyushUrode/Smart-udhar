@@ -228,8 +228,8 @@ setInfoModal({
   return (
     <>
       {/* Header */}
-      <div className="border px-5 md:px-10 py-10">  
-      <div className="mx-auto py-2 px-2 md:mt-5">
+      <div className="border px-2 md:px-10 py-10">  
+      <div className="mx-auto py-2  md:mt-5">
         <div className="flex justify-between items-center bg-white px-5 py-5 rounded shadow">
           <h1 className="text-base md:text-xl lg:text-2xl font-semibold text-[#1F2937] font-robotoB">
             Business List

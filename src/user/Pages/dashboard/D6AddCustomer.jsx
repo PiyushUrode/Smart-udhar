@@ -94,9 +94,8 @@ const D6AddCustomer = () => {
             ) : (
               <>
                 <FaUpload size={36} className="text-gray-400 mb-2" />
-                <span className="text-sm text-gray-600 font-medium">
-                  Click to upload (PNG, JPG - max 2MB)
-                </span>
+                <span className="text-xs text-gray-600 font-medium text-wrap">
+Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px                </span>
               </>
             )}
             <input

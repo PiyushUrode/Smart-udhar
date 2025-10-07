@@ -1,142 +1,144 @@
-import React, { useState } from "react";
-import { FaArrowLeft, FaArrowRight, FaStar } from "react-icons/fa";
-import star from "../../assets/homepage/testimonial/star.png"
+import React from "react";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import star from "../../assets/homepage/testimonial/star.png";
 import review1 from "../../assets/homepage/testimonial/review1.png";
-import review2 from "../../assets/homepage/testimonial/review1.png";
-import review3 from "../../assets/homepage/testimonial/review1.png";
-import review4 from "../../assets/homepage/testimonial/review1.png";
-import review5 from "../../assets/homepage/testimonial/review1.png";
 
-// import unionShape from "../../assets/homepage/testimonial/Union.png";
+// ✅ Correct imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 const testimonials = [
   {
+    id: 1,
     name: "Anjali Shah",
-    title: "Home Tutor, Ahmedabad",
-    message:
-      "I now send professional invoices and share my repayment record with clients.",
-    image: review1, 
-  },
-
-  {
-    name: "Raj Mehta",
-    title: "Retailer, Surat",
-    message:
-      "Smart Udhar helped me track credit and reduce collection time significantly.",
-    image: review2,
+    role: "Home Tutor, Ahmedabad",
+    text: "I now send professional invoices and share my repayment record with clients.",
+    desc: "Hear how SMARTUDHAR is transforming small businesses with smarter credit tracking, timely reminders, and simplified financial management tools.",
+    img: review1,
   },
   {
-    name: "Neha Batra",
-    title: "Salon Owner, Indore",
-    message:
-      "It’s easy to use and my staff also understands how to send reminders.",
-    image: review3,
+    id: 2,
+    name: "Rahul Verma",
+    role: "Shop Owner, Delhi",
+    text: "Managing client payments is now effortless and transparent.",
+    desc: "SMARTUDHAR has simplified my finances, improved trust, and saved me hours of manual work.",
+    img: review1,
   },
   {
-    name: "Karan Yadav",
-    title: "Pharmacy Owner, Lucknow",
-    message:
-      "No more missed payments. It’s my digital udhar register now!",
-    image: review4,
+    id: 3,
+    name: "Priya Mehta",
+    role: "Freelancer, Mumbai",
+    text: "With SmartUdhar, I can manage multiple clients easily.",
+    desc: "The reminders and repayment tracking keep me stress-free and focused on work instead of chasing payments.",
+    img: review1,
   },
-  {
-    name: "Pooja Singh",
-    title: "Boutique Owner, Bhopal",
-    message:
-      "My clients appreciate the professional updates. It’s improved my business image.",
-    image: review5,
-  },
-
 ];
 
-const Testimonial = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) =>
-      prev === 0 ? testimonials.length - 1 : prev - 1
-    );
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) =>
-      prev === testimonials.length - 1 ? 0 : prev + 1
-    );
-  };
-
+export default function TestimonialSlider() {
   return (
-    <section id="our-impace" className="testimonial-section">
-      <div className="testimonial-header">
-        <div>
-          <p className="tag">Testimonials</p>
-          <h2>
-            Small Businesses, <span>Big Impact</span>
+    <div className="bg-[#0B0C1A] pt-10">
+      {/* Header */}
+      <div className="px-5 sm:px-10 md:px-20 flex flex-col lg:flex-row justify-between gap-6">
+        <div className="flex-1 text-center lg:text-left">
+          <p className="  text-blue-500 tracking-wide text-sm  ">
+            Testimonials
+          </p>
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white">
+            Small Businesses, <span className="text-blue-500">Big Impact</span>
           </h2>
-          <p className="subtext">
+          <p className="text-gray-400 mt-3 max-w-xl mx-auto lg:mx-0">
             Hear how SMARTUDHAR is transforming small businesses with smarter
             credit tracking, timely reminders, and simplified financial
             management tools.
           </p>
         </div>
-        <div className="impact">
-          <h3>Our Positive Social Impact</h3>
-          <div className="stars">
+
+        <div className="text-center lg:text-left">
+          <div className="flex justify-center lg:justify-start gap-1 my-2">
             {[...Array(5)].map((_, i) => (
-              <img
-                key={i}
-                src={star}
-                alt="star"
-                className="custom-star"
-              />
+              <img key={i} src={star} alt="star" className="w-7 h-7" />
             ))}
           </div>
-
-          <p className="">5-star favorite for smart udhar management.</p>
+          <h3 className="text-lg md:text-2xl font-semibold text-white">
+            Our Positive Social Impact
+          </h3>
+          <p className="text-sm md:text-base text-gray-400">
+            5-star favorite for smart udhar management.
+          </p>
         </div>
       </div>
 
-      <div className="testimonial-box">
-        <button className="arrow left" onClick={handlePrev}>
+      {/* Slider */}
+      <div className="relative px-5 sm:px-10 md:px-20 w-full max-w-6xl mx-auto py-12">
+        <Swiper
+          modules={[Navigation, Pagination]}
+          navigation={{
+            nextEl: ".prev-btn",
+            prevEl: ".next-btn",
+          }}
+          
+          spaceBetween={20}
+          pagination={{
+            clickable: true,
+            
+           }}
+          loop={true}
+          className="w-full rounded-2xl"
+        >
+          {testimonials.map((item) => (
+            <SwiperSlide
+              key={item.id}
+              className="grid items-stretch " // 👈 ensures equal height
+            >
+              <div className="bg-white rounded-2xl shadow-lg py-10  px-5  sm:px-10 md:px-12 flex flex-col md:flex-row items-center gap-6 w-full h-full">
+                {/* Image */}
+                <div className="relative flex-shrink-0">
+                  <div className="absolute -top-3 -left-3 w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 bg-blue-600 rounded-full -z-10"></div>
+                  <img
+                    src={item.img}
+                    alt={item.name}
+                    className=" w-[14rem] md:w-[18rem]   rounded-full object-cover border-4 border-white"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 flex flex-col justify-between text-center md:text-left">
+                  <div>
+                    <p className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3">
+                      “{item.text}”
+                    </p>
+                    <p className="text-sm sm:text-base text-gray-600 mb-4">
+                      {item.desc}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-blue-600 font-semibold">{item.name}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {item.role}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+
+        {/* Navigation Buttons */}
+        <button className="prev-btn max-md:hidden absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 bg-white/10 border border-white text-white p-2 sm:p-3 rounded-full hover:bg-white/20 transition">
           <FaArrowLeft />
         </button>
-
-        <div className="testimonial-card">
-          <div className="test-head">
-            <h4 className="t-head">Testimonials</h4>
-              <p className="desc">See what people are saying…</p>
-          </div>
-          <div className="review-content">
-            <div className="img-circle">
-              {/* <div className="img-shape" style={{ backgroundImage: `url(${unionShape})` }}> */}
-              <div className="img-shape">
-                <img src={testimonials[currentIndex].image} alt="client" />
-              </div>
-            </div>
-            <div className="testimonial-content">
-              <p className="quote">“{testimonials[currentIndex].message}”</p>
-              <h5>{testimonials[currentIndex].name}</h5>
-              <span>{testimonials[currentIndex].title}</span>
-            </div>
-          </div>
-          
-        </div>
-
-        <button className="arrow right" onClick={handleNext}>
+        <button className="next-btn max-md:hidden absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 bg-white/10 border border-white text-white p-2 sm:p-3 rounded-full hover:bg-white/20 transition">
           <FaArrowRight />
         </button>
       </div>
-
-      <div className="dots">
-        {testimonials.map((_, idx) => (
-          <div
-            key={idx}
-            className={`dot ${idx === currentIndex ? "active" : ""}`}
-            onClick={() => setCurrentIndex(idx)}
-          />
-        ))}
-      </div>
-    </section>
+    </div>
   );
-};
-
-export default Testimonial;
+}

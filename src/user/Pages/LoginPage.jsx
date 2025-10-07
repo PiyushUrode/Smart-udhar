@@ -90,8 +90,7 @@ const handleGetOtp = async () => {
     setPhone(value);
   };
 
-  // OTP input handling
-  // OTP change handler
+
 const handleOtpChange = (e, index) => {
   const value = e.target.value.replace(/\D/, ""); // only digits allowed
   const newOtp = otp.split("");
@@ -132,7 +131,7 @@ const handleKeyDown = (e, index) => {
 
 
   return (
- <div className="h-screen overflow-y-hidden flex flex-col bg-[linear-gradient(115.57deg,#5BA0F9_3.68%,#77C2FB_24.82%,#6F88FC_45.17%,#BCD4FA_62.05%,#D2E5F4_90.54%)] md:bg-[linear-gradient(115.57deg,#5BA0F9_3.68%,#77C2FB_24.82%,#6F88FC_45.17%,#BCD4FA_62.05%,#D2E5F4_90.54%)] sm:bg-white">
+ <div className=" overflow-y-hidden flex flex-col bg-[linear-gradient(115.57deg,#5BA0F9_3.68%,#77C2FB_24.82%,#6F88FC_45.17%,#BCD4FA_62.05%,#D2E5F4_90.54%)] md:bg-[linear-gradient(115.57deg,#5BA0F9_3.68%,#77C2FB_24.82%,#6F88FC_45.17%,#BCD4FA_62.05%,#D2E5F4_90.54%)] sm:bg-white">
   {/* Header */}
   <header className="flex justify-between items-center bg-white px-5 md:px-12 py-3 gap-3 md:gap-10">
     <Link to="/">

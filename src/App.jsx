@@ -75,7 +75,6 @@ function App() {
         <Route path="/signup" element={<SignUpPage />} />
 
         <Route path="/dashboard/*" element={<DashboardLayout />}>
-          <Route index element={<D1DashboardHome />} />
 
           {/* Ye pages hamesha accessible (guard ke bahar) */}
           <Route path="information" element={<D2BasicDetails />} />
@@ -89,6 +88,8 @@ function App() {
               <DashboardGuards>
 
               <Routes>
+                          <Route index element={<D1DashboardHome />} />
+
                 <Route path="product" element={<D3Product />} />
                 <Route path="product/:id" element={<D3Product />} />
                 <Route path="product-list" element={<D4ProductList />} />
