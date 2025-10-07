@@ -85,6 +85,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
     previewRef,
     downloadPreviewAsPDF,
     setSearchTriggered,
+
+    taxType,
+    handleTaxTypeChange,
   } = useCreateInvoiceController({ onCustomerSelect });
 
   return (
@@ -358,17 +361,20 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                         </div>
 
                         {/* Tax */}
-                        <div className="col-span-1 md:col-span-2">
-                          <label className="text-xs text-gray-600 font-robotoM">
-                            Tax
-                          </label>
-                          <input
-                            type="text"
-                            value={`${row.tax}%`}
-                            readOnly
-                            className="w-full h-9 border border-gray-300 px-2 rounded-md bg-gray-50 text-sm"
-                          />
-                        </div>
+                        {(taxType === "taxable") ?
+                         <div className="col-span-1 md:col-span-2">
+                         <label className="text-xs text-gray-600 font-robotoM">
+                           Tax %
+                         </label>
+                         <input
+                           type="text"
+                           value={`${row.tax}`}
+                           onChange={(e) =>
+                             handleChange(row.id, "tax", e.target.value)
+                           }
+                           className="w-full h-9 border border-gray-300 px-2 rounded-md bg-gray-50 text-sm"
+                         />
+                       </div>:''}
 
                         {/* Total */}
                         <div className="col-span-1 md:col-span-2">
@@ -400,6 +406,20 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   + Add Row
                 </button>
 
+              {/* Tax Type Dropdown */}
+              <div className="mt-4">
+                <label className="text-xs text-gray-600 font-robotoM block mb-1">
+                  Tax Type
+                </label>
+                <select
+                  className="w-full h-9 border border-gray-300 px-2 rounded-md focus:border-blue-500 focus:ring-blue-500 outline-none text-sm"
+                  value={taxType}
+                  onChange={(e) => handleTaxTypeChange(e.target.value)}
+                >
+                  <option value="taxable">Taxable</option>
+                  <option value="non-taxable">Non Taxable</option>
+                </select>
+              </div>
                 
               </div>
 
@@ -818,7 +838,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   <th className="text-left py-2 px-2 border-b">Product</th>
                   <th className="text-right py-2 px-2 border-b">Qty</th>
                   <th className="text-right py-2 px-2 border-b">Unit Price</th>
+                  {(taxType === "taxable") ?
                   <th className="text-right py-2 px-2 border-b">Tax</th>
+                  : ''}
                   <th className="text-right py-2 px-2 border-b">Total</th>
                 </tr>
               </thead>
@@ -829,7 +851,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                     <td className="py-2 px-2">{p.name}</td>
                     <td className="py-2 px-2 text-right">{p.qty}</td>
                     <td className="py-2 px-2 text-right">₹{Number(p.price).toFixed(2)}</td>
+                    {(taxType === "taxable") ?
                     <td className="py-2 px-2 text-right">{p.tax}%</td>
+                    : ''}
                     <td className="py-2 px-2 text-right">
                       ₹
                       {Number(
@@ -848,10 +872,12 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   <span>Subtotal:</span>
                   <span>₹{Number(previewInvoice.subtotal || invoiceSummary.subtotal).toFixed(2)}</span>
                 </div>
+                {(taxType === "taxable") ?
                 <div className="flex justify-between">
                   <span>Tax:</span>
                   <span>₹{Number(previewInvoice.tax || invoiceSummary.totalTax).toFixed(2)}</span>
                 </div>
+                : ''}
                 <div className="flex justify-between">
                   <span>Delivery:</span>
                   <span>₹{Number(previewInvoice.deliveryFee || invoiceSummary.deliveryFee).toFixed(2)}</span>
@@ -909,7 +935,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   <th className="py-2 px-2 text-left">Item</th>
                   <th className="py-2 px-2 text-right">Qty</th>
                   <th className="py-2 px-2 text-right">Price</th>
+                  {(taxType === "taxable") ?
                   <th className="py-2 px-2 text-right">Tax</th>
+                  : ''}
                   <th className="py-2 px-2 text-right">Total</th>
                 </tr>
               </thead>
@@ -919,8 +947,10 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                     <td className="py-2 px-2">{p.name}</td>
                     <td className="py-2 px-2 text-right">{p.qty}</td>
                     <td className="py-2 px-2 text-right">₹{Number(p.price || 0).toFixed(2)}</td>
+                    {(taxType === "taxable") ?
                     <td className="py-2 px-2 text-right">{p.tax}%</td>
-                    <td className="py-2 px-2 text-right">₹{(p.qty * p.price * (1 + p.tax / 100)).toFixed(2)}</td>
+                    : ''}
+                    <td className="py-2 px-2 text-right">₹{(taxType === "taxable")?(p.qty * p.price * (1 + p.tax / 100)).toFixed(2):(p.qty * p.price).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -930,7 +960,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
             <div className="flex justify-end mt-6">
               <div className="w-1/2 border-t pt-4 space-y-2 text-right">
                 <div>Subtotal: ₹{invoiceSummary.subtotal.toFixed(2)}</div>
+                {(taxType === "taxable") ?
                 <div>Tax: ₹{invoiceSummary.totalTax.toFixed(2)}</div>
+                :''}
                 <div>Delivery: ₹{invoiceSummary.deliveryFee.toFixed(2)}</div>
                 <div>Discount: -₹{invoiceSummary.discount.toFixed(2)}</div>
                 <div className="font-bold text-lg border-t pt-2">Total: ₹{invoiceSummary.total.toFixed(2)}</div>
@@ -961,6 +993,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   <th className="text-left">Item</th>
                   <th className="text-right">Qty</th>
                   <th className="text-right">Price</th>
+                  {(taxType === "taxable") ?
+                  <th className="text-right">Tax</th>
+                  : ''}
                   <th className="text-right">Total</th>
                 </tr>
               </thead>
@@ -970,7 +1005,10 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                     <td>{p.name}</td>
                     <td className="text-right">{p.qty}</td>
                     <td className="text-right">₹{Number(p.price || 0).toFixed(2)}</td>
-                    <td className="text-right">₹{(p.qty * p.price * (1 + p.tax / 100)).toFixed(2)}</td>
+                    {(taxType === "taxable") ?
+                    <td className="text-right">{p.tax}%</td>
+                    : ''}
+                    <td className="text-right">₹{(taxType === "taxable")?(p.qty * p.price * (1 + p.tax / 100)).toFixed(2):(p.qty * p.price).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -978,7 +1016,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
 
             <div className="mt-3 text-right">
               <div>Subtotal: ₹{invoiceSummary.subtotal.toFixed(2)}</div>
+              {(taxType === "taxable") ?
               <div>Tax: ₹{invoiceSummary.totalTax.toFixed(2)}</div>
+              : ''}
               <div>Total: <strong>₹{invoiceSummary.total.toFixed(2)}</strong></div>
             </div>
 
