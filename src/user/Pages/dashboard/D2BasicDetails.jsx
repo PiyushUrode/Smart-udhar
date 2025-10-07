@@ -29,7 +29,8 @@ const D2BasicDetails = () => {
   const navigate = useNavigate();
   const [signatureImage, setSignatureImage] = useState(null);
   const [logoImage, setLogoImage] = useState(null);
-
+const [submitted, setSubmitted] = useState(false);
+ 
   const [formData, setFormData] = useState({
     businessName: "",
     gstNumber: "",
@@ -182,7 +183,7 @@ const D2BasicDetails = () => {
   // Handle Submit
   const handleSubmit = async (e) => {
   e.preventDefault();
-
+ setSubmitted(true);
   // Clean mobile before validation & submission
   setFormData((prev) => ({
     ...prev,
@@ -279,11 +280,16 @@ const D2BasicDetails = () => {
                   onBlur={handleBlur}
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
-                {errors.businessName && (
-                  <p className="text-red-500 text-xs mt-1 capitalize ">
-                    {errors.businessName}
-                  </p>
-                )}
+{errors.businessName && (
+  <p
+    className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}
+  >
+    {errors.businessName}
+  </p>
+)}
+
               </div>
 
               <div>
@@ -301,7 +307,9 @@ const D2BasicDetails = () => {
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
                 {errors.gstNumber && (
-                  <p className="text-red-500 text-xs mt-1 capitalize">
+                  <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}>
                     {errors.gstNumber}
                   </p>
                 )}
@@ -323,7 +331,9 @@ const D2BasicDetails = () => {
                 className="w-full border rounded px-3 py-2 outline-none bg-[#FAFAFA]"
               />
               {errors.address && (
-                <p className="text-red-500 text-xs mt-1 capitalize">
+                <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}>
                   {errors.address}
                 </p>
               )}
@@ -345,7 +355,9 @@ const D2BasicDetails = () => {
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
                 {errors.pincode && (
-                  <p className="text-red-500 text-xs mt-1 capitalize">
+                  <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}>
                     {errors.pincode}
                   </p>
                 )}
@@ -366,7 +378,9 @@ const D2BasicDetails = () => {
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />{" "}
                 {errors.mobile && (
-                  <p className="text-red-500 text-xs mt-1 capitalize">
+                  <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}>
                     {errors.mobile}
                   </p>
                 )}
@@ -385,7 +399,9 @@ const D2BasicDetails = () => {
                 className="w-full border rounded px-3 py-2 outline-none bg-white"
               />{" "}
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1 capitalize">
+                <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}>
                   {errors.email}
                 </p>
               )}
@@ -406,7 +422,9 @@ const D2BasicDetails = () => {
                 className="w-full border rounded px-3 py-2 outline-none bg-white"
               />{" "}
               {errors.shortBio && (
-                <p className="text-red-500 text-xs mt-1 capitalize">
+                <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}>
                   {errors.shortBio}
                 </p>
               )}
@@ -449,7 +467,9 @@ const D2BasicDetails = () => {
             <option value="E-commerce">E-commerce</option>
           </select>
           {errors.industry && (
-            <p className="text-red-500 text-xs">{errors.industry}</p>
+            <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}>{errors.industry}</p>
           )}
 
           {/* Social Media URLs */}
@@ -470,10 +490,12 @@ const D2BasicDetails = () => {
                     onBlur={handleBlur}
                     autoComplete="off"
                     placeholder={`${field} URL`}
-                    className="bg-transparent outline-none w-full"
+                    className="bg-transparent outline-none w-full pl-3"
                   />
                   {errors[field] && (
-                    <p className="text-red-500 text-xs w-full mt-1">
+                    <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize`}>
                       {errors[field]}
                     </p>
                   )}
@@ -492,10 +514,12 @@ const D2BasicDetails = () => {
             onBlur={handleBlur}
             autoComplete="off"
             placeholder="https://example.com"
-            className="input bg-white w-full"
+            className="input bg-white w-full ml-3"
           />
           {errors.websiteURL && (
-            <p className="text-red-500 text-xs">{errors.websiteURL}</p>
+            <p className={`${
+      submitted ? "text-red-500" : "text-blue-500"
+    } text-xs mt-1 capitalize `}>{errors.websiteURL}</p>
           )}
 
           <div className="flex justify-end gap-4">

@@ -15,6 +15,7 @@ import * as XLSX from "xlsx";
 import Button from "../../common/Button.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
+import ProductDummy from "../../../../public/Download/productdummy.xlsx"
 
 // =========================================================================
 // ✅ NEW: Delete Confirmation Modal Component
@@ -449,6 +450,13 @@ const D4ProductList = () => {
     }
   };
 
+  const handeluploadexceldummy = ()=>{
+    const link = document.createElement("a");
+    link.href = ProductDummy;
+    link.download = "product-template.xlsx";
+    link.click(); 
+  }
+
   return (
     <div className="mx-auto md:mt-5 border p-1 md:p-4">
       {/* Header */}
@@ -547,40 +555,81 @@ const D4ProductList = () => {
       </div>
 
       {/* Export/Import */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center mt-6 p-5 border rounded-md shadow">
-        <div className="flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
-          {/* File Input */}
-          <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
-            <svg
-              className="w-5 h-5 mr-2 text-gray-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
-            </svg>
-            <span className="text-gray-700 text-sm truncate">
-              {excelFile ? excelFile.name : "Choose Excel/CSV file"}
-            </span>
-            <input
-              type="file"
-              accept=".xlsx, .xls, .csv"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
+<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-6">
+  
 
-          {/* Import Button */}
-          <button
-            onClick={handleImportExcel}
-            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
+  {/* Action Area */}
+  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+    {/* Download Section */}
+    <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded-md border border-gray-200 w-full lg:w-1/2">
+      <div className="flex items-center gap-2">
+        <div className="p-2 bg-green-100 rounded-lg">
+          <svg
+            className="w-5 h-5 text-green-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
-            </svg>
-            Import Excel
-          </button>
+            <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
+          </svg>
+        </div>
+        <div>
+          <h4 className="text-sm font-medium text-gray-800">Download Template</h4>
+          <p className="text-xs text-gray-500">Get the Excel format file</p>
         </div>
       </div>
+
+      <button
+        onClick={handeluploadexceldummy}
+        className="flex items-center gap-2 px-5 py-2 bg-green-600 text-white text-sm rounded shadow hover:bg-green-700 transition-all"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
+        </svg>
+        Download Excel
+      </button>
+    </div>
+
+    {/* Upload Section */}
+    <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded-md border border-gray-200 w-full lg:w-1/2">
+      <label className="flex items-center justify-center w-full sm:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition text-sm text-gray-700">
+        <svg
+          className="w-5 h-5 mr-2 text-gray-500"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
+        </svg>
+        {excelFile ? excelFile.name : "Choose Excel/CSV file"}
+        <input
+          type="file"
+          accept=".xlsx, .xls, .csv"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </label>
+
+      <button
+        onClick={handleImportExcel}
+
+        className={`flex items-center gap-2 px-5 py-2 text-sm rounded shadow transition-all bg-blue-600 hover:bg-blue-700 text-white
+         `}
+      >
+        <svg
+          className="w-4 h-4"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
+        </svg>
+        Import Excel
+      </button>
+    </div>
+  </div>
+</div>
 
       {/* Stock Popup */}
       {showStockPopup && selectedProduct && (

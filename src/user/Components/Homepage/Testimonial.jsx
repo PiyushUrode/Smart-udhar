@@ -3,8 +3,14 @@ import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import star from "../../assets/homepage/testimonial/star.png";
 import review1 from "../../assets/homepage/testimonial/review1.png";
 
+// ✅ Correct imports
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";

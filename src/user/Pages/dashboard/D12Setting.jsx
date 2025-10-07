@@ -189,11 +189,11 @@ const handleSave = async () => {
             <p className="font-medium">Notification Preferences</p>
             <div className="space-y-2">
               <label className="flex items-center gap-2">
-                <input type="checkbox" defaultChecked className="appearance-none h-5 w-5 border-2 border-gray-700 rounded-sm checked:bg-white checked:border-white checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center" />
+                <input type="checkbox" defaultChecked className="checked:bg-blue-500 checked:text-white appearance-none h-5 w-5 border-2 border-gray-700 rounded-sm checked:bg-white checked:border-black checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center" />
                 WhatsApp (Verified)
               </label>
               <label className="flex items-center gap-2">
-                <input type="checkbox" className="appearance-none h-5 w-5 border-2 border-gray-700 rounded-sm checked:bg-white checked:border-white checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center" />
+                <input type="checkbox" className="checked:bg-blue-500 checked:text-white appearance-none h-5 w-5 border-2 border-gray-700 rounded-sm checked:bg-white checked:border-black checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center" />
                 SMS Reminder
               </label>
               <div className="flex items-center gap-2">

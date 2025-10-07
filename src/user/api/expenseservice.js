@@ -49,8 +49,19 @@ const getAllExpenses = async (page = 1, limit = 10) => {
 
 const filterExpenses = async (filters = {}) => {
   const { token, store_id, storeProfile_id } = getAuthContext();
-  const response = await api.post(`/store-expense/filter`, { store_id, storeProfile_id, ...filters }, {
-    headers: { Authorization: `Bearer ${token}` }
+
+  // Construct payload dynamically like your cURL examples
+  const payload = {
+    store_id,
+    storeProfile_id,
+    ...(filters.expenseCategory && { expenseCategory: filters.expenseCategory }),
+    ...(filters.paymentMode && { paymentMode: filters.paymentMode }),
+    ...(filters.startDate && { startDate: filters.startDate }),
+    ...(filters.endDate && { endDate: filters.endDate }),
+  };
+
+  const response = await api.post(`/store-expense/filter`, payload, {
+    headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 };
