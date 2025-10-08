@@ -346,7 +346,7 @@ const D10Expenses = () => {
                   className="hidden"
                 />
               </label>
-              <p className="mt-2 text-sm font-semibold">Upload Image Here</p>
+              <p className="mt-2 text-xs font-semibold">Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px  </p>
             </div>
 
             {/* Submit */}

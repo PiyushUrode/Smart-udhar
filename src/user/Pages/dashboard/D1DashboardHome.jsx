@@ -527,12 +527,12 @@ useEffect(() => {
           <h2 className="text-lg font-semibold text-gray-800">
             Recent Transactions
           </h2>
-          <button
+          {/* <button
             onClick={() => setSelectedType("All")}
             className="text-sm text-blue-600 hover:underline"
           >
             View All
-          </button>
+          </button> */}
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-[640px] text-left w-full">
