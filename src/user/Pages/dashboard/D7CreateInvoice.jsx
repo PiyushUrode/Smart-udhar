@@ -779,6 +779,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   Close
                 </button>
               </div>
+            </div>
 
             {/* ---------- Body: Printable Area ---------- */}
             <div ref={previewRef} className="p-6 text-gray-900 font-sans">
@@ -993,9 +994,6 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        )}
 
               {/* ========== MODERN FORMAT ========== */}
               {selectedFormat === "modern" && (
@@ -1205,28 +1203,8 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
               </button>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* ---------- Footer Buttons ---------- */}
-      <div className="flex justify-end gap-3 my-4 p-4 border-t">
-        <button
-          onClick={() => setShowPreview(false)}
-          className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Submit Invoice
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+        </div>
+      )}
 
       {/* Sidebar */}
       <div className="bg-white shadow-customCard  border rounded-lg p-4 ">
