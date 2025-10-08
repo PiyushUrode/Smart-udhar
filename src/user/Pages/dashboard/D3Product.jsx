@@ -261,14 +261,14 @@ const ProductForm = ({
           >
             <option value="">Select</option>
             <option value="0">0%</option>
-            <option value="3">3%</option>
-            <option value="12">12%</option>
+            <option value="5">5%</option>
+            <option value="10">10%</option>
             <option value="18">18%</option>
             <option value="28">28%</option>
           </select>
         </div>
 
-        <div className="hidden">
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Price
           </label>
@@ -279,7 +279,7 @@ const ProductForm = ({
             onChange={handleChange}
           >
             <option value="fixed">With tax</option>
-            {/* <option value="without">Without tax</option> */}
+            <option value="without">Without tax</option>
           </select>
         </div>
       </div>
@@ -296,7 +296,9 @@ const ProductForm = ({
       <button
         type="submit"
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      > Save Product
+      >
+        {" "}
+        Save Product
       </button>
     </div>
   </form>
@@ -489,12 +491,12 @@ const ServiceForm = ({
         Import CSV
       </button>
 
-      <div className="flex items-center gap-2 text-sm hidden">
+      <div className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
           className="appearance-none h-5 w-5 border border-gray-300 rounded-sm checked:bg-white checked:border-white checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center"
           name="gstInclusive"
-          checked={true}
+          checked={formData.gstInclusive}
           onChange={handleChange}
         />
         <label htmlFor="gstInclusive">GST Inclusive Pricing</label>
@@ -763,7 +765,7 @@ export default function D3Product() {
       }
 
       console.log("Final payload before API call:", payload, "File:", file);
-      
+
       // Product type mapping for the API call
       const productType = activeTab === "product" ? "inventory" : "service";
 
@@ -852,10 +854,8 @@ export default function D3Product() {
   // =================================================================
   return (
     <div className="max-w-5xl mx-auto  px-5 md:px-10 py-10  bg-white rounded-lg shadow-customCard">
-
       {/* Removed: <ToastContainer /> */}
       <div className="bg-blue-600 text-white px-6 py-3 rounded-t-md text-lg font-semibold">
-
         Items
       </div>
 

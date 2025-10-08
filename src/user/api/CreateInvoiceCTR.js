@@ -6,12 +6,8 @@ import { jsPDF } from "jspdf";
 import { parse, format, isValid } from "date-fns";
 
 export function useCreateInvoiceController({ onCustomerSelect } = {}) {
-  // =========================================================================
-  // 1. STATE DECLARATIONS (useState)
-  // =========================================================================
   const [selectedFormat, setSelectedFormat] = useState("classic");
 
-  // Customer State
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,22 +15,15 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   const [searchTriggered, setSearchTriggered] = useState(false);
   const [storeProfile, setStoreProfile] = useState(null);
 
-  // Product and Row State
-  const [products, setProducts] = useState([]);
-  const [rows, setRows] = useState([
-    { id: Date.now(), productId: "", qty: 1, unit: "", price: 0, tax: 0 },
-  ]);
-  const [taxType, setTaxType] = useState("taxable");
-
-  // Payment State
   const [showStep3, setShowStep3] = useState(false);
   const [showStep4, setShowStep4] = useState(false);
   const [paymentMode, setPaymentMode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [transactionId, setTransactionId] = useState("");
-  const [partialCashAmount, setPartialCashAmount] = useState(0);
 
-  // Milestones State
+  const [popupType, setPopupType] = useState(null);
+  const [message, setMessage] = useState("");
+
   const [milestones, setMilestones] = useState([
     {
       id: Date.now(),
@@ -45,16 +34,16 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     },
   ]);
 
-  // Charges and Notes State
   const [additionalCharges, setAdditionalCharges] = useState({
     deliveryFee: "",
     packingCharges: "",
     discount: "",
     other: "",
   });
-  const [note, setNote] = useState("");
 
-  // Summary State
+  const [note, setNote] = useState("");
+  const [partialCashAmount, setPartialCashAmount] = useState(0);
+
   const [invoiceSummary, setInvoiceSummary] = useState({
     subtotal: 0,
     totalTax: 0,
@@ -66,34 +55,11 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     total: 0,
   });
 
-  // Preview and Submit State
-  const [previewInvoice, setPreviewInvoice] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
-
-  // Notification State
-  const [popupType, setPopupType] = useState(null);
-  const [message, setMessage] = useState("");
-
-  // Invoice List State
-  const [invoices, setInvoices] = useState([]);
-  const [todayCollection, setTodayCollection] = useState(0);
-  const [totalCollection, setTotalCollection] = useState(0);
-
-  // =========================================================================
-  // 2. REFS (useRef)
-  // =========================================================================
-  const previewRef = useRef(null);
-
-  // =========================================================================
-  // 3. SIDE EFFECTS & DATA FETCHING (useEffect)
-  // =========================================================================
-
-  // Effect 1: Fetch Customers
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
         setLoading(true);
-        const { success, customers } = await Invoice.fetchCustomersForInvoice(1,1000);
+        const { success, customers } = await Invoice.fetchCustomersForInvoice();
         if (success && Array.isArray(customers)) {
           setCustomers(customers);
         } else {
@@ -109,7 +75,29 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     fetchCustomers();
   }, []);
 
-  // Effect 2: Fetch Products
+  const filteredCustomers = searchTerm
+    ? customers.filter((cust) => {
+        const name = cust?.name?.toLowerCase() || "";
+        const mobile = cust?.mobile?.toLowerCase() || "";
+        return (
+          name.includes(searchTerm.toLowerCase()) ||
+          mobile.includes(searchTerm.toLowerCase())
+        );
+      })
+    : [];
+
+  const handleSelectCustomer = (cust) => {
+    setSelectedCustomer(cust);
+    setSearchTerm("");
+    setSearchTriggered(false);
+    if (onCustomerSelect) onCustomerSelect(cust);
+  };
+
+  const [products, setProducts] = useState([]);
+  const [rows, setRows] = useState([
+    { id: Date.now(), productId: "", qty: 1, unit: "", price: 0, tax: 0 },
+  ]);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -125,135 +113,6 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     };
     fetchProducts();
   }, []);
-
-  // Effect 3: Calculate Invoice Summary (re-runs on rows, charges, cash amount change)
-  useEffect(() => {
-    calculateInvoiceSummary();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, additionalCharges, partialCashAmount]);
-
-  // Effect 4: Fetch Invoices
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        const res = await Invoice.getAllInvoices();
-        if (res.success) {
-          setInvoices(res.invoices);
-          setTodayCollection(res.todayCollection);
-          setTotalCollection(res.totalCollection);
-        }
-      } catch (err) {
-        console.error("❌ Error fetching invoices:", err);
-      }
-    };
-    fetchInvoices();
-  }, []);
-
-  // Effect 5: Fetch Store Profile
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const storeProfile_id = localStorage.getItem("storeProfile_id");
-        if (!storeProfile_id) {
-          console.warn("⚠️ No active business found");
-          return;
-        }
-        const res = await ProfileService.getProfile(storeProfile_id);
-        setStoreProfile(res?.data || res);
-      } catch (err) {
-        console.error("❌ Error fetching profile:", err.message);
-      }
-    };
-    fetchProfile();
-  }, []);
-
-  // =========================================================================
-  // 4. DERIVED VALUES
-  // =========================================================================
-
-  const filteredCustomers = searchTerm
-    ? customers.filter((cust) => {
-        const name = cust?.name?.toLowerCase() || "";
-        const mobile = cust?.mobile?.toLowerCase() || "";
-        return (
-          name.includes(searchTerm.toLowerCase()) ||
-          mobile.includes(searchTerm.toLowerCase())
-        );
-      })
-    : [];
-
-  // =========================================================================
-  // 5. HELPER/CALCULATION FUNCTIONS
-  // =========================================================================
-
-  const calculateTotal = (row) => {
-    const subtotal = (row.qty || 0) * (row.price || 0);
-    // Logic from the original code: If price_type is NOT 'without' (meaning it includes tax),
-    // the tax is calculated and added.
-    const taxable = taxType === "taxable";
-    if (row.price_type === "without" || !taxable) {
-      return subtotal;
-    } else {
-      const taxAmount = (subtotal * (row.tax || 0)) / 100;
-      return subtotal + taxAmount;
-    }
-  };
-
-  const calculateInvoiceSummary = () => {
-    const subtotal = rows.reduce((sum, row) => sum + row.qty * row.price, 0);
-    const totalTax = rows.reduce((sum, row) => {
-      // If price includes tax (not 'without' type), tax is not separately added to subtotal for total calculation.
-      // The original logic seems to calculate totalTax for display purposes, but only applies it to the 'total' if price_type is 'without'.
-      // Reverting to the original logic for consistency:
-      // Tax is only calculated for products where 'price_type' is NOT 'fixed'.
-      // If 'price_type' is 'without', the tax is calculated and added to get the final total.
-      // The original 'calculateTotal' handles the final per-row total.
-
-      const taxable = taxType === "taxable";
-      // Let's assume this totalTax calculation is for displaying the *total tax amount*, not just for the final 'total' calculation.
-      if (row.price_type === "without" || !taxable) return sum;
-
-      const rowSubtotal = row.qty * row.price;
-      return sum + (rowSubtotal * (row.tax || 0)) / 100;
-    }, 0);
-
-    const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
-    const packingCharges = Number(additionalCharges.packingCharges) || 0;
-    const discount = Number(additionalCharges.discount) || 0;
-    const other = Number(additionalCharges.other) || 0;
-
-    // The 'subtotal' here is the sum of (qty * price).
-    // The 'totalTax' calculated above is only for 'price_type !== fixed' (i.e., 'without').
-    // 'total' = Subtotal + TotalTax + Charges - Discount.
-    const total =
-      subtotal + totalTax + deliveryFee + packingCharges - discount + other;
-
-    const totalReceived = Number(partialCashAmount) || 0;
-    const dueBalance = total - totalReceived;
-
-    setInvoiceSummary({
-      subtotal,
-      totalTax,
-      total,
-      totalReceived,
-      dueBalance,
-      deliveryFee,
-      packingCharges,
-      discount,
-      other,
-    });
-  };
-
-  // =========================================================================
-  // 6. EVENT HANDLERS
-  // =========================================================================
-
-  const handleSelectCustomer = (cust) => {
-    setSelectedCustomer(cust);
-    setSearchTerm("");
-    setSearchTriggered(false);
-    if (onCustomerSelect) onCustomerSelect(cust);
-  };
 
   const handleSelectProduct = (rowId, product) => {
     setRows((prev) =>
@@ -296,35 +155,11 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
         row.id === id
           ? {
               ...row,
-              [field]:
-                field === "qty" || field === "price"
-                  ? Number(value) || 0
-                  : value,
+              [field]: field === "qty" || field === "price" ? Number(value) || 0 : value,
             }
           : row
       )
     );
-  };
-
-  const handleTaxTypeChange = (value) => {
-    setTaxType(value);
-    if (value === "non-taxable") {
-      setRows((prev) =>
-        prev.map((row) => ({
-          ...row,
-          price_type: "without", // or "fixed" if price is final
-        }))
-      );
-    }
-
-    if (value === "taxable") {
-      setRows((prev) =>
-        prev.map((row) => ({
-          ...row,
-          price_type: "fixed", // Assuming default for taxable is 'fixed' (price includes tax)
-        }))
-      );
-    }
   };
 
   const handlePaymentMode = (mode) => {
@@ -332,12 +167,11 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     if (mode === "cash") {
       setShowStep3(true);
       setShowStep4(false);
-      // Set partial cash amount to total for 'cash' mode, implying full cash payment initially
       setPartialCashAmount(invoiceSummary.total);
     } else if (mode === "debt") {
       setShowStep4(true);
       setShowStep3(false);
-      setPartialCashAmount(0); // Assuming no cash collected for 'debt' initially
+      setPartialCashAmount(0);
     }
   };
 
@@ -355,9 +189,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   };
 
   const handleMilestoneChange = (id, field, value) => {
-    setMilestones((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
-    );
+    setMilestones((prev) => prev.map((m) => (m.id === id ? { ...m, [field]: value } : m)));
   };
 
   const handleAdditionalChange = (field, value) => {
@@ -367,8 +199,20 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     }));
   };
 
+  const [previewInvoice, setPreviewInvoice] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const calculateTotal = (row) => {
+    const subtotal = (row.qty || 0) * (row.price || 0);
+    if (row.price_type === "fixed") {
+      return subtotal;
+    } else {
+      const taxAmount = (subtotal * (row.tax || 0)) / 100;
+      return subtotal + taxAmount;
+    }
+  };
+
   const handlePreview = () => {
-    
     if (!selectedCustomer?._id) {
       setPopupType("error");
       setMessage("Please select a customer!");
@@ -379,38 +223,14 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       setMessage("Please select a payment mode!");
       return;
     }
-    // Check for at least one valid product row
     if (rows.some((r) => !r.productId || r.qty <= 0)) {
       setPopupType("error");
       setMessage("Please add at least one valid product!");
       return;
     }
 
-    const { subtotal, totalTax, total, totalReceived, dueBalance } =
-      invoiceSummary;
+    const { subtotal, totalTax, total, totalReceived, dueBalance } = invoiceSummary;
 
-    // Check if milestones total matches due balance for 'debt' mode
-    if (
-      paymentMode === "debt" &&
-      Math.abs(
-        milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0) -
-          dueBalance
-      ) > 0.01
-    ) {
-      setMessage(
-        `Milestones total must equal Due Balance (${dueBalance.toFixed(2)})!`
-      );
-      setPopupType("error");
-      return;
-    }
-
-    let payloadPaymentMethod = paymentMethod;
-    let payloadtransactionId = transactionId;
-
-    if(paymentMode === "debt"){
-      payloadPaymentMethod ="";
-      payloadtransactionId ="";
-    } //no details of cash should be sent for debt
     const payload = {
       customerId: selectedCustomer._id,
       name: selectedCustomer.name,
@@ -419,8 +239,8 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       balance: selectedCustomer.balance,
       creditScore: selectedCustomer.creditScore,
       paymentMode,
-      paymentMethod: payloadPaymentMethod,
-      transactionId: payloadtransactionId,
+      paymentMethod,
+      transactionId,
       deliveryFee: Number(additionalCharges.deliveryFee) || 0,
       packingCharges: Number(additionalCharges.packingCharges) || 0,
       discount: Number(additionalCharges.discount) || 0,
@@ -432,15 +252,9 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       totalReceived,
       dueBalance,
       paymentStatus:
-        totalReceived === total
-          ? "Paid"
-          : totalReceived > 0
-          ? "Partial"
-          : "Unpaid",
+        totalReceived === total ? "Paid" : totalReceived > 0 ? "Partial" : "Unpaid",
       products: rows.map((p) => {
-        const prod =
-          products.find((x) => x._id === p.productId || x.id === p.productId) ||
-          {};
+        const prod = products.find((x) => x._id === p.productId || x.id === p.productId) || {};
         return {
           productId: p.productId,
           name: prod?.name || prod?.product_name || "Unnamed",
@@ -451,7 +265,6 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
           total: calculateTotal(p),
         };
       }),
-      productType: taxType,
       ...(paymentMode === "debt"
         ? {
             milestones: milestones.map((m) => {
@@ -472,13 +285,21 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
         : {}),
     };
 
+    if (
+      paymentMode === "debt" &&
+      Math.abs(milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0) - dueBalance) > 0.01
+    ) {
+      setMessage(`Milestones total must equal Due Balance (${dueBalance.toFixed(2)})!`);
+      setPopupType("error");
+      return;
+    }
+
     setPreviewInvoice(payload);
     setShowPreview(true);
   };
 
   const handleSubmit = async () => {
     try {
-    
       const res = await Invoice.createInvoice(previewInvoice);
       if (res.success) {
         setMessage("✅ Invoice created successfully!");
@@ -486,40 +307,19 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
         setShowPreview(false);
         setPreviewInvoice(null);
 
-        // Reset State after successful creation
         setSelectedCustomer(null);
         setPaymentMode("");
         setPaymentMethod("");
         setTransactionId("");
-        setAdditionalCharges({
-          deliveryFee: 0,
-          packingCharges: 0,
-          discount: 0,
-          other: 0,
-        });
+        setAdditionalCharges({ deliveryFee: 0, packingCharges: 0, discount: 0, other: 0 });
         setNote("");
         setPartialCashAmount(0);
-        setMilestones([
-          {
-            id: Date.now(),
-            name: "Promise1",
-            amount: "",
-            dueDate: format(new Date(), "dd/MM/yyyy"),
-            status: "Pending",
-          },
-        ]);
+        setMilestones([]);
+
         setRows([
-          {
-            id: Date.now(),
-            productId: "",
-            qty: 1,
-            unit: "pcs",
-            price: 0,
-            tax: 0,
-          },
+          { id: Date.now(), productId: "", qty: 1, unit: "pcs", price: 0, tax: 0 },
         ]);
 
-        // Refresh Invoices List
         const refreshed = await Invoice.getAllInvoices();
         if (refreshed?.success) {
           setInvoices(refreshed.invoices || []);
@@ -537,6 +337,61 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     }
   };
 
+  const calculateInvoiceSummary = () => {
+    const subtotal = rows.reduce((sum, row) => sum + row.qty * row.price, 0);
+    const totalTax = rows.reduce((sum, row) => {
+      if (row.price_type === "fixed") return sum;
+      const rowSubtotal = row.qty * row.price;
+      return sum + (rowSubtotal * (row.tax || 0)) / 100;
+    }, 0);
+    const deliveryFee = Number(additionalCharges.deliveryFee) || 0;
+    const packingCharges = Number(additionalCharges.packingCharges) || 0;
+    const discount = Number(additionalCharges.discount) || 0;
+    const other = Number(additionalCharges.other) || 0;
+    const total = subtotal + totalTax + deliveryFee + packingCharges - discount + other;
+    const totalReceived = Number(partialCashAmount) || 0;
+    const dueBalance = total - totalReceived;
+    setInvoiceSummary({
+      subtotal,
+      totalTax,
+      total,
+      totalReceived,
+      dueBalance,
+      deliveryFee,
+      packingCharges,
+      discount,
+      other,
+    });
+  };
+
+  useEffect(() => {
+    // intentionally not memoizing calculateInvoiceSummary to keep API simple
+    calculateInvoiceSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, additionalCharges, partialCashAmount]);
+
+  const [invoices, setInvoices] = useState([]);
+  const [todayCollection, setTodayCollection] = useState(0);
+  const [totalCollection, setTotalCollection] = useState(0);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const res = await Invoice.getAllInvoices();
+        if (res.success) {
+          setInvoices(res.invoices);
+          setTodayCollection(res.todayCollection);
+          setTotalCollection(res.totalCollection);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching invoices:", err);
+      }
+    };
+    fetchInvoices();
+  }, []);
+
+  const previewRef = useRef(null);
+
   const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
     if (!previewRef.current) {
       setMessage("Preview not ready for PDF.");
@@ -544,74 +399,43 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       return;
     }
     try {
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-      });
+      const canvas = await html2canvas(previewRef.current, { scale: 2, useCORS: true, allowTaint: true });
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "pt",
-        format: "a4",
-      });
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = pageWidth - 40;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
       if (imgHeight <= pageHeight - 40) {
-        // Single page
         pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
       } else {
-        // Multi-page logic
         let heightLeft = imgHeight;
         const pageCanvas = document.createElement("canvas");
         const pageCtx = pageCanvas.getContext("2d");
-
-        let currentY = 0;
-
         while (heightLeft > 0) {
-          const contentHeight = Math.min(
-            canvas.height - currentY,
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = Math.min(
+            canvas.height,
             Math.floor((canvas.width * (pageHeight - 40)) / imgWidth)
           );
-
-          if (currentY > 0) {
-            pdf.addPage();
-          }
-
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = contentHeight;
-
           pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
           pageCtx.drawImage(
             canvas,
             0,
-            currentY,
+            canvas.height - heightLeft,
             canvas.width,
-            contentHeight,
+            pageCanvas.height,
             0,
             0,
             pageCanvas.width,
             pageCanvas.height
           );
           const pageData = pageCanvas.toDataURL("image/png");
-
-          pdf.addImage(
-            pageData,
-            "PNG",
-            20,
-            20,
-            imgWidth,
-            (pageCanvas.height * imgWidth) / pageCanvas.width
-          );
-
-          heightLeft -= (pageCanvas.height * imgWidth) / canvas.width;
-          currentY += contentHeight;
+          if (pdf.internal.getNumberOfPages() > 0) pdf.addPage();
+          pdf.addImage(pageData, "PNG", 20, 20, imgWidth, (pageCanvas.height * imgWidth) / pageCanvas.width);
+          heightLeft -= pageCanvas.height;
         }
       }
-
       pdf.save(fileName);
     } catch (err) {
       console.error("PDF generation error:", err);
@@ -620,12 +444,25 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     }
   };
 
-  // =========================================================================
-  // 7. RETURN HOOK INTERFACE
-  // =========================================================================
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const storeProfile_id = localStorage.getItem("storeProfile_id");
+        if (!storeProfile_id) {
+          console.warn("⚠️ No active business found");
+          return;
+        }
+        const res = await ProfileService.getProfile(storeProfile_id);
+        setStoreProfile(res?.data || res);
+      } catch (err) {
+        console.error("❌ Error fetching profile:", err.message);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   return {
-    // View/General State
+    // view state
     selectedFormat,
     setSelectedFormat,
     customers,
@@ -636,31 +473,26 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     selectedCustomer,
     searchTriggered,
     filteredCustomers,
-    storeProfile,
     handleSelectCustomer,
+    storeProfile,
 
-    // Products and Rows
+    // products and rows
     products,
     rows,
-    taxType,
     handleSelectProduct,
     handleAddRow,
     handleRemoveRow,
     handleChange,
-    handleTaxTypeChange,
-    calculateTotal, // Helper function for display
 
-    // Payment and Milestones
+    // payment and milestones
     showStep3,
     showStep4,
     paymentMode,
+    handlePaymentMode,
     paymentMethod,
     setPaymentMethod,
     transactionId,
     setTransactionId,
-    partialCashAmount,
-    setPartialCashAmount,
-    handlePaymentMode,
     milestones,
     setMilestones,
     handleAddMilestone,
@@ -669,11 +501,14 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     handleAdditionalChange,
     note,
     setNote,
+    partialCashAmount,
+    setPartialCashAmount,
 
-    // Summary
+    // summary
     invoiceSummary,
+    calculateTotal,
 
-    // Preview and Submit
+    // preview and submit
     previewInvoice,
     setPreviewInvoice,
     showPreview,
@@ -681,19 +516,21 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     handlePreview,
     handleSubmit,
 
-    // Notifications
+    // notifications
     popupType,
     setPopupType,
     message,
     setMessage,
 
-    // Previous Invoices
+    // previous invoices
     invoices,
     todayCollection,
     totalCollection,
 
-    // PDF
+    // pdf
     previewRef,
     downloadPreviewAsPDF,
   };
 }
+
+
