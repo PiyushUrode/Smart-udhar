@@ -1207,7 +1207,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
       )}
 
       {/* Sidebar */}
-      <div className="bg-white shadow-customCard  border rounded-lg p-4 ">
+      <div className="bg-white shadow-customCard  border rounded-lg p-4">
         <h2 className="text-lg font-robotoSb mb-4">Invoice Summary</h2>
         <ul className="text-sm font-robotoR text-black space-y-3">
           <li className="flex justify-between">

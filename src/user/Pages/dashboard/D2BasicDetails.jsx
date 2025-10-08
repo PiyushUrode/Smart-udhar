@@ -17,9 +17,6 @@ import { AuthService } from "../../api/authservice.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-
-
-
 const D2BasicDetails = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [errors, setErrors] = useState({});
@@ -29,8 +26,8 @@ const D2BasicDetails = () => {
   const navigate = useNavigate();
   const [signatureImage, setSignatureImage] = useState(null);
   const [logoImage, setLogoImage] = useState(null);
-const [submitted, setSubmitted] = useState(false);
- 
+  const [submitted, setSubmitted] = useState(false);
+
   const [formData, setFormData] = useState({
     businessName: "",
     gstNumber: "",
@@ -72,162 +69,124 @@ const [submitted, setSubmitted] = useState(false);
     validateForm();
   };
 
-  // Validate Form
-  const validateForm = () => {
-    const newErrors = {};
+ // Validate Form
+const validateForm = () => {
+  const newErrors = {};
 
-    // Minimal required fields
-    const requiredFields = [
-      "businessName",
-      "address",
-      "pincode",
-      "mobile",
-      "email",
-      "industry",
-    ];
-    const optionalFields = [
-      "gstNumber",
-      "fbURL",
-      "twitterURL",
-      "linkedInURL",
-      "instagramURL",
-      "websiteURL",
-    ];
+  // Required fields
+  const requiredFields = [
+    "businessName",
+    "address",
+    "pincode",
+    "mobile",
+    "email",
+    "industry",
+  ];
 
-    // Create a clean copy of formData for validation
-    const dataToValidate = { ...formData };
+  const dataToValidate = { ...formData };
 
-    // Ensure mobile is cleaned before validation
-    if (dataToValidate.mobile) {
-      dataToValidate.mobile = dataToValidate.mobile
-        .replace(/^(\+91|0)/, "")
-        .replace(/\D/g, "");
-    }
+  // Clean mobile before validation
+  if (dataToValidate.mobile) {
+    dataToValidate.mobile = dataToValidate.mobile
+      .replace(/^(\+91|0)/, "")
+      .replace(/\D/g, "");
+  }
 
-    // Check if user has filled anything
-    const hasAnyInput = [...requiredFields, ...optionalFields].some(
-      (field) =>
-        dataToValidate[field] && dataToValidate[field].toString().trim() !== ""
-    );
-
-    if (hasAnyInput) {
-      // Required fields validation
-      requiredFields.forEach((field) => {
-        if (
-          !dataToValidate[field] ||
-          dataToValidate[field].toString().trim() === ""
-        ) {
-          newErrors[field] = `${field} is required`;
-        }
-      });
-    }
-
-    // Business Name: 3-50 chars
+  // Required fields validation
+  requiredFields.forEach((field) => {
     if (
-      dataToValidate.businessName &&
-      !/^[a-zA-Z0-9\s&.-]{3,50}$/.test(dataToValidate.businessName)
+      !dataToValidate[field] ||
+      dataToValidate[field].toString().trim() === ""
     ) {
-      newErrors.businessName = "Business name must be 3-50 chars";
+      newErrors[field] = `${field} is required`;
     }
+  });
 
-    // Pincode: 6 digits
-    if (
-      dataToValidate.pincode &&
-      !/^[1-9][0-9]{5}$/.test(dataToValidate.pincode)
-    ) {
-      newErrors.pincode = "Pincode must be 6 digits";
-    }
+  // Business Name: 3-50 chars
+  if (
+    dataToValidate.businessName &&
+    !/^[a-zA-Z0-9\s&.-]{3,50}$/.test(dataToValidate.businessName)
+  ) {
+    newErrors.businessName = "Business name must be 3-50 characters";
+  }
 
-    // Mobile: 10 digits, starting 6-9
-    if (dataToValidate.mobile && !/^[6-9]\d{9}$/.test(dataToValidate.mobile)) {
-      newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
-    }
+  // Pincode: 6 digits
+  if (
+    dataToValidate.pincode &&
+    !/^[1-9][0-9]{5}$/.test(dataToValidate.pincode)
+  ) {
+    newErrors.pincode = "Pincode must be 6 digits";
+  }
 
-    // Email
-    if (
-      dataToValidate.email &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dataToValidate.email.toLowerCase())
-    ) {
-      newErrors.email = "Invalid Email format";
-    }
+  // Mobile: 10 digits, starting with 6-9
+  if (dataToValidate.mobile && !/^[6-9]\d{9}$/.test(dataToValidate.mobile)) {
+    newErrors.mobile = "Mobile number must be 10 digits & start with 6-9";
+  }
 
-    // Industry
-    if (
-      dataToValidate.industry &&
-      dataToValidate.industry !== "Select Industry" &&
-      !/^[a-zA-Z\s]{2,30}$/.test(dataToValidate.industry)
-    ) {
-      newErrors.industry = "Industry must be 2-30 letters only";
-    }
+  // Email: standard validation
+  if (
+    dataToValidate.email &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dataToValidate.email.toLowerCase())
+  ) {
+    newErrors.email = "Invalid email format";
+  }
 
-    // GST validation
-    if (
-      dataToValidate.gstNumber &&
-      !/^[0-9A-Z]{15}$/.test(dataToValidate.gstNumber.toUpperCase())
-    ) {
-      newErrors.gstNumber = "Invalid GST number format (27ABCDE1234F1Z5)";
-    }
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
-    // Optional URLs
-    const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/\S*)?$/;
-    optionalFields.forEach((field) => {
-      if (dataToValidate[field] && !urlPattern.test(dataToValidate[field])) {
-        newErrors[field] = `Enter a valid ${field} URL`;
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   // Handle Submit
   const handleSubmit = async (e) => {
-  e.preventDefault();
- setSubmitted(true);
-  // Clean mobile before validation & submission
-  setFormData((prev) => ({
-    ...prev,
-    mobile: prev.mobile?.replace(/^(\+91|0)/, "").replace(/\D/g, ""),
-  }));
+    e.preventDefault();
+    setSubmitted(true);
+    // Clean mobile before validation & submission
+    setFormData((prev) => ({
+      ...prev,
+      mobile: prev.mobile?.replace(/^(\+91|0)/, "").replace(/\D/g, ""),
+    }));
 
-  const isValid = validateForm(); // updates errors state
+    const isValid = validateForm(); // updates errors state
 
-  if (!isValid) {
-    // Show popup button for validation errors
-    setPopupType("error");
-    return;
-  }
-
-  // If valid, proceed
-  try {
-    setPopupType("processing");
-
-    let res;
-    if (id) {
-      res = await ProfileService.updateProfile(
-        id,
-        formData,
-        signatureImage,
-        logoImage
-      );
-      console.log("✅ Profile Updated Successfully!");
-    } else {
-      res = await ProfileService.createProfile(
-        formData,
-        signatureImage,
-        logoImage
-      );
-      console.log("✅ Profile Created Successfully!");
+    if (!isValid) {
+      // Show popup button for validation errors
+      setPopupType("error");
+      return;
     }
 
-    setPopupType("success");
-    navigate("/dashboard/bussinessList");
-  } catch (err) {
-    console.error("❌ handleSubmit Error:", err.message);
-    setPopupType("error");
-  }
-};
+    // If valid, proceed
+    try {
+      setPopupType("processing");
 
+      let res;
+      if (id) {
+        res = await ProfileService.updateProfile(
+          id,
+          formData,
+          signatureImage,
+          logoImage
+        );
+        console.log("✅ Profile Updated Successfully!");
+      } else {
+        res = await ProfileService.createProfile(
+          formData,
+          signatureImage,
+          logoImage
+        );
+        console.log("✅ Profile Created Successfully!");
+      }
+
+      setPopupType("success");
+      navigate("/dashboard/bussinessList");
+    } catch (err) {
+      console.error("❌ handleSubmit Error:", err.message);
+      setPopupType("error");
+    }
+  };
+
+  const GotoBusinessList = () => {
+    navigate("/dashboard/bussinessList");
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -280,16 +239,15 @@ const [submitted, setSubmitted] = useState(false);
                   onBlur={handleBlur}
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
-{errors.businessName && (
-  <p
-    className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}
-  >
-    {errors.businessName}
-  </p>
-)}
-
+                {errors.businessName && (
+                  <p
+                    className={`${
+                      submitted ? "text-red-500" : "text-blue-500"
+                    } text-xs mt-1 capitalize`}
+                  >
+                    {errors.businessName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -307,9 +265,11 @@ const [submitted, setSubmitted] = useState(false);
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
                 {errors.gstNumber && (
-                  <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}>
+                  <p
+                    className={`${
+                      submitted ? "text-red-500" : "text-blue-500"
+                    } text-xs mt-1 capitalize`}
+                  >
                     {errors.gstNumber}
                   </p>
                 )}
@@ -331,9 +291,11 @@ const [submitted, setSubmitted] = useState(false);
                 className="w-full border rounded px-3 py-2 outline-none bg-[#FAFAFA]"
               />
               {errors.address && (
-                <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}>
+                <p
+                  className={`${
+                    submitted ? "text-red-500" : "text-blue-500"
+                  } text-xs mt-1 capitalize`}
+                >
                   {errors.address}
                 </p>
               )}
@@ -355,9 +317,11 @@ const [submitted, setSubmitted] = useState(false);
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />
                 {errors.pincode && (
-                  <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}>
+                  <p
+                    className={`${
+                      submitted ? "text-red-500" : "text-blue-500"
+                    } text-xs mt-1 capitalize`}
+                  >
                     {errors.pincode}
                   </p>
                 )}
@@ -378,9 +342,11 @@ const [submitted, setSubmitted] = useState(false);
                   className="w-full border rounded px-3 py-2 outline-none bg-white"
                 />{" "}
                 {errors.mobile && (
-                  <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}>
+                  <p
+                    className={`${
+                      submitted ? "text-red-500" : "text-blue-500"
+                    } text-xs mt-1 capitalize`}
+                  >
                     {errors.mobile}
                   </p>
                 )}
@@ -388,7 +354,8 @@ const [submitted, setSubmitted] = useState(false);
             </div>
 
             <div className="mt-4">
-              <label className="text-sm mb-1 block">Email</label>
+              <label className="text-sm mb-1 block">{" "}
+                  <span className="text-red-500"> * </span>Email</label>
               <input
                 type="email"
                 name="email"
@@ -399,9 +366,11 @@ const [submitted, setSubmitted] = useState(false);
                 className="w-full border rounded px-3 py-2 outline-none bg-white"
               />{" "}
               {errors.email && (
-                <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}>
+                <p
+                  className={`${
+                    submitted ? "text-red-500" : "text-blue-500"
+                  } text-xs mt-1 capitalize`}
+                >
                   {errors.email}
                 </p>
               )}
@@ -422,9 +391,11 @@ const [submitted, setSubmitted] = useState(false);
                 className="w-full border rounded px-3 py-2 outline-none bg-white"
               />{" "}
               {errors.shortBio && (
-                <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}>
+                <p
+                  className={`${
+                    submitted ? "text-red-500" : "text-blue-500"
+                  } text-xs mt-1 capitalize`}
+                >
                   {errors.shortBio}
                 </p>
               )}
@@ -467,9 +438,13 @@ const [submitted, setSubmitted] = useState(false);
             <option value="E-commerce">E-commerce</option>
           </select>
           {errors.industry && (
-            <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}>{errors.industry}</p>
+            <p
+              className={`${
+                submitted ? "text-red-500" : "text-blue-500"
+              } text-xs mt-1 capitalize`}
+            >
+              {errors.industry}
+            </p>
           )}
 
           {/* Social Media URLs */}
@@ -493,9 +468,11 @@ const [submitted, setSubmitted] = useState(false);
                     className="bg-transparent outline-none w-full pl-3"
                   />
                   {errors[field] && (
-                    <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize`}>
+                    <p
+                      className={`${
+                        submitted ? "text-red-500" : "text-blue-500"
+                      } text-xs mt-1 capitalize`}
+                    >
                       {errors[field]}
                     </p>
                   )}
@@ -517,14 +494,19 @@ const [submitted, setSubmitted] = useState(false);
             className="input bg-white w-full ml-3"
           />
           {errors.websiteURL && (
-            <p className={`${
-      submitted ? "text-red-500" : "text-blue-500"
-    } text-xs mt-1 capitalize `}>{errors.websiteURL}</p>
+            <p
+              className={`${
+                submitted ? "text-red-500" : "text-blue-500"
+              } text-xs mt-1 capitalize `}
+            >
+              {errors.websiteURL}
+            </p>
           )}
 
           <div className="flex justify-end gap-4">
             <button
               type="button"
+              onChange={GotoBusinessList}
               className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition"
             >
               Cancel
@@ -540,20 +522,19 @@ const [submitted, setSubmitted] = useState(false);
       </div>
 
       {popupType && (
-<Button
-  type={popupType}
-  message={
-    popupType === "error"
-      ? "⚠️ Please fill all required fields correctly!"
-      : popupType === "success"
-      ? "✅ Profile saved successfully!"
-      : popupType === "processing"
-      ? "⏳ Processing..."
-      : ""
-  }
-  onClose={() => setPopupType(null)}
-/>
-
+        <Button
+          type={popupType}
+          message={
+            popupType === "error"
+              ? "⚠️ Please enter correct details"
+              : popupType === "success"
+              ? "✅ Profile saved successfully!"
+              : popupType === "processing"
+              ? "⏳ Processing..."
+              : ""
+          }
+          onClose={() => setPopupType(null)}
+        />
       )}
     </div>
   );
