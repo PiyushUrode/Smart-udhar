@@ -368,6 +368,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   };
 
   const handlePreview = () => {
+    
     if (!selectedCustomer?._id) {
       setPopupType("error");
       setMessage("Please select a customer!");
@@ -403,6 +404,13 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       return;
     }
 
+    let payloadPaymentMethod = paymentMethod;
+    let payloadtransactionId = transactionId;
+
+    if(paymentMode === "debt"){
+      payloadPaymentMethod ="";
+      payloadtransactionId ="";
+    } //no details of cash should be sent for debt
     const payload = {
       customerId: selectedCustomer._id,
       name: selectedCustomer.name,
@@ -411,8 +419,8 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       balance: selectedCustomer.balance,
       creditScore: selectedCustomer.creditScore,
       paymentMode,
-      paymentMethod,
-      transactionId,
+      paymentMethod: payloadPaymentMethod,
+      transactionId: payloadtransactionId,
       deliveryFee: Number(additionalCharges.deliveryFee) || 0,
       packingCharges: Number(additionalCharges.packingCharges) || 0,
       discount: Number(additionalCharges.discount) || 0,
@@ -443,6 +451,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
           total: calculateTotal(p),
         };
       }),
+      productType: taxType,
       ...(paymentMode === "debt"
         ? {
             milestones: milestones.map((m) => {
@@ -469,6 +478,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
 
   const handleSubmit = async () => {
     try {
+    
       const res = await Invoice.createInvoice(previewInvoice);
       if (res.success) {
         setMessage("✅ Invoice created successfully!");
