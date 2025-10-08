@@ -60,7 +60,6 @@ import SubscriptionCategory from "./admin/Pages/Subcriptions/SubscriptionCategor
 import CustomDropdown from "./admin/Pages/Notification/ManageNotificationTypes.jsx";
 import ProfileCard from "./admin/Pages/profile/profile.jsx";
 import D15Invite from "./user/Pages/dashboard/D15Invite.jsx";
-import D8_1ViewInvoice from "./user/Pages/dashboard/D8_1ViewInvoice.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true); // adjust as per your logic
@@ -113,7 +112,6 @@ function App() {
                   path="payment-collectionList"
                   element={<D8PaymentCollectionList />}
                 />
-                <Route path="invoice-view/:id" element={<D8_1ViewInvoice />} />
                 <Route path="credit-score" element={<D9CreditScore />} />
                 <Route path="expenses" element={<D10Expenses />} />
                 <Route path="expenses-list" element={<D10ExpensesList />} />
