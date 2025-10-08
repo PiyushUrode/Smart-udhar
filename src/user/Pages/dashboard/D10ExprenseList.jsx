@@ -11,14 +11,14 @@ const D10ExpenseList = () => {
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
-  const [popupType, setPopupType] = useState(null); // Pagination State
-
+  const [popupType, setPopupType] = useState(null);   
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalExpenses, setTotalExpenses] = useState(0); // State for items per page, defaulted to 10
+  const [totalExpenses, setTotalExpenses] = useState(0); 
   const [limit, setLimit] = useState(10);
-  const LIMIT_OPTIONS = [5, 10, 25, 50]; // Options for the user to select
-
+  const LIMIT_OPTIONS = [5, 10, 25, 50]; 
+  
   const [filters, setFilters] = useState({
     date: false,
     category: false,
@@ -30,6 +30,81 @@ const D10ExpenseList = () => {
     startDate: null,
     endDate: null,
   }); // Update useEffect to use currentPage AND limit
+
+
+// --- Add these at the top ---
+const categories = ["Travel", "Office Supplies", "Rent", "Utilities"];
+const paymentModes = ["Cash", "UPI", "Bank"];
+
+// --- Add new state ---
+const [selectedCategories, setSelectedCategories] = useState([]);
+const [selectedPayment, setSelectedPayment] = useState("");
+const [customDate, setCustomDate] = useState({
+  startDate: "",
+  endDate: "",
+});
+
+// --- Update toggleFilter to reset dependent filters ---
+const toggleFilter = (selectedFilter) => {
+  setFilters({
+    date: selectedFilter === "date",
+    category: selectedFilter === "category",
+    paymentMode: selectedFilter === "paymentMode",
+  });
+
+  // Reset irrelevant selections when switching filters
+  if (selectedFilter !== "category") setSelectedCategories([]);
+  if (selectedFilter !== "paymentMode") setSelectedPayment("");
+  if (selectedFilter !== "date") setCustomDate({ startDate: "", endDate: "" });
+};
+
+
+// --- Update applyFilters function ---
+const applyFilters = async () => {
+  setCurrentPage(1);
+  try {
+    setLoading(true);
+    const payload = {};
+
+    // Add date range if active
+    if (filters.date && customDate.startDate && customDate.endDate) {
+      payload.startDate = customDate.startDate;
+      payload.endDate = customDate.endDate;
+    }
+
+    // Add category array if selected
+    if (filters.category && selectedCategories.length > 0) {
+      // You can either send one or loop multiple, depending on backend
+      payload.expenseCategory = selectedCategories;
+    }
+
+    // Add payment mode if selected
+    if (filters.paymentMode && selectedPayment) {
+      payload.paymentMode = selectedPayment;
+    }
+
+    const res = await ExpenseService.filterExpenses(payload);
+    setExpenses(res?.expenses || res?.data || []);
+    setTotalExpenses(res.total || (res.expenses?.length ?? 0));
+    setTotalPages(Math.ceil((res.total || (res.expenses?.length ?? 0)) / limit));
+  } catch (error) {
+    console.error("Error applying filters:", error.message);
+    setExpenses([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// --- Add clear filters ---
+const clearFilters = () => {
+  setFilters({ date: false, category: false, paymentMode: false });
+  setSelectedCategories([]);
+  setSelectedPayment("");
+  setCustomDate({ startDate: "", endDate: "" });
+  fetchAllExpenses(1, limit);
+};
+
+
 
   useEffect(() => {
     fetchAllExpenses(currentPage, limit);
@@ -60,41 +135,7 @@ const D10ExpenseList = () => {
     }
   };
 
-  const toggleFilter = (key) =>
-    setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  const applyFilters = async () => {
-    // Reset to first page when applying new filters
-    setCurrentPage(1);
-    try {
-      setLoading(true); 
-      const payload = {};
-      if (filters.category) payload.expenseCategory = "Office Supplies";
-      if (filters.paymentMode) payload.paymentMode = "UPI";
-
-      if (filters.date) {
-        const today = new Date();
-        const last30 = new Date();
-        last30.setDate(today.getDate() - 30);
-
-        const startDate = last30.toISOString().split("T")[0];
-        const endDate = today.toISOString().split("T")[0];
-        Object.assign(payload, { startDate, endDate });
-        setDateRange({ startDate, endDate });
-      } else {
-        setDateRange({ startDate: null, endDate: null });
-      } // NOTE: Filter endpoint must also handle pagination (page and limit) // Assuming filterExpenses can accept payload, page=1, and current limit
-
-      const res = await ExpenseService.filterExpenses(payload, 1, limit);
-      setExpenses(res?.expenses || res?.data || []);
-      setTotalPages(Math.ceil((res.total || 0) / limit));
-      setTotalExpenses(res.total || 0);
-    } catch (error) {
-      console.error("Error applying filters:", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileChange = (e) => setFile(e.target.files[0] || null);
 
@@ -160,34 +201,115 @@ const D10ExpenseList = () => {
           </button>
               {" "}
           {showFilters && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 p-3 space-y-2 ">
-                    {" "}
-              {["date", "category", "gst", "paymentMode"].map((key) => (
-                <label
-                  key={key}
-                  className="flex items-center text-sm text-gray-700 gap-2"
-                >
-                          {" "}
-                  <input
-                    type="checkbox"
-                    checked={filters[key]}
-                    onChange={() => toggleFilter(key)}
-                    className="h-5 w-5 border border-gray-300 rounded-sm checked:bg-blue-500 checked:text-white appearance-none h-5 w-5 border-2 border-gray-700 rounded-sm checked:bg-white checked:border-black checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center"
-                  />
-                           {key.charAt(0).toUpperCase() + key.slice(1)}
-                         {" "}
-                </label>
-              ))}
-                    {" "}
-              <button
-                onClick={applyFilters}
-                className="w-full mt-2 px-2 py-1 bg-blue-600 text-white text-xs rounded"
-              >
-                        Apply       {" "}
-              </button>
-                   {" "}
-            </div>
-          )}
+  <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-md shadow-lg z-10 p-4 space-y-3">
+    
+    {/* Date Filter */}
+    <label className="flex items-center text-sm font-medium text-gray-700 gap-2">
+      <input
+        type="checkbox"
+        checked={filters.date}
+        onChange={() => toggleFilter("date")}
+        className="h-4 w-4 border-gray-300 rounded checked:bg-blue-500 checked:text-white appearance-none h-5 w-5 border-2 rounded-full border-gray-700 rounded-sm checked:bg-white checked:border-black checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center"
+      />
+      Date Range
+    </label>
+    {filters.date && (
+      <div className="flex flex-col gap-2 mt-2">
+        <input
+          type="date"
+          value={customDate.startDate}
+          onChange={(e) =>
+            setCustomDate((p) => ({ ...p, startDate: e.target.value }))
+          }
+          className="border border-gray-300 rounded-md p-1 text-sm"
+        />
+        <input
+          type="date"
+          value={customDate.endDate}
+          onChange={(e) =>
+            setCustomDate((p) => ({ ...p, endDate: e.target.value }))
+          }
+          className="border border-gray-300 rounded-md p-1 text-sm"
+        />
+      </div>
+    )}
+
+    {/* Category Filter */}
+    <label className="flex items-center text-sm font-medium text-gray-700 gap-2 mt-2">
+      <input
+        type="checkbox"
+        checked={filters.category}
+        onChange={() => toggleFilter("category")}
+        className="h-4 w-4 border-gray-300 rounded checked:bg-blue-500 checked:text-white appearance-none h-5 w-5 border-2 rounded-full border-gray-700 rounded-sm checked:bg-white checked:border-black checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center"
+      />
+      Category
+    </label>
+    {filters.category && (
+      <div className="flex flex-col gap-1 ml-4">
+        {categories.map((cat) => (
+          <label key={cat} className="text-sm text-gray-600 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={selectedCategories.includes(cat)}
+              onChange={(e) => {
+                if (e.target.checked)
+                  setSelectedCategories((prev) => [...prev, cat]);
+                else
+                  setSelectedCategories((prev) =>
+                    prev.filter((c) => c !== cat)
+                  );
+              }}
+              className="h-4 w-4 border-gray-300 rounded checked:bg-blue-500 checked:text-white appearance-none h-5 w-5 border-2 rounded-full border-gray-700 rounded-sm checked:bg-white checked:border-black checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center"
+            />
+            {cat}
+          </label>
+        ))}
+      </div>
+    )}
+
+    {/* Payment Mode Filter */}
+    <label className="flex items-center text-sm font-medium text-gray-700 gap-2 mt-2">
+      <input
+        type="checkbox"
+        checked={filters.paymentMode}
+        onChange={() => toggleFilter("paymentMode")}
+        className="h-4 w-4 border-gray-300 rounded checked:bg-blue-500 checked:text-white appearance-none h-5 w-5 border-2 rounded-full border-gray-700 rounded-sm checked:bg-white checked:border-black checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center"
+      />
+      Payment Mode
+    </label>
+    {filters.paymentMode && (
+      <select
+        value={selectedPayment}
+        onChange={(e) => setSelectedPayment(e.target.value)}
+        className="w-full mt-1 border border-gray-300 rounded-md p-1 text-sm"
+      >
+        <option value="">Select Mode</option>
+        {paymentModes.map((mode) => (
+          <option key={mode} value={mode}>
+            {mode}
+          </option>
+        ))}
+      </select>
+    )}
+
+    {/* Buttons */}
+    <div className="flex justify-between mt-3">
+      <button
+        onClick={applyFilters}
+        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+      >
+        Apply
+      </button>
+      <button
+        onClick={clearFilters}
+        className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+)}
+
              {" "}
         </div>
           {" "}

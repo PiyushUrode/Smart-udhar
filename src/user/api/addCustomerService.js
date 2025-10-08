@@ -135,13 +135,11 @@ export const useCustomerForm = () => {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
-      newErrors.email = "Email is required.";
-      valid = false;
-    } else if (!emailRegex.test(email.trim())) {
-      newErrors.email = "Invalid email address.";
-      valid = false;
-    }
+if (email.trim() && !emailRegex.test(email.trim())) {
+  newErrors.email = "Invalid email address.";
+  valid = false;
+}
+
 
     setErrors(newErrors);
     return valid;
@@ -165,6 +163,10 @@ export const useCustomerForm = () => {
 
       for (const key in formData) {
         if (key === "store_id" || key === "storeProfile_id") continue;
+          if (key === "email" && !formData[key]) {
+    payload.append("email", "noemail@dummy.com");
+    continue;
+  }
         if (formData[key]) payload.append(key, formData[key]);
       }
 

@@ -172,17 +172,17 @@ const CustomerDetailsForm = () => {
                 >
                   {/* Serial Number */}
                   <td className="p-3">{(page - 1) * limit + index + 1}</td>
-                  <td className="p-3">{cust.displayId}</td>
-                  <td className="p-3">{cust.name}</td>
-                  <td className="p-3">{cust.mobile}</td>
+                  <td className="p-3">{cust.displayId || "--"}</td>
+                  <td className="p-3">{cust.name || "--"}</td>
+                  <td className="p-3">{cust.mobile || "--"}</td>
                   <td className="p-3 text-blue-600 hover:underline cursor-pointer">
-                    {cust.email}
+                    {cust.email || "--"}
                   </td>
                   <td className={`p-3 ${getScoreColor(cust.score)}`}>
                     {cust.score}
                   </td>
-                  <td className="p-3">{cust.city}</td>
-                  <td className="p-3">{cust.state}</td>
+                  <td className="p-3">{cust.city || "--"}</td>
+                  <td className="p-3">{cust.state || "--" }</td>
                   <td className="p-3 text-center space-x-2">
                     <button onClick={() => handleEdit(cust)}>
                       <FiEdit className="w-5 h-5 text-blue-500" />

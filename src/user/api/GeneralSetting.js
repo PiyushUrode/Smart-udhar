@@ -1,9 +1,9 @@
 // src/api/settingService.js
+import axios from "axios";
+import Cookies from "js-cookie";
 import axiosClient from "./axiosclient.js";
 import { AuthService } from "./authservice.js";
-import Cookies from "js-cookie";
 import { API_BASE } from "../config/constant.js";
-import axios from "axios";
 
 // ----------------- Helpers -----------------
 function getstoreProfile_id() {
@@ -30,112 +30,126 @@ function authHeaders(token) {
   return { Authorization: `Bearer ${token}` };
 }
 
-
-// ================= Service ==================
+// ==========================================================
+// ✅ SETTINGS SERVICE
+// ==========================================================
 const SettingsService = {
-
-
-
-
-
-
-
-
-
-  
   // ---------------- General Settings ----------------
   async createGeneralSettings(payload) {
     const { token, store_id, storeProfile_id } = getAuthContext();
+
     const res = await axios.post(
       `${API_BASE}/general-settings/create`,
       { ...payload, store_id, storeProfile_id },
       { headers: authHeaders(token) }
     );
+
     return res.data;
   },
 
   async updateGeneralSettings(id, payload) {
-    const { token } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
+
     const res = await axios.put(
       `${API_BASE}/general-settings/update/${id}`,
-      payload,
+      { ...payload, store_id, storeProfile_id },
       { headers: authHeaders(token) }
     );
+
     return res.data;
   },
 
   async getAllGeneralSettings() {
-  const { token, store_id, storeProfile_id } = getAuthContext();
-  const res = await axios.get(
-    `${API_BASE}/general-settings/find-all/${store_id}/${storeProfile_id}`,
-    { headers: authHeaders(token) }
-  );
-  return res.data?.data || res.data;
-},
-
-
-
- async createInvoiceTemplateSettings(payload) {
     const { token, store_id, storeProfile_id } = getAuthContext();
-    
 
-  const res = await axios.post(
-    `${API_BASE}/invoice-template-settings/create`,
-    { ...payload, store_id, storeProfile_id }, 
-    { headers: authHeaders(token) }
-  );
-  return res.data;
-}
-,
- async updateInvoiceTemplateSettings(id, payload) {
-  const { token, store_id, storeProfile_id } = getAuthContext();
-  const res = await axios.put(
-    `${API_BASE}/invoice-template-settings/update/${id}`,
-    { ...payload, store_id, storeProfile_id }, 
-    { headers: authHeaders(token) }
-  );
-  return res.data;
-}
-,
+    const res = await axios.get(
+      `${API_BASE}/general-settings/find-all/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token) }
+    );
 
-async getAllInvoiceTemplateSettings() {
-  const { token, store_id, storeProfile_id } = getAuthContext();
-  const res = await axios.get(
-    `${API_BASE}/invoice-template-settings/find-all/${store_id}/${storeProfile_id}`,
-    { headers: authHeaders(token) }
-  );
-  return res.data?.data || res.data;
-},
+    return res.data?.data || res.data;
+  },
+
+  async getGeneralSettingById(id) {
+    const { token } = getAuthContext();
+    const res = await axios.get(
+      `${API_BASE}/general-settings/findBy-id/${id}`,
+      { headers: authHeaders(token) }
+    );
+    return res.data?.data || res.data;
+  },
+
+  // ---------------- Invoice Template Settings ----------------
+  async createInvoiceTemplateSettings(payload) {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+
+    const res = await axios.post(
+      `${API_BASE}/invoice-template-settings/create`,
+      { ...payload, store_id, storeProfile_id },
+      { headers: authHeaders(token) }
+    );
+
+    return res.data;
+  },
+
+  async updateInvoiceTemplateSettings(id, payload) {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+
+    const res = await axios.put(
+      `${API_BASE}/invoice-template-settings/update/${id}`,
+      { ...payload, store_id, storeProfile_id },
+      { headers: authHeaders(token) }
+    );
+
+    return res.data;
+  },
+
+  async getAllInvoiceTemplateSettings() {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+
+    const res = await axios.get(
+      `${API_BASE}/invoice-template-settings/find-all/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token) }
+    );
+
+    return res.data?.data || res.data;
+  },
 
   // ---------------- Payment Setup ----------------
   async createPaymentSetup(payload) {
     const { token, store_id, storeProfile_id } = getAuthContext();
+
     const res = await axios.post(
       `${API_BASE}/payment-setup/create`,
       { ...payload, store_id, storeProfile_id },
       { headers: authHeaders(token) }
     );
+
     return res.data;
   },
 
   async updatePaymentSetup(id, payload) {
-    const { token } = getAuthContext();
+    const { token, store_id, storeProfile_id } = getAuthContext();
+
     const res = await axios.put(
       `${API_BASE}/payment-setup/update/${id}`,
-      payload,
+      { ...payload, store_id, storeProfile_id },
       { headers: authHeaders(token) }
     );
+
     return res.data;
   },
 
-async getAllPaymentSetup() {
-  const { token, store_id, storeProfile_id } = getAuthContext();
-  const res = await axios.get(
-    `${API_BASE}/payment-setup/find-all/${store_id}/${storeProfile_id}`,
-    { headers: authHeaders(token) }
-  );
-  return res.data?.data || res.data;
-},
+  async getAllPaymentSetup() {
+    const { token, store_id, storeProfile_id } = getAuthContext();
+
+    const res = await axios.get(
+      `${API_BASE}/payment-setup/find-all/${store_id}/${storeProfile_id}`,
+      { headers: authHeaders(token) }
+    );
+
+    return res.data?.data || res.data;
+  },
 };
 
 export default SettingsService;

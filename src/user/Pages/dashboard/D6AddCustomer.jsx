@@ -22,7 +22,7 @@ const D6AddCustomer = () => {
   const inputFields = [
     ["name", "Name", true],
     ["mobile", "Mobile", true],
-    ["email", "Email", true],
+    ["email", "Email", false],
     ["address", "Address", false],
     ["pin", "PIN", false],
     ["city", "City", false],
