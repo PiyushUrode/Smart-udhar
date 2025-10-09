@@ -26,6 +26,7 @@ import { useCreateInvoiceController } from "../../api/CreateInvoiceCTR.js";
 export default function D7CreateInvoice({ onCustomerSelect }) {
   const navigate = useNavigate();
   const {
+    invoceId,
     createdDate,
     setCreatedDate,
     selectedFormat,
@@ -94,6 +95,11 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
   const handleCreateDate = (date) => {
     setCreatedDate(date);   
   };
+
+  const handleView = (id) => {
+    navigate(`/dashboard/invoice-view/${id}`);
+  }
+
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
@@ -114,7 +120,8 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
 
             {/* {created date as input box } */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <p className="my-6">Invoice ID : <strong>{invoceId}</strong> </p>
+              <label className="block text-sm font-medium text-gray-700 my-3">
                 Invoice Created Date
               </label>
               <input
@@ -754,8 +761,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
 
       {/* ---------- Invoice Preview Modal ---------- */}
       {/* ---------- Invoice Preview Modal (with 3 format options) ---------- */}
-
-      {/* ---------- Invoice Preview Modal ---------- */}
+  {/* ---------- Invoice Preview Modal ---------- */}
       {showPreview && previewInvoice && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-6 bg-black/40">
           <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
@@ -808,7 +814,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                     <div>
                       <h1 className="text-2xl font-bold">INVOICE</h1>
                       <p className="text-sm text-gray-600">
-                        Invoice ID: {previewInvoice._id || previewInvoice.id}
+                        Invoice ID: {invoceId}
                       </p>
                       <p className="text-sm text-gray-600">
                         Date:{" "}
@@ -1012,197 +1018,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   </div>
                 </div>
               )}
-
-              {/* ========== MODERN FORMAT ========== */}
-              {selectedFormat === "modern" && (
-                <div className="space-y-6 text-gray-800">
-                  {/* Centered Header */}
-                  <div className="text-center mb-6">
-                    <h1 className="text-3xl font-bold text-blue-700">
-                      {storeProfile?.businessName || "Your Company Name"}
-                    </h1>
-                    <p className="text-sm">
-                      {storeProfile?.address || "Address line 1"}
-                    </p>
-                    <p className="text-sm">
-                      {storeProfile?.mobile || ""}{" "}
-                      {storeProfile?.email ? `/ ${storeProfile.email}` : ""}
-                    </p>
-                  </div>
-
-                  <div className="text-center mb-6">
-                    <h2 className="text-2xl font-semibold">INVOICE</h2>
-                    <p className="text-gray-500">
-                      #{previewInvoice?._id || "-"}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(
-                        previewInvoice?.createdAt || Date.now()
-                      ).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  {/* Items Table */}
-                  <table className="w-full border-collapse text-sm">
-                    <thead className="bg-blue-50 border-b border-blue-200">
-                      <tr>
-                        <th className="py-2 px-2 text-left">Item</th>
-                        <th className="py-2 px-2 text-right">Qty</th>
-                        <th className="py-2 px-2 text-right">Price</th>
-                        {taxType === "taxable" ? (
-                          <th className="py-2 px-2 text-right">Tax</th>
-                        ) : (
-                          ""
-                        )}
-                        <th className="py-2 px-2 text-right">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(previewInvoice.products || []).map((p, i) => (
-                        <tr key={i} className={i % 2 === 0 ? "bg-gray-50" : ""}>
-                          <td className="py-2 px-2">{p.name}</td>
-                          <td className="py-2 px-2 text-right">{p.qty}</td>
-                          <td className="py-2 px-2 text-right">
-                            ₹{Number(p.price || 0).toFixed(2)}
-                          </td>
-                          {taxType === "taxable" ? (
-                            <td className="py-2 px-2 text-right">{p.tax}%</td>
-                          ) : (
-                            ""
-                          )}
-                          <td className="py-2 px-2 text-right">
-                            ₹
-                            {taxType === "taxable"
-                              ? (p.qty * p.price * (1 + p.tax / 100)).toFixed(2)
-                              : (p.qty * p.price).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
-                  {/* Totals */}
-                  <div className="flex justify-end mt-6">
-                    <div className="w-1/2 border-t pt-4 space-y-2 text-right">
-                      <div>Subtotal: ₹{invoiceSummary.subtotal.toFixed(2)}</div>
-                      {taxType === "taxable" ? (
-                        <div>Tax: ₹{invoiceSummary.totalTax.toFixed(2)}</div>
-                      ) : (
-                        ""
-                      )}
-                      <div>
-                        Delivery: ₹{invoiceSummary.deliveryFee.toFixed(2)}
-                      </div>
-                      <div>
-                        Discount: -₹{invoiceSummary.discount.toFixed(2)}
-                      </div>
-                      <div className="font-bold text-lg border-t pt-2">
-                        Total: ₹{invoiceSummary.total.toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 bg-gray-100 p-4 text-sm rounded">
-                    <p>
-                      <strong>Payment Mode:</strong>{" "}
-                      {previewInvoice.paymentMode}
-                    </p>
-                    <p>
-                      <strong>Note:</strong>{" "}
-                      {previewInvoice.note || "Thank you for your business!"}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* ========== MINIMAL FORMAT ========== */}
-              {selectedFormat === "minimal" && (
-                <div className="p-6 text-xs text-gray-800 space-y-4">
-                  <h2 className="text-xl font-bold">
-                    {storeProfile?.businessName || "Your Company Name"}
-                  </h2>
-                  <p>{storeProfile?.address || "Address line 1"}</p>
-                  <p>
-                    {storeProfile?.mobile || ""}{" "}
-                    {storeProfile?.email ? `| ${storeProfile.email}` : ""}
-                  </p>
-                  <hr className="my-2" />
-                  <p>
-                    <strong>Invoice:</strong> #{previewInvoice?._id || "-"}
-                  </p>
-                  <p>
-                    <strong>Date:</strong>{" "}
-                    {new Date(
-                      previewInvoice?.createdAt || Date.now()
-                    ).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <strong>Customer:</strong>{" "}
-                    {previewInvoice?.name || selectedCustomer?.name || "-"}
-                  </p>
-
-                  <table className="w-full mt-3 border-collapse">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left">Item</th>
-                        <th className="text-right">Qty</th>
-                        <th className="text-right">Price</th>
-                        {taxType === "taxable" ? (
-                          <th className="text-right">Tax</th>
-                        ) : (
-                          ""
-                        )}
-                        <th className="text-right">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(previewInvoice.products || []).map((p, i) => (
-                        <tr key={i} className="border-b">
-                          <td>{p.name}</td>
-                          <td className="text-right">{p.qty}</td>
-                          <td className="text-right">
-                            ₹{Number(p.price || 0).toFixed(2)}
-                          </td>
-                          {taxType === "taxable" ? (
-                            <td className="text-right">{p.tax}%</td>
-                          ) : (
-                            ""
-                          )}
-                          <td className="text-right">
-                            ₹
-                            {taxType === "taxable"
-                              ? (p.qty * p.price * (1 + p.tax / 100)).toFixed(2)
-                              : (p.qty * p.price).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
-                  <div className="mt-3 text-right">
-                    <div>Subtotal: ₹{invoiceSummary.subtotal.toFixed(2)}</div>
-                    {taxType === "taxable" ? (
-                      <div>Tax: ₹{invoiceSummary.totalTax.toFixed(2)}</div>
-                    ) : (
-                      ""
-                    )}
-                    <div>
-                      Total: <strong>₹{invoiceSummary.total.toFixed(2)}</strong>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p>
-                      <strong>Payment:</strong> {previewInvoice.paymentMode}
-                    </p>
-                    {previewInvoice.note && (
-                      <p>
-                        <strong>Note:</strong> {previewInvoice.note}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
+             
             </div>
 
             {/* ---------- Footer Buttons ---------- */}
@@ -1223,11 +1039,12 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
           </div>
         </div>
       )}
+    
 
       {/* Sidebar */}
       <div className="bg-white shadow-customCard  border rounded-lg p-4">
-        <h2 className="text-lg font-robotoSb mb-4">Invoice Summary</h2>
-        <ul className="text-sm font-robotoR text-black space-y-3">
+        <h2 className="text-lg font-robotoSb mb-4 hidden">Invoice Summary</h2>
+        <ul className="text-sm font-robotoR text-black space-y-3 hidden">
           <li className="flex justify-between">
             <span>Subtotal:</span>
             <span>₹{invoiceSummary.subtotal.toFixed(2)}</span>
@@ -1283,7 +1100,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                 </div>
 
                 <button
-                  onClick={() => console.log("View Invoice:", inv._id)}
+                  onClick={() => handleView(inv._id)}
                   className="bg-[#E6FEE2] text-[#16A34A] px-2 py-1 rounded-full font-robotoM text-xs"
                 >
                   View Invoice

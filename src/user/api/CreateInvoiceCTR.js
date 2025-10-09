@@ -13,6 +13,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
 
   // Customer State
   const [createdDate, setCreatedDate] = useState(Date.now());
+  const [invoceId, setInvoiceId] = useState("INV-00000001");
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,6 +90,19 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   // 3. SIDE EFFECTS & DATA FETCHING (useEffect)
   // =========================================================================
 
+  useEffect(() => {
+    try{
+      const fetchInvoiceId = async () => {
+        const res = await Invoice.fetchInvoiceId();
+        if (res.success) {
+          setInvoiceId(res.invoiceId || "");
+        }
+      };
+      fetchInvoiceId();
+    }catch(err){
+      console.error("Error in createdDate effect:", err);
+    }
+  }, [createdDate]);
   // Effect 1: Fetch Customers
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -108,6 +122,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       }
     };
     fetchCustomers();
+    
   }, []);
 
   // Effect 2: Fetch Products
@@ -636,6 +651,8 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   // =========================================================================
 
   return {
+    invoceId,
+
     createdDate,
     setCreatedDate,
     // View/General State
