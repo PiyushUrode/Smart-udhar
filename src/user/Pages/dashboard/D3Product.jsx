@@ -114,11 +114,59 @@ const ProductForm = ({
             value={formData.unit}
             onChange={handleChange}
           >
-            <option value="">e.g. pcs, kg, ltr</option>
-            <option value="pcs">pcs</option>
+            {/* <!-- Units in Alphabetical Order --> */}
+            <option value="acre">acre</option>
+            <option value="bag">bag</option>
+            <option value="barrel">barrel</option>
+            <option value="bottle">bottle</option>
+            <option value="box">box</option>
+            <option value="bundle">bundle</option>
+            <option value="can">can</option>
+            <option value="carton">carton</option>
+            <option value="cc">cc</option>
+            <option value="cft">cft</option>
+            <option value="cm">cm</option>
+            <option value="container">container</option>
+            <option value="cubicm">cubic meter</option>
+            <option value="day">day</option>
+            <option value="dozen">dozen</option>
+            <option value="ft">ft</option>
+            <option value="g">g</option>
+            <option value="gal">gallon</option>
+            <option value="hectare">hectare</option>
+            <option value="hour">hour</option>
+            <option value="inch">inch</option>
+            <option value="jar">jar</option>
             <option value="kg">kg</option>
+            <option value="kl">kl</option>
+            <option value="km">km</option>
             <option value="ltr">ltr</option>
+            <option value="m">m</option>
+            <option value="mg">mg</option>
+            <option value="ml">ml</option>
+            <option value="month">month</option>
+            <option value="nos">nos</option>
+            <option value="packet">packet</option>
+            <option value="pack">pack</option>
+            <option value="pair">pair</option>
+            <option value="pcs">pcs</option>
+            <option value="piece">piece</option>
+            <option value="quintal">quintal</option>
+            <option value="roll">roll</option>
+            <option value="set">set</option>
+            <option value="sheet">sheet</option>
+            <option value="sqcm">sqcm</option>
+            <option value="sqft">sqft</option>
+            <option value="sqm">sqm</option>
+            <option value="sqyard">sqyard</option>
+            <option value="tin">tin</option>
+            <option value="ton">ton</option>
+            <option value="tube">tube</option>
+            <option value="unit">unit</option>
+            <option value="yard">yard</option>
+            <option value="year">year</option>
           </select>
+
           {errors.unit && (
             <p className="text-red-500 text-xs mt-1">Unit is required</p>
           )}
@@ -203,24 +251,81 @@ const ProductForm = ({
       <label className="block text-sm font-medium text-gray-700 mb-3">
         Categories<span className="text-red-500">*</span>
       </label>
-      <select
-        name="category"
-        required
-        className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
-          errors.category ? "border-red-500" : "border-gray-300"
-        }`}
-        value={formData.category || ""}
-        onChange={handleChange}
-      >
-        <option value="">Select Category</option>
-        <option value="Food">Food</option>
-        <option value="Bakery">Bakery</option>
-        <option value="Grociers">Grociers</option>
-        <option value="Electronics">Electronics</option>
-        <option value="Pendrive">Pendrive</option>
-        <option value="Hardisk">Hardisk</option>
-        <option value="Storage">Storage</option>
-      </select>
+     <select
+  name="category"
+  required
+  className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
+    errors.category ? "border-red-500" : "border-gray-300"
+  }`}
+  value={formData.category || ""}
+  onChange={handleChange}
+>
+  <option value="">Select Category</option>
+
+  <option value="Accessories">Accessories</option>
+  <option value="Art Supplies">Art Supplies</option>
+  <option value="Automotive">Automotive</option>
+  <option value="Baby Products">Baby Products</option>
+  <option value="Bakery">Bakery</option>
+  <option value="Bags & Luggage">Bags & Luggage</option>
+  <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+  <option value="Beverages">Beverages</option>
+  <option value="Bike Accessories">Bike Accessories</option>
+  <option value="Books">Books</option>
+  <option value="Cameras">Cameras</option>
+  <option value="Camping">Camping</option>
+  <option value="Car Accessories">Car Accessories</option>
+  <option value="Cleaning Supplies">Cleaning Supplies</option>
+  <option value="Clothing - Kids">Clothing - Kids</option>
+  <option value="Clothing - Men">Clothing - Men</option>
+  <option value="Clothing - Women">Clothing - Women</option>
+  <option value="Construction">Construction</option>
+  <option value="Crafts">Crafts</option>
+  <option value="Dairy">Dairy</option>
+  <option value="Electronics">Electronics</option>
+  <option value="Fitness">Fitness</option>
+  <option value="Food">Food</option>
+  <option value="Footwear">Footwear</option>
+  <option value="Frozen Foods">Frozen Foods</option>
+  <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+  <option value="Furniture">Furniture</option>
+  <option value="Gadgets">Gadgets</option>
+  <option value="Games & Gaming">Games & Gaming</option>
+  <option value="Gardening">Gardening</option>
+  <option value="Gifts">Gifts</option>
+  <option value="Groceries">Groceries</option>
+  <option value="Harddisk">Harddisk</option>
+  <option value="Headphones">Headphones</option>
+  <option value="Health Care">Health Care</option>
+  <option value="Home Appliances">Home Appliances</option>
+  <option value="Home Decor">Home Decor</option>
+  <option value="Industrial">Industrial</option>
+  <option value="Jewellery">Jewellery</option>
+  <option value="Kitchen Appliances">Kitchen Appliances</option>
+  <option value="Lighting">Lighting</option>
+  <option value="Laptops">Laptops</option>
+  <option value="Lubricants">Lubricants</option>
+  <option value="Medical Supplies">Medical Supplies</option>
+  <option value="Mobiles">Mobiles</option>
+  <option value="Office Supplies">Office Supplies</option>
+  <option value="Other">Other</option>
+  <option value="Pendrive">Pendrive</option>
+  <option value="Personal Care">Personal Care</option>
+  <option value="Pet Supplies">Pet Supplies</option>
+  <option value="Smartwatches">Smartwatches</option>
+  <option value="Snacks">Snacks</option>
+  <option value="Spices & Condiments">Spices & Condiments</option>
+  <option value="Sports">Sports</option>
+  <option value="Stationery">Stationery</option>
+  <option value="Storage">Storage</option>
+  <option value="Tablets">Tablets</option>
+  <option value="Tools & Equipment">Tools & Equipment</option>
+  <option value="Toys">Toys</option>
+  <option value="Travel Accessories">Travel Accessories</option>
+  <option value="TV & Audio">TV & Audio</option>
+  <option value="Watches">Watches</option>
+</select>
+
       {errors.category && (
         <p className="text-red-500 text-xs mt-1">Category is required</p>
       )}
@@ -296,7 +401,9 @@ const ProductForm = ({
       <button
         type="submit"
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      > Save Product
+      >
+        {" "}
+        Save Product
       </button>
     </div>
   </form>
@@ -763,7 +870,7 @@ export default function D3Product() {
       }
 
       console.log("Final payload before API call:", payload, "File:", file);
-      
+
       // Product type mapping for the API call
       const productType = activeTab === "product" ? "inventory" : "service";
 
@@ -852,10 +959,8 @@ export default function D3Product() {
   // =================================================================
   return (
     <div className="max-w-5xl mx-auto  px-5 md:px-10 py-10  bg-white rounded-lg shadow-customCard">
-
       {/* Removed: <ToastContainer /> */}
       <div className="bg-blue-600 text-white px-6 py-3 rounded-t-md text-lg font-semibold">
-
         Items
       </div>
 

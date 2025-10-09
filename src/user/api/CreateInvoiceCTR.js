@@ -12,6 +12,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   const [selectedFormat, setSelectedFormat] = useState("classic");
 
   // Customer State
+  const [createdDate, setCreatedDate] = useState(Date.now());
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,7 +94,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     const fetchCustomers = async () => {
       try {
         setLoading(true);
-        const { success, customers } = await Invoice.fetchCustomersForInvoice(1,1000);
+        const { success, customers } = await Invoice.fetchCustomersForInvoice(1, 1000);
         if (success && Array.isArray(customers)) {
           setCustomers(customers);
         } else {
@@ -173,13 +174,13 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
 
   const filteredCustomers = searchTerm
     ? customers.filter((cust) => {
-        const name = cust?.name?.toLowerCase() || "";
-        const mobile = cust?.mobile?.toLowerCase() || "";
-        return (
-          name.includes(searchTerm.toLowerCase()) ||
-          mobile.includes(searchTerm.toLowerCase())
-        );
-      })
+      const name = cust?.name?.toLowerCase() || "";
+      const mobile = cust?.mobile?.toLowerCase() || "";
+      return (
+        name.includes(searchTerm.toLowerCase()) ||
+        mobile.includes(searchTerm.toLowerCase())
+      );
+    })
     : [];
 
   // =========================================================================
@@ -260,13 +261,13 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       prev.map((row) =>
         row.id === rowId
           ? {
-              ...row,
-              productId: product._id || product.id,
-              price: product.sales_price || 0,
-              unit: product.unit || "pcs",
-              tax: product.tax || 0,
-              price_type: product.price_type || "without",
-            }
+            ...row,
+            productId: product._id || product.id,
+            price: product.sales_price || 0,
+            unit: product.unit || "pcs",
+            tax: product.tax || 0,
+            price_type: product.price_type || "without",
+          }
           : row
       )
     );
@@ -295,12 +296,12 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       prev.map((row) =>
         row.id === id
           ? {
-              ...row,
-              [field]:
-                field === "qty" || field === "price"
-                  ? Number(value) || 0
-                  : value,
-            }
+            ...row,
+            [field]:
+              field === "qty" || field === "price"
+                ? Number(value) || 0
+                : value,
+          }
           : row
       )
     );
@@ -368,7 +369,8 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   };
 
   const handlePreview = () => {
-    
+    console.log(createdDate);
+
     if (!selectedCustomer?._id) {
       setPopupType("error");
       setMessage("Please select a customer!");
@@ -394,7 +396,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       paymentMode === "debt" &&
       Math.abs(
         milestones.reduce((sum, m) => sum + Number(m.amount || 0), 0) -
-          dueBalance
+        dueBalance
       ) > 0.01
     ) {
       setMessage(
@@ -407,9 +409,9 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     let payloadPaymentMethod = paymentMethod;
     let payloadtransactionId = transactionId;
 
-    if(paymentMode === "debt"){
-      payloadPaymentMethod ="";
-      payloadtransactionId ="";
+    if (paymentMode === "debt") {
+      payloadPaymentMethod = "";
+      payloadtransactionId = "";
     } //no details of cash should be sent for debt
     const payload = {
       customerId: selectedCustomer._id,
@@ -429,14 +431,14 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       subtotal,
       tax: totalTax,
       total,
-      totalReceived,
+      totalReceived,   
       dueBalance,
       paymentStatus:
         totalReceived === total
           ? "Paid"
           : totalReceived > 0
-          ? "Partial"
-          : "Unpaid",
+            ? "Partial"
+            : "Unpaid",
       products: rows.map((p) => {
         const prod =
           products.find((x) => x._id === p.productId || x.id === p.productId) ||
@@ -454,31 +456,40 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       productType: taxType,
       ...(paymentMode === "debt"
         ? {
-            milestones: milestones.map((m) => {
-              let isoDue = null;
-              if (m.dueDate) {
-                const parsed = parse(m.dueDate, "dd/MM/yyyy", new Date());
-                isoDue = isValid(parsed) ? parsed.toISOString() : null;
-              }
-              return {
-                milestoneName: m.name,
-                amount: Number(m.amount) || 0,
-                paymentMode: m.paymentMode || paymentMode,
-                dueDate: isoDue,
-                status: m.status || "Pending",
-              };
-            }),
-          }
+          milestones: milestones.map((m) => {
+            let isoDue = null;
+            if (m.dueDate) {
+              const parsed = parse(m.dueDate, "dd/MM/yyyy", new Date());
+              isoDue = isValid(parsed) ? parsed.toISOString() : null;
+            }
+            return {
+              milestoneName: m.name,
+              amount: Number(m.amount) || 0,
+              paymentMode: m.paymentMode || paymentMode,
+              dueDate: isoDue,
+              status: m.status || "Pending",
+            };
+          }),
+        }
         : {}),
+      InvoiceCreatedDate: formatDate(new Date(createdDate)),
     };
+    console.log(payload);
 
     setPreviewInvoice(payload);
     setShowPreview(true);
   };
 
+
+  const formatDate = (date) => {
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
   const handleSubmit = async () => {
     try {
-    
+
       const res = await Invoice.createInvoice(previewInvoice);
       if (res.success) {
         setMessage("✅ Invoice created successfully!");
@@ -625,6 +636,8 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   // =========================================================================
 
   return {
+    createdDate,
+    setCreatedDate,
     // View/General State
     selectedFormat,
     setSelectedFormat,

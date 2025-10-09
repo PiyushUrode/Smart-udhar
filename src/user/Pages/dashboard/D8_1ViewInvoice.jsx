@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import { FiLoader } from "react-icons/fi";
+import { fetchInvoiceById } from "../../api/invoiceViewController";
 
 const D8_1ViewInvoice = () => {
   const { id } = useParams();
@@ -10,25 +10,18 @@ const D8_1ViewInvoice = () => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const fetchInvoice = async () => {
+    const loadInvoice = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/store-invoice/findBy-id/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setInvoice(res.data.data);
-      } catch (err) {
-        console.error("Error fetching invoice:", err);
+        const data = await fetchInvoiceById(id, token);
+        setInvoice(data);
+      } catch (error) {
+        console.error("Error loading invoice:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchInvoice();
+    loadInvoice();
   }, [id, token]);
 
   if (loading)
@@ -40,22 +33,26 @@ const D8_1ViewInvoice = () => {
     );
 
   if (!invoice) return <div className="text-center mt-10">Invoice not found</div>;
-
+ const formatDate = (date) => {
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
   return (
     <div className="max-w-5xl mx-auto bg-white shadow-md rounded-lg p-6 mt-8">
       {/* ---------- Header ---------- */}
       <div className="flex justify-between items-center border-b pb-3 mb-4">
-        <h2 className="text-2xl font-semibold text-gray-800">
-          Invoice Details
-        </h2>
+        <h2 className="text-2xl font-semibold text-gray-800">Invoice Details</h2>
         <span className="text-sm text-gray-500">
-          Date: {new Date(invoice.createdAt).toLocaleDateString()}
+          Date: {invoice.InvoiceCreatedDate ||  formatDate(new Date(invoice.createdAt))}
         </span>
       </div>
 
       {/* ---------- Customer Info ---------- */}
       <div className="mb-6">
-        <h3 className="text-lg font-medium text-gray-700 mb-2">
+        <b className="text-lg">Invoice Id : {invoice.invoiceId} </b> 
+        <h3 className="text-lg font-medium text-gray-700 mb-2 mt-4">
           Customer Details
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-1 text-gray-600">
@@ -65,7 +62,7 @@ const D8_1ViewInvoice = () => {
           <p><strong>Credit Score:</strong> {invoice.creditScore}</p>
           <p><strong>Payment Mode:</strong> {invoice.paymentMode}</p>
           {invoice.paymentMethod && (
-          <p><strong>Payment Method:</strong> {invoice.paymentMethod}</p>
+            <p><strong>Payment Method:</strong> {invoice.paymentMethod}</p>
           )}
         </div>
       </div>
@@ -81,8 +78,9 @@ const D8_1ViewInvoice = () => {
               <th className="p-2 border">Qty</th>
               <th className="p-2 border">Unit</th>
               <th className="p-2 border">Price</th>
-              {invoice.productType === "taxable" ? (
-              <th className="p-2 border">Tax</th>):''}
+              {invoice.productType === "taxable" && (
+                <th className="p-2 border">Tax</th>
+              )}
               <th className="p-2 border">Total</th>
             </tr>
           </thead>
@@ -94,9 +92,9 @@ const D8_1ViewInvoice = () => {
                 <td className="p-2 border">{item.qty}</td>
                 <td className="p-2 border">{item.unit}</td>
                 <td className="p-2 border">₹{item.price}</td>
-                {invoice.productType === "taxable" ? (
-                <td className="p-2 border">{item.tax}%</td>
-                ) : ('')}
+                {invoice.productType === "taxable" && (
+                  <td className="p-2 border">{item.tax}%</td>
+                )}
                 <td className="p-2 border font-medium">₹{item.total}</td>
               </tr>
             ))}
@@ -104,7 +102,7 @@ const D8_1ViewInvoice = () => {
         </table>
       </div>
 
-      {/* ---------- Milestones (only if type = debt) ---------- */}
+      {/* ---------- Milestones ---------- */}
       {invoice.paymentMode === "debt" && invoice.milestones?.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-700 mb-2">Milestones</h3>
@@ -113,7 +111,6 @@ const D8_1ViewInvoice = () => {
               <tr className="text-left">
                 <th className="p-2 border">Milestone</th>
                 <th className="p-2 border">Amount</th>
-                {/* <th className="p-2 border">Payment Mode</th> */}
                 <th className="p-2 border">Due Date</th>
                 <th className="p-2 border">Status</th>
               </tr>
@@ -123,7 +120,6 @@ const D8_1ViewInvoice = () => {
                 <tr key={m._id} className="text-gray-700">
                   <td className="p-2 border">{m.milestoneName}</td>
                   <td className="p-2 border">₹{m.amount}</td>
-                  {/* <td className="p-2 border">{m.paymentMode}</td> */}
                   <td className="p-2 border">
                     {new Date(m.dueDate).toLocaleDateString()}
                   </td>
@@ -151,7 +147,9 @@ const D8_1ViewInvoice = () => {
           </div>
           <div className="text-right mt-3 sm:mt-0">
             <p>Subtotal: ₹{invoice.subtotal}</p>
-            {invoice.productType === "taxable" ? (<p>Tax: ₹{invoice.tax}</p>):''}            
+            {invoice.productType === "taxable" && (
+              <p>Tax: ₹{invoice.tax}</p>
+            )}
             <p>Discount: ₹{invoice.discount}</p>
             <p>Delivery Fee: ₹{invoice.deliveryFee}</p>
             <p>Packing Charges: ₹{invoice.packingCharges}</p>
