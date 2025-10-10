@@ -58,35 +58,90 @@ const ProductForm = ({
           <p className="text-red-500 text-xs mt-1">Name is required</p>
         )}
       </div>
-
+      
           <div>
       <label className="block text-sm font-medium text-gray-700 mb-3">
         Categories<span className="text-red-500">*</span>
       </label>
-      <select
-        name="category"
-        required
-        className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
-          errors.category ? "border-red-500" : "border-gray-300"
-        }`}
-        value={formData.category || ""}
-        onChange={handleChange}
-      >
-        <option value="">Select Category</option>
-        <option value="Food">Food</option>
-        <option value="Bakery">Bakery</option>
-        <option value="Grociers">Grociers</option>
-        <option value="Electronics">Electronics</option>
-        <option value="Pendrive">Pendrive</option>
-        <option value="Hardisk">Hardisk</option>
-        <option value="Storage">Storage</option>
-      </select>
+     <select
+  name="category"
+  required
+  className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
+    errors.category ? "border-red-500" : "border-gray-300"
+  }`}
+  value={formData.category || ""}
+  onChange={handleChange}
+>
+  <option value="">Select Category</option>
+
+  <option value="Accessories">Accessories</option>
+  <option value="Art Supplies">Art Supplies</option>
+  <option value="Automotive">Automotive</option>
+  <option value="Baby Products">Baby Products</option>
+  <option value="Bakery">Bakery</option>
+  <option value="Bags & Luggage">Bags & Luggage</option>
+  <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+  <option value="Beverages">Beverages</option>
+  <option value="Bike Accessories">Bike Accessories</option>
+  <option value="Books">Books</option>
+  <option value="Cameras">Cameras</option>
+  <option value="Camping">Camping</option>
+  <option value="Car Accessories">Car Accessories</option>
+  <option value="Cleaning Supplies">Cleaning Supplies</option>
+  <option value="Clothing - Kids">Clothing - Kids</option>
+  <option value="Clothing - Men">Clothing - Men</option>
+  <option value="Clothing - Women">Clothing - Women</option>
+  <option value="Construction">Construction</option>
+  <option value="Crafts">Crafts</option>
+  <option value="Dairy">Dairy</option>
+  <option value="Electronics">Electronics</option>
+  <option value="Fitness">Fitness</option>
+  <option value="Food">Food</option>
+  <option value="Footwear">Footwear</option>
+  <option value="Frozen Foods">Frozen Foods</option>
+  <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+  <option value="Furniture">Furniture</option>
+  <option value="Gadgets">Gadgets</option>
+  <option value="Games & Gaming">Games & Gaming</option>
+  <option value="Gardening">Gardening</option>
+  <option value="Gifts">Gifts</option>
+  <option value="Groceries">Groceries</option>
+  <option value="Harddisk">Harddisk</option>
+  <option value="Headphones">Headphones</option>
+  <option value="Health Care">Health Care</option>
+  <option value="Home Appliances">Home Appliances</option>
+  <option value="Home Decor">Home Decor</option>
+  <option value="Industrial">Industrial</option>
+  <option value="Jewellery">Jewellery</option>
+  <option value="Kitchen Appliances">Kitchen Appliances</option>
+  <option value="Lighting">Lighting</option>
+  <option value="Laptops">Laptops</option>
+  <option value="Lubricants">Lubricants</option>
+  <option value="Medical Supplies">Medical Supplies</option>
+  <option value="Mobiles">Mobiles</option>
+  <option value="Office Supplies">Office Supplies</option>
+  <option value="Other">Other</option>
+  <option value="Pendrive">Pendrive</option>
+  <option value="Personal Care">Personal Care</option>
+  <option value="Pet Supplies">Pet Supplies</option>
+  <option value="Smartwatches">Smartwatches</option>
+  <option value="Snacks">Snacks</option>
+  <option value="Spices & Condiments">Spices & Condiments</option>
+  <option value="Sports">Sports</option>
+  <option value="Stationery">Stationery</option>
+  <option value="Storage">Storage</option>
+  <option value="Tablets">Tablets</option>
+  <option value="Tools & Equipment">Tools & Equipment</option>
+  <option value="Toys">Toys</option>
+  <option value="Travel Accessories">Travel Accessories</option>
+  <option value="TV & Audio">TV & Audio</option>
+  <option value="Watches">Watches</option>
+</select>
+
       {errors.category && (
         <p className="text-red-500 text-xs mt-1">Category is required</p>
       )}
     </div>
-
-
 
     </div>
 
@@ -253,89 +308,7 @@ const ProductForm = ({
       </div>
     </div>
 
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-3">
-        Categories<span className="text-red-500">*</span>
-      </label>
-     <select
-  name="category"
-  required
-  className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
-    errors.category ? "border-red-500" : "border-gray-300"
-  }`}
-  value={formData.category || ""}
-  onChange={handleChange}
->
-  <option value="">Select Category</option>
 
-  <option value="Accessories">Accessories</option>
-  <option value="Art Supplies">Art Supplies</option>
-  <option value="Automotive">Automotive</option>
-  <option value="Baby Products">Baby Products</option>
-  <option value="Bakery">Bakery</option>
-  <option value="Bags & Luggage">Bags & Luggage</option>
-  <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
-  <option value="Beverages">Beverages</option>
-  <option value="Bike Accessories">Bike Accessories</option>
-  <option value="Books">Books</option>
-  <option value="Cameras">Cameras</option>
-  <option value="Camping">Camping</option>
-  <option value="Car Accessories">Car Accessories</option>
-  <option value="Cleaning Supplies">Cleaning Supplies</option>
-  <option value="Clothing - Kids">Clothing - Kids</option>
-  <option value="Clothing - Men">Clothing - Men</option>
-  <option value="Clothing - Women">Clothing - Women</option>
-  <option value="Construction">Construction</option>
-  <option value="Crafts">Crafts</option>
-  <option value="Dairy">Dairy</option>
-  <option value="Electronics">Electronics</option>
-  <option value="Fitness">Fitness</option>
-  <option value="Food">Food</option>
-  <option value="Footwear">Footwear</option>
-  <option value="Frozen Foods">Frozen Foods</option>
-  <option value="Fruits & Vegetables">Fruits & Vegetables</option>
-  <option value="Furniture">Furniture</option>
-  <option value="Gadgets">Gadgets</option>
-  <option value="Games & Gaming">Games & Gaming</option>
-  <option value="Gardening">Gardening</option>
-  <option value="Gifts">Gifts</option>
-  <option value="Groceries">Groceries</option>
-  <option value="Harddisk">Harddisk</option>
-  <option value="Headphones">Headphones</option>
-  <option value="Health Care">Health Care</option>
-  <option value="Home Appliances">Home Appliances</option>
-  <option value="Home Decor">Home Decor</option>
-  <option value="Industrial">Industrial</option>
-  <option value="Jewellery">Jewellery</option>
-  <option value="Kitchen Appliances">Kitchen Appliances</option>
-  <option value="Lighting">Lighting</option>
-  <option value="Laptops">Laptops</option>
-  <option value="Lubricants">Lubricants</option>
-  <option value="Medical Supplies">Medical Supplies</option>
-  <option value="Mobiles">Mobiles</option>
-  <option value="Office Supplies">Office Supplies</option>
-  <option value="Other">Other</option>
-  <option value="Pendrive">Pendrive</option>
-  <option value="Personal Care">Personal Care</option>
-  <option value="Pet Supplies">Pet Supplies</option>
-  <option value="Smartwatches">Smartwatches</option>
-  <option value="Snacks">Snacks</option>
-  <option value="Spices & Condiments">Spices & Condiments</option>
-  <option value="Sports">Sports</option>
-  <option value="Stationery">Stationery</option>
-  <option value="Storage">Storage</option>
-  <option value="Tablets">Tablets</option>
-  <option value="Tools & Equipment">Tools & Equipment</option>
-  <option value="Toys">Toys</option>
-  <option value="Travel Accessories">Travel Accessories</option>
-  <option value="TV & Audio">TV & Audio</option>
-  <option value="Watches">Watches</option>
-</select>
-
-      {errors.category && (
-        <p className="text-red-500 text-xs mt-1">Category is required</p>
-      )}
-    </div>
 
     <div
       className="bg-[#F6F8FA] p-3 rounded-md text-bluecol font-semibold text-sm cursor-pointer"
@@ -394,12 +367,7 @@ const ProductForm = ({
           </select>
         </div>
 
-      
-
-
-
-
-<div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
   <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
     {formData.product_image ? (
       // Preview Image
@@ -442,18 +410,6 @@ const ProductForm = ({
     )}
   </label>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
 
       </div>
     )}
@@ -621,7 +577,7 @@ const ServiceForm = ({
           </select>
         </div>
 
-              <div>
+          <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">
           Image
         </label>
