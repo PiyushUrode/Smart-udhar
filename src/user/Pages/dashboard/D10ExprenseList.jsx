@@ -4,6 +4,7 @@ import { FaFilePdf, FaFileExcel } from "react-icons/fa";
 import ExpenseService from "../../api/expenseservice.js";
 import Button from "../../common/Button.jsx";
 import ExpenseDummy from "../../../../public/Download/expense_report.xlsx"
+import NoData from "../../assets/common/beforecreatebussiness.png"
 
 const D10ExpenseList = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -174,6 +175,9 @@ const clearFilters = () => {
     setCurrentPage(1);
   };
 
+ const handleAdd = () => {
+    navigate("/dashboard/product");
+  };
 
 
       const handeluploadexceldummy = ()=>{
@@ -377,8 +381,20 @@ const clearFilters = () => {
             ) : expenses.length === 0 ? (
               <tr>
                        {" "}
-                <td colSpan="7" className="text-center p-4 text-gray-500">
-                  No expenses found
+               <td colSpan="9" className="p-6">
+                  <div className="flex flex-col items-center justify-center text-center "         onClick={handleAdd}>
+                       <p
+                          className="text-lg font-medium cursor-pointer underline text-blue-500 hover:text-blue-600 capitalize"
+                        >
+                          Create Your first Expenses 
+                        </p>
+                    <img
+                      src={NoData}
+                      onClick={handleAdd}
+                      alt="No data illustration"
+                      className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain cursor-pointer"
+                    />
+                  </div>
                 </td>
                       {" "}
               </tr>

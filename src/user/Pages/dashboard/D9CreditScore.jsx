@@ -124,7 +124,7 @@ const  getCustomerStats = (customerId) => {  // customerId here will be c._id (M
         </div>
 
         {/* Collection Call List */}
-        <div className="bg-white p-4 rounded-md shadow md:col-span-2 lg:col-span-3">
+        <div className="bg-white p-4 rounded-md shadow md:col-span-2 lg:col-span-3  overflow-x-auto">
           <h2 className="text-lg text-[#1F2937] font-robotoSb mb-4">Collection Call List</h2>
 
           {loading ? (
