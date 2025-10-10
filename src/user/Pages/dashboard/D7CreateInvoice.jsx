@@ -1076,7 +1076,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
         </ul>
         {/* Previous Invoices Section */}
         <div className="mt-6">
-          <h3 className="text-[22px] font-robotoSb mb-2">Previous Invoices</h3>
+          <h3 className="text-[22px] font-robotoSb mb-2">Invoices List</h3>
 
           {invoices.length === 0 ? (
             <p className="text-gray-500 text-sm">No invoices found.</p>
