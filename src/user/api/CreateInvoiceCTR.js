@@ -30,9 +30,9 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   const [taxType, setTaxType] = useState("taxable");
 
   // Payment State
-  const [showStep3, setShowStep3] = useState(false);
+  const [showStep3, setShowStep3] = useState(true);
   const [showStep4, setShowStep4] = useState(false);
-  const [paymentMode, setPaymentMode] = useState("");
+  const [paymentMode, setPaymentMode] = useState("cash");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [transactionId, setTransactionId] = useState("");
   const [partialCashAmount, setPartialCashAmount] = useState(0);
@@ -92,7 +92,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   // =========================================================================
 
   useEffect(() => {
-    try{
+    try {
       const fetchInvoiceId = async () => {
         const res = await Invoice.fetchInvoiceId();
         if (res.success) {
@@ -100,7 +100,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
         }
       };
       fetchInvoiceId();
-    }catch(err){
+    } catch (err) {
       console.error("Error in createdDate effect:", err);
     }
   }, [createdDate]);
@@ -109,7 +109,13 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     const fetchCustomers = async () => {
       try {
         setLoading(true);
-        const { success, customers } = await Invoice.fetchCustomersForInvoice(1, 1000);
+        
+        const { success, customers } = await Invoice.fetchCustomersForInvoice(
+          {
+            page: 1,
+            limit: 1000,
+          }
+        );
         if (success && Array.isArray(customers)) {
           setCustomers(customers);
         } else {
@@ -123,14 +129,17 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       }
     };
     fetchCustomers();
-    
+
   }, []);
 
   // Effect 2: Fetch Products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await Invoice.getProducts();
+        const res = await Invoice.getProducts( {
+            page: 1,
+            limit: 1000,
+          });
         const productList =
           res?.products || res?.data?.products || res?.data || [];
         const validProducts = productList.filter((p) => p && (p._id || p.id));
@@ -447,7 +456,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       subtotal,
       tax: totalTax,
       total,
-      totalReceived,   
+      totalReceived,
       dueBalance,
       paymentStatus:
         totalReceived === total
@@ -564,88 +573,121 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     }
   };
 
-  const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
-    if (!previewRef.current) {
-      setMessage("Preview not ready for PDF.");
-      setPopupType("error");
-      return;
-    }
-    try {
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-      });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "pt",
-        format: "a4",
-      });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth - 40;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
+  if (!previewRef.current) {
+    setMessage("Preview not ready for PDF.");
+    setPopupType("error");
+    return;
+  }
+  
+  // --- 1. PRE-PROCESSING: Hide modal UI elements and scrollbars ---
+  // You need to add the class/selector '.invoice-controls' to the header and footer buttons/controls in your JSX.
+  const nonPrintableElements = document.querySelectorAll(".invoice-controls");
+  nonPrintableElements.forEach(el => el.style.display = 'none');
+  
+  // Target the body and the main modal content to hide scrollbars
+  document.body.style.overflow = 'hidden'; 
+  const modalContent = document.querySelector('.max-h-[90vh]');
+  if (modalContent) modalContent.style.overflow = 'visible'; 
+  
+  try {
+    // A slight delay ensures the browser re-renders before capturing
+    await new Promise(resolve => setTimeout(resolve, 50)); 
+    
+    const canvas = await html2canvas(previewRef.current, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+    });
+    
+    const imgData = canvas.toDataURL("image/png");
+    
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "pt",
+      format: "a4",
+    });
+    
+    // --- 2. Set PDF Metadata Title ---
+    pdf.setProperties({
+      title: fileName.replace(".pdf", ""), 
+    });
 
-      if (imgHeight <= pageHeight - 40) {
-        // Single page
-        pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
-      } else {
-        // Multi-page logic
-        let heightLeft = imgHeight;
-        const pageCanvas = document.createElement("canvas");
-        const pageCtx = pageCanvas.getContext("2d");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth - 40;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        let currentY = 0;
+    if (imgHeight <= pageHeight - 40) {
+      // Single page
+      pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
+    } else {
+      // Multi-page logic
+      let heightLeft = imgHeight;
+      const pageCanvas = document.createElement("canvas");
+      const pageCtx = pageCanvas.getContext("2d");
 
-        while (heightLeft > 0) {
-          const contentHeight = Math.min(
-            canvas.height - currentY,
-            Math.floor((canvas.width * (pageHeight - 40)) / imgWidth)
-          );
+      let currentY = 0;
+      
+      // Calculate the height of content that fits on one PDF page, mapped to the source canvas
+      const pageContentHeight = (pageHeight - 40) * canvas.width / imgWidth;
 
-          if (currentY > 0) {
-            pdf.addPage();
-          }
-
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = contentHeight;
-
-          pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-          pageCtx.drawImage(
-            canvas,
-            0,
-            currentY,
-            canvas.width,
-            contentHeight,
-            0,
-            0,
-            pageCanvas.width,
-            pageCanvas.height
-          );
-          const pageData = pageCanvas.toDataURL("image/png");
-
-          pdf.addImage(
-            pageData,
-            "PNG",
-            20,
-            20,
-            imgWidth,
-            (pageCanvas.height * imgWidth) / pageCanvas.width
-          );
-
-          heightLeft -= (pageCanvas.height * imgWidth) / canvas.width;
-          currentY += contentHeight;
+      while (heightLeft > 0) {
+        // Determine how much canvas content height to crop for the current page
+        const contentHeight = Math.min(canvas.height - currentY, pageContentHeight);
+        
+        if (currentY > 0) {
+          pdf.addPage();
         }
-      }
 
-      pdf.save(fileName);
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      setPopupType("error");
-      setMessage("Failed to create PDF.");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = contentHeight;
+
+        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+        
+        // Draw the cropped section from the original canvas
+        pageCtx.drawImage(
+          canvas,
+          0,
+          currentY,
+          canvas.width,
+          contentHeight,
+          0, 0, pageCanvas.width, pageCanvas.height
+        );
+        
+        const pageData = pageCanvas.toDataURL("image/png");
+
+        // Add image to PDF
+        pdf.addImage(
+          pageData,
+          "PNG",
+          20,
+          20,
+          imgWidth,
+          (pageCanvas.height * imgWidth) / pageCanvas.width
+        );
+
+        // Update remaining height and current position
+        heightLeft -= (pageCanvas.height * imgWidth) / canvas.width;
+        currentY += contentHeight;
+      }
     }
-  };
+
+    pdf.save(fileName);
+    setMessage(`Invoice saved as ${fileName}`);
+    setPopupType("success");
+    
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    setPopupType("error");
+    setMessage("Failed to create PDF. Check console for details.");
+  } finally {
+    // --- 3. POST-PROCESSING: Restore modal UI elements and scrollbars ---
+    nonPrintableElements.forEach(el => el.style.display = 'flex'); // Restore original display
+    document.body.style.overflow = '';
+    if (modalContent) modalContent.style.overflow = 'auto';
+  }
+};
 
   // =========================================================================
   // 7. RETURN HOOK INTERFACE

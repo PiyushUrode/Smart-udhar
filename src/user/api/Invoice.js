@@ -74,12 +74,21 @@ export const Invoice = {
   },
 
   // ----------------- Products -----------------
- async getProducts() {
+ async getProducts({ page, limit } = {}) {
   try {
     const { token, store_id, storeProfile_id } = getAuthContext();
 
+      const qs =
+        page || limit
+          ? `?${new URLSearchParams({
+              ...(page ? { page: String(page) } : {}),
+              ...(limit ? { limit: String(limit) } : {}),
+            }).toString()}`
+          : "";
+
+
     const { data } = await axios.get(
-      `${API_BASE}/store-product/find-all/${store_id}/${storeProfile_id}`,
+      `${API_BASE}/store-product/find-all/${store_id}/${storeProfile_id}${qs}`,
       { headers: authHeaders(token) }
     );
 

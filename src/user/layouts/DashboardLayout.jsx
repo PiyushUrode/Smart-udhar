@@ -26,7 +26,7 @@ const MainDashboard = () => {
       <div className="dashboard-main ">
         {/* Sidebar */}
         <aside
-          className={`dashboard-sidebar z-[99999] ${
+          className={`dashboard-sidebar z-[9] ${
             isMobile
               ? `mobile ${isSidebarOpen ? "open" : ""}`
               : isSidebarOpen
