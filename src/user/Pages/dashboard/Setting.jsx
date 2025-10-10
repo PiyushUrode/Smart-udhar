@@ -1,754 +1,1099 @@
-import React, { useState, useEffect } from "react";
-import {
-  FaPlus,
-  FaTrash,
-  FaEdit,
-  FaDownload,
-  FaFilePdf,
-  FaExclamationTriangle, // Added for warning icon
-} from "react-icons/fa";
-import { CiSearch } from "react-icons/ci";
-import { useNavigate } from "react-router-dom";
+import { ImagePlus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+// Removed: import { toast, ToastContainer } from "react-toastify";
+// Removed: import "react-toastify/dist/ReactToastify.css";
+// Assuming ProductService and Button are available/defined as in the original
 import { ProductService } from "../../api/productservice.js";
-import product1 from "../../assets/dummyimage/product1.png";
-import * as XLSX from "xlsx";
-import Button from "../../common/Button.jsx";
+import Button from "../../common/Button.jsx"; // Assuming Button component is imported
 
-const API_URL = import.meta.env.VITE_API_URL;
-import ProductDummy from "../../../../public/Download/productdummy.xlsx"
+// Maximum file size constant (5 MB)
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
-// =========================================================================
-// ✅ NEW: Delete Confirmation Modal Component
-// =========================================================================
-const DeleteConfirmationModal = ({ productName, onConfirm, onCancel }) => (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-    <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative transform transition-all scale-100 opacity-100">
-      <div className="text-center">
-        <FaExclamationTriangle className="mx-auto h-12 w-12 text-red-500" />
-        <h3 className="mt-4 text-lg font-semibold text-gray-900">
-          Confirm Deletion
-        </h3>
-        <div className="mt-2">
-          <p className="text-sm text-gray-500">
-            Are you sure you want to delete the product:
-            <br />
-            <strong className="text-red-600">{productName}</strong>? This action
-            cannot be undone.
-          </p>
+// Initial state for form data
+const initialFormData = {
+  name: "",
+  product_image: null,
+  quantity: "",
+  unit: "",
+  min_quantity: "",
+  sales_price: "",
+  purchase_price: "",
+  category: "",
+  gstInclusive: false,
+  hsn_number: "",
+  tax: "",
+  price_type: "",
+};
+
+// =================================================================
+// 💰 ProductForm Component (Unchanged)
+// =================================================================
+const ProductForm = ({
+  formData,
+  handleChange,
+  handleSubmit,
+  showAdvanced,
+  setShowAdvanced,
+  errors,
+}) => (
+  <form onSubmit={handleSubmit} className="space-y-4 px-4 pt-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Name<span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          name="name"
+          placeholder="Enter item name"
+          required
+          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.name ? "border-red-500" : "border-gray-300"
+          }`}
+          value={formData.name}
+          onChange={handleChange}
+        />
+        {errors.name && (
+          <p className="text-red-500 text-xs mt-1">Name is required</p>
+        )}
+      </div>
+
+          <div>
+      <label className="block text-sm font-medium text-gray-700 mb-3">
+        Categories<span className="text-red-500">*</span>
+      </label>
+      <select
+        name="category"
+        required
+        className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
+          errors.category ? "border-red-500" : "border-gray-300"
+        }`}
+        value={formData.category || ""}
+        onChange={handleChange}
+      >
+        <option value="">Select Category</option>
+        <option value="Food">Food</option>
+        <option value="Bakery">Bakery</option>
+        <option value="Grociers">Grociers</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Pendrive">Pendrive</option>
+        <option value="Hardisk">Hardisk</option>
+        <option value="Storage">Storage</option>
+      </select>
+      {errors.category && (
+        <p className="text-red-500 text-xs mt-1">Category is required</p>
+      )}
+    </div>
+
+
+
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Unit<span className="text-red-500">*</span>
+        </label>
+        <div className="flex flex-row gap-4 pb-2 w-full max-w-full">
+          <input
+            name="quantity"
+            type="text"
+            min="1"
+            required
+            placeholder="Qty"
+            className={`input w-[30%] bg-[#F6F8FA] rounded border ${
+              errors.quantity ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.quantity}
+            onChange={handleChange}
+          />
+          {errors.quantity && (
+            <p className="text-red-500 text-xs mt-1">Quantity is required</p>
+          )}
+          <select
+            name="unit"
+            required
+            className={`input w-[70%] bg-[#F6F8FA] font-robotoR text-gray-500 p-2 rounded border ${
+              errors.unit ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.unit}
+            onChange={handleChange}
+          >
+            {/* <!-- Units in Alphabetical Order --> */}
+            <option value="acre">acre</option>
+            <option value="bag">bag</option>
+            <option value="barrel">barrel</option>
+            <option value="bottle">bottle</option>
+            <option value="box">box</option>
+            <option value="bundle">bundle</option>
+            <option value="can">can</option>
+            <option value="carton">carton</option>
+            <option value="cc">cc</option>
+            <option value="cft">cft</option>
+            <option value="cm">cm</option>
+            <option value="container">container</option>
+            <option value="cubicm">cubic meter</option>
+            <option value="day">day</option>
+            <option value="dozen">dozen</option>
+            <option value="ft">ft</option>
+            <option value="g">g</option>
+            <option value="gal">gallon</option>
+            <option value="hectare">hectare</option>
+            <option value="hour">hour</option>
+            <option value="inch">inch</option>
+            <option value="jar">jar</option>
+            <option value="kg">kg</option>
+            <option value="kl">kl</option>
+            <option value="km">km</option>
+            <option value="ltr">ltr</option>
+            <option value="m">m</option>
+            <option value="mg">mg</option>
+            <option value="ml">ml</option>
+            <option value="month">month</option>
+            <option value="nos">nos</option>
+            <option value="packet">packet</option>
+            <option value="pack">pack</option>
+            <option value="pair">pair</option>
+            <option value="pcs">pcs</option>
+            <option value="piece">piece</option>
+            <option value="quintal">quintal</option>
+            <option value="roll">roll</option>
+            <option value="set">set</option>
+            <option value="sheet">sheet</option>
+            <option value="sqcm">sqcm</option>
+            <option value="sqft">sqft</option>
+            <option value="sqm">sqm</option>
+            <option value="sqyard">sqyard</option>
+            <option value="tin">tin</option>
+            <option value="ton">ton</option>
+            <option value="tube">tube</option>
+            <option value="unit">unit</option>
+            <option value="yard">yard</option>
+            <option value="year">year</option>
+          </select>
+
+          {errors.unit && (
+            <p className="text-red-500 text-xs mt-1">Unit is required</p>
+          )}
         </div>
       </div>
-      <div className="mt-6 flex justify-end gap-3">
-        <button
-          type="button"
-          className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 transition sm:text-sm"
-          onClick={onCancel}
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 transition sm:text-sm"
-          onClick={onConfirm}
-        >
-          Delete
-        </button>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Minimum Quantity <span className="text-red-500">*</span>
+        </label>
+        <div className="w-full">
+          <input
+            name="min_quantity"
+            type="text"
+            min="1"
+            required
+            placeholder="0"
+            className={`input w-full bg-[#F6F8FA] rounded border ${
+              errors.min_quantity ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.min_quantity}
+            onChange={handleChange}
+          />
+          {errors.min_quantity && (
+            <p className="text-red-500 text-xs mt-1">
+              Minimum Quantity is required
+            </p>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
-// =========================================================================
 
-const D4ProductList = () => {
-  const [file, setFile] = useState(null);
-  const [activeTab, setActiveTab] = useState("product");
-  const [items, setItems] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(5);
-  const [totalPages, setTotalPages] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showStockPopup, setShowStockPopup] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [newStock, setNewStock] = useState("");
-  const navigate = useNavigate();
-  const [showHistoryPopup, setShowHistoryPopup] = useState(false);
-  const [productHistory, setProductHistory] = useState([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [excelFile, setExcelFile] = useState(null);
-
-  // ✅ NEW STATE FOR DELETE CONFIRMATION
-  const [deleteProductId, setDeleteProductId] = useState(null);
-  const [deleteProductName, setDeleteProductName] = useState("");
-  // END NEW STATE
-
-  // State for the custom notification/pop-up component
-  const [popupType, setPopupType] = useState(null); // 'success', 'error', 'processing'
-  const [message, setMessage] = useState("");
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setExcelFile(file);
-  };
-
-  // ✅ Fetch Products
-  const fetchItems = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { success, products, total } = await ProductService.fetchProducts({
-        page,
-        limit,
-        search: searchQuery,
-      });
-      if (!success) throw new Error("Failed to fetch products");
-
-      setTotalItems(total); // ✅ total products from backend
-      setTotalPages(Math.ceil(total / limit) || 1);
-
-      // Add full URL for product images
-      const processedProducts = products.map((p) => ({
-        ...p,
-        product_image: p.product_image
-          ? `${API_URL}/assets/uploadsProduct/${p.product_image}`
-          : null,
-      }));
-
-      setItems(processedProducts);
-      setTotalPages(Math.ceil(total / limit) || 1); // ✅ pagination
-    } catch (err) {
-      setError(err.message);
-      setPopupType("error"); // Show error pop-up
-      setMessage(err.message);
-      if (err.message.includes("login") || err.message.includes("token")) {
-        navigate("/login");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchItems();
-  }, [activeTab, page, limit, searchQuery]);
-
-  // ✅ Local Filter
-  useEffect(() => {
-    const filtered = items.filter(
-      (item) =>
-        (item.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.category || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredItems(filtered);
-  }, [items, searchQuery]);
-
-  // ✅ Search API
-  const handleSearch = async (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    setPage(1); // reset pagination
-
-    if (!query) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    try {
-      const { success, products } = await ProductService.searchProductsByName(
-        query
-      );
-      if (success) {
-        setSuggestions(products.slice(0, 3)); // top 3 results only
-        setShowSuggestions(true);
-      }
-    } catch (err) {
-      console.error(err);
-      setPopupType("error");
-      setMessage(err.message || "Search failed");
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  // ✅ Edit
-  const handleEdit = (product) => {
-    navigate(`/dashboard/product/${product._id}`, { state: { product } });
-  };
-
-  // =========================================================================
-  // ✅ UPDATED: Delete function to show modal
-  // =========================================================================
-  const handleDelete = (_id, name) => {
-    setDeleteProductId(_id);
-    setDeleteProductName(name);
-  };
-
-  // ✅ NEW: Function to execute deletion upon confirmation
-  const confirmDelete = async () => {
-    const _id = deleteProductId;
-    if (!_id) return; // Should not happen
-
-    // Clear modal immediately
-    setDeleteProductId(null);
-    setDeleteProductName("");
-
-    try {
-      setPopupType("processing"); // Show processing message
-      setMessage(`Deleting product: ${deleteProductName}...`);
-
-      const { success } = await ProductService.deleteProduct(_id);
-      if (!success) throw new Error("Failed to delete product");
-
-      setPopupType("success"); // ✅ ADDED
-      setMessage("Product deleted successfully"); // ✅ ADDED
-      fetchItems();
-    } catch (err) {
-      setPopupType("error"); // ✅ ADDED
-      setMessage(err.message || "Delete failed"); // ✅ ADDED
-    }
-  };
-  // =========================================================================
-
-  // ✅ Render Table
-  const renderTable = () => {
-    const isProductTab = activeTab === "product";
-    return (
-      <table className="w-full bg-white rounded-lg shadow-sm  text-nowrap ">
-        <thead className="text-left text-gray-600 font-medium text-xs md:text-sm">
-          <tr>
-            <th className="p-3 align-middle">Image</th>
-            <th className="p-3 align-middle">Name</th>
-            <th className="p-3 align-middle">Unit</th>
-            <th className="p-3 align-middle">Sale Price</th>
-            <th className="p-3 align-middle">Purchase Price</th>
-            <th className="p-3 align-middle">Stock</th>
-            <th className="p-3 align-middle">Status</th>
-            <th className="p-3 align-middle">Actions</th>
-            <th className="p-3 align-middle">New Stock</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td
-                colSpan="9"
-                className="text-center  p-3 align-middle align-middle"
-              >
-                Loading...
-              </td>
-            </tr>
-          ) : error ? (
-            <tr>
-              <td
-                colSpan="9"
-                className="text-center text-red-500 p-3 align-middle"
-              >
-                {error}
-              </td>
-            </tr>
-          ) : filteredItems.length === 0 ? (
-            <tr>
-              <td colSpan="9" className="text-center p-3 align-middle">
-                No {activeTab}s found.
-              </td>
-            </tr>
-          ) : (
-            filteredItems
-              .filter(
-                (item) =>
-                  item.product_type === (isProductTab ? "inventory" : "service")
-              )
-              .map((item) => {
-                const isLow = (item.quantity || 0) < 10;
-                return (
-                  <tr
-                    key={item._id}
-                    className="border-t hover:bg-gray-50 text-xs md:text-sm"
-                  >
-                    <td className="p-3 align-middle">
-                      <img
-                        src={item.product_image ? item.product_image : product1}
-                        alt={item.name || "Product Image"}
-                        className="w-12 h-12 object-cover rounded"
-                        onError={(e) => {
-                          e.target.onerror = null; // prevent infinite loop if product1 also fails
-                          e.target.src = product1;
-                        }}
-                      />
-                    </td>
-                    <td className="p-3 align-middle">
-                      <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-gray-500">
-                        {item.category}
-                      </div>
-                    </td>
-                    <td className="p-3 align-middle">{item.unit}</td>
-                    <td className="p-3 align-middle">
-                      ₹{Number(item.sales_price).toLocaleString()}
-                    </td>
-                    <td className="p-3 align-middle">
-                      ₹{Number(item.purchase_price).toLocaleString()}
-                    </td>
-                    <td
-                      className={`p-3 align-middle font-semibold ${
-                        isLow ? "text-red-600" : "text-green-600"
-                      }`}
-                    >
-                      {item.quantity}
-                    </td>
-                    <td className="p-3 align-middle">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          isLow
-                            ? "bg-orange-100 text-orange-600"
-                            : "bg-green-100 text-green-600"
-                        }`}
-                      >
-                        {isLow ? "Low Stock" : "In Stock"}
-                      </span>
-                    </td>
-                    <td className="p-3 align-middle">
-                      <div className="flex gap-3 items-center">
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                        >
-                          <FaEdit /> Edit
-                        </button>
-                        <button
-                          // ✅ UPDATED: Call handleDelete with ID and Name
-                          onClick={() => handleDelete(item._id, item.name)}
-                          className="text-red-600 hover:text-red-800 flex items-center gap-1"
-                        >
-                          <FaTrash />
-                        </button>
-                        <button
-                          onClick={() => handleFetchHistory(item)}
-                          className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
-                        >
-                          History
-                        </button>
-                      </div>
-                    </td>
-
-                    <td className="p-3 align-middle">
-                      <button
-                        onClick={() =>
-                          setShowStockPopup(true) || setSelectedProduct(item)
-                        }
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                      >
-                        Add Stock
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-          )}
-        </tbody>
-      </table>
-    );
-  };
-  const handleUpdateStock = async () => {
-    try {
-      if (!selectedProduct) {
-        setPopupType("error");
-        setMessage("No product selected");
-        return;
-      }
-
-      const newStockValue = parseInt(newStock || 0, 10);
-      if (isNaN(newStockValue) || newStockValue <= 0) {
-        setPopupType("error");
-        setMessage("New stock must be a positive number.");
-        return;
-      }
-
-      setPopupType("processing"); // Indicate processing
-      setMessage(`Updating stock for ${selectedProduct.name}...`);
-
-      const updatedQty =
-        parseInt(selectedProduct.quantity || 0, 10) + newStockValue;
-
-      const payload = { quantity: updatedQty };
-      const { success } = await ProductService.updateProduct(
-        selectedProduct._id,
-        payload,
-        null,
-        selectedProduct.product_type
-      );
-      if (!success) throw new Error("Failed to update stock");
-
-      setPopupType("success"); // ✅ ADDED
-      setMessage("Stock updated successfully"); // ✅ ADDED
-      setShowStockPopup(false);
-      setNewStock(""); // reset
-      fetchItems();
-    } catch (err) {
-      setPopupType("error"); // ✅ ADDED
-      setMessage(err.message || "Stock update failed"); // ✅ ADDED
-    }
-  };
-
-  // ✅ Fetch product history
-  const handleFetchHistory = async (product) => {
-    try {
-      setPopupType("processing"); // Indicate loading
-      setMessage(`Fetching history for ${product.name}...`);
-      const { success, history, error } =
-        await ProductService.getProductHistory(product._id);
-
-      if (success) {
-        setSelectedProduct(product);
-        setProductHistory(history);
-        setShowHistoryPopup(true);
-        setPopupType(null); // Clear loading message on success
-      } else {
-        setPopupType("error"); // ✅ ADDED
-        setMessage(error || "Failed to fetch product history"); // ✅ ADDED
-      }
-    } catch (err) {
-      console.error(err);
-      setPopupType("error"); // ✅ ADDED
-      setMessage("Error fetching product history"); // ✅ ADDED
-    }
-  };
-
-  const handleImportExcel = async () => {
-    if (!excelFile) {
-      setPopupType("error"); // ✅ ADDED
-      setMessage("Please select an Excel file"); // ✅ ADDED
-      return;
-    }
-
-    try {
-      setPopupType("processing"); // Indicate processing
-      setMessage("Importing data, please wait...");
-
-      const {
-        success,
-        message: responseMessage,
-        count,
-      } = await ProductService.uploadExcel(excelFile);
-
-      if (success) {
-        setPopupType("success"); // ✅ ADDED
-        setMessage(`Imported ${count} products successfully!`); // ✅ ADDED
-        setExcelFile(null); // reset input
-        fetchItems(); // refresh product list
-      } else {
-        setPopupType("error"); // ✅ ADDED
-        setMessage(responseMessage || "Import failed"); // ✅ ADDED
-      }
-    } catch (err) {
-      setPopupType("error"); // ✅ ADDED
-      setMessage(err.message || "Import failed"); // ✅ ADDED
-    }
-  };
-
-  const handeluploadexceldummy = ()=>{
-    const link = document.createElement("a");
-    link.href = ProductDummy;
-    link.download = "product-template.xlsx";
-    link.click(); 
-  }
-
-  return (
-    <div className="mx-auto md:mt-5 border p-1 md:p-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6 border-b px-6 py-3">
-        <h1 className="text-base md:text-xl lg:text-2xl font-semibold">
-          Items
-        </h1>
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
-          onClick={() => navigate("/dashboard/product")}
-        >
-          <FaPlus /> Add New Item
-        </button>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Sale Price *
+        </label>
+        <input
+          name="sales_price"
+          type="text"
+          min="0"
+          step="0.01"
+          required
+          placeholder="₹ 0.00"
+          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.sales_price ? "border-red-500" : "border-gray-300"
+          }`}
+          value={formData.sales_price}
+          onChange={handleChange}
+        />
+        {errors.sales_price && (
+          <p className="text-red-500 text-xs mt-1">Sale Price is required</p>
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="border-b mb-4 flex gap-6 text-sm px-6 py-3 ">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Purchase Price *
+        </label>
+        <input
+          name="purchase_price"
+          type="text"
+          min="0"
+          step="0.01"
+          required
+          placeholder="₹ 0.00"
+          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.purchase_price ? "border-red-500" : "border-gray-300"
+          }`}
+          value={formData.purchase_price}
+          onChange={handleChange}
+        />
+        {errors.purchase_price && (
+          <p className="text-red-500 text-xs mt-1">
+            Purchase Price is required
+          </p>
+        )}
+      </div>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-3">
+        Categories<span className="text-red-500">*</span>
+      </label>
+     <select
+  name="category"
+  required
+  className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
+    errors.category ? "border-red-500" : "border-gray-300"
+  }`}
+  value={formData.category || ""}
+  onChange={handleChange}
+>
+  <option value="">Select Category</option>
+
+  <option value="Accessories">Accessories</option>
+  <option value="Art Supplies">Art Supplies</option>
+  <option value="Automotive">Automotive</option>
+  <option value="Baby Products">Baby Products</option>
+  <option value="Bakery">Bakery</option>
+  <option value="Bags & Luggage">Bags & Luggage</option>
+  <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+  <option value="Beverages">Beverages</option>
+  <option value="Bike Accessories">Bike Accessories</option>
+  <option value="Books">Books</option>
+  <option value="Cameras">Cameras</option>
+  <option value="Camping">Camping</option>
+  <option value="Car Accessories">Car Accessories</option>
+  <option value="Cleaning Supplies">Cleaning Supplies</option>
+  <option value="Clothing - Kids">Clothing - Kids</option>
+  <option value="Clothing - Men">Clothing - Men</option>
+  <option value="Clothing - Women">Clothing - Women</option>
+  <option value="Construction">Construction</option>
+  <option value="Crafts">Crafts</option>
+  <option value="Dairy">Dairy</option>
+  <option value="Electronics">Electronics</option>
+  <option value="Fitness">Fitness</option>
+  <option value="Food">Food</option>
+  <option value="Footwear">Footwear</option>
+  <option value="Frozen Foods">Frozen Foods</option>
+  <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+  <option value="Furniture">Furniture</option>
+  <option value="Gadgets">Gadgets</option>
+  <option value="Games & Gaming">Games & Gaming</option>
+  <option value="Gardening">Gardening</option>
+  <option value="Gifts">Gifts</option>
+  <option value="Groceries">Groceries</option>
+  <option value="Harddisk">Harddisk</option>
+  <option value="Headphones">Headphones</option>
+  <option value="Health Care">Health Care</option>
+  <option value="Home Appliances">Home Appliances</option>
+  <option value="Home Decor">Home Decor</option>
+  <option value="Industrial">Industrial</option>
+  <option value="Jewellery">Jewellery</option>
+  <option value="Kitchen Appliances">Kitchen Appliances</option>
+  <option value="Lighting">Lighting</option>
+  <option value="Laptops">Laptops</option>
+  <option value="Lubricants">Lubricants</option>
+  <option value="Medical Supplies">Medical Supplies</option>
+  <option value="Mobiles">Mobiles</option>
+  <option value="Office Supplies">Office Supplies</option>
+  <option value="Other">Other</option>
+  <option value="Pendrive">Pendrive</option>
+  <option value="Personal Care">Personal Care</option>
+  <option value="Pet Supplies">Pet Supplies</option>
+  <option value="Smartwatches">Smartwatches</option>
+  <option value="Snacks">Snacks</option>
+  <option value="Spices & Condiments">Spices & Condiments</option>
+  <option value="Sports">Sports</option>
+  <option value="Stationery">Stationery</option>
+  <option value="Storage">Storage</option>
+  <option value="Tablets">Tablets</option>
+  <option value="Tools & Equipment">Tools & Equipment</option>
+  <option value="Toys">Toys</option>
+  <option value="Travel Accessories">Travel Accessories</option>
+  <option value="TV & Audio">TV & Audio</option>
+  <option value="Watches">Watches</option>
+</select>
+
+      {errors.category && (
+        <p className="text-red-500 text-xs mt-1">Category is required</p>
+      )}
+    </div>
+
+    <div
+      className="bg-[#F6F8FA] p-3 rounded-md text-bluecol font-semibold text-sm cursor-pointer"
+      onClick={() => setShowAdvanced(!showAdvanced)}
+    >
+      {showAdvanced ? "▴ Advanced Fields" : "▾ Advanced Fields"}
+    </div>
+
+    {showAdvanced && (
+      <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            HSN/SCN Code
+          </label>
+          <input
+            type="text"
+            name="hsn_number"
+            placeholder="Enter code"
+            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
+            value={formData.hsn_number || ""}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Tax
+          </label>
+          <select
+            name="tax"
+            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
+            value={formData.tax || ""}
+            onChange={handleChange}
+          >
+            <option value="">Select</option>
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="10">10%</option>
+            <option value="18">18%</option>
+            <option value="28">28%</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Price
+          </label>
+          <select
+            name="price_type"
+            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
+            value={formData.price_type || ""}
+            onChange={handleChange}
+          >
+            <option value="fixed">With tax</option>
+            <option value="without">Without tax</option>
+          </select>
+        </div>
+
+      
+
+
+
+
+<div className="flex flex-col md:flex-row gap-4">
+  <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
+    {formData.product_image ? (
+      // Preview Image
+      <img
+        src={URL.createObjectURL(formData.product_image)}
+        alt="Preview"
+        className="w-40 h-40 object-cover rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
+      />
+    ) : (
+      // Default State
+      <div className="flex flex-col items-center gap-2 text-center">
+        <ImagePlus className="text-blue-600 w-8 h-8" />
+        <span className="text-sm text-blue-600 font-medium">
+          Add Product Image
+        </span>
+        <span className="text-xs text-gray-400">Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px</span>
+      </div>
+    )}
+
+    <input
+      type="file"
+      name="product_image"
+      accept="image/*"
+      className="hidden"
+      onChange={handleChange}
+    />
+
+    {/* Optional File Name */}
+    {formData.product_image && (
+      <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-md">
+        {(() => {
+          const name = formData.product_image.name;
+          const dotIndex = name.lastIndexOf(".");
+          const ext = dotIndex !== -1 ? name.slice(dotIndex) : "";
+          const base = dotIndex !== -1 ? name.slice(0, dotIndex) : name;
+          const displayBase = base.length > 15 ? base.slice(0, 15) : base;
+          return displayBase + ext;
+        })()}
+      </span>
+    )}
+  </label>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </div>
+    )}
+
+    <div className="flex justify-end gap-4 pb-2">
+      <button
+        type="button"
+        className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="submit"
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        {" "}
+        Save Product
+      </button>
+    </div>
+  </form>
+);
+
+// =================================================================
+// 🛠️ ServiceForm Component (Unchanged)
+// =================================================================
+const ServiceForm = ({
+  formData,
+  handleChange,
+  handleSubmit,
+  showAdvanced,
+  setShowAdvanced,
+  errors,
+}) => (
+  <form onSubmit={handleSubmit} className="space-y-4 px-4 pt-6">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 pb-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Name<span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          name="name"
+          placeholder="Enter service name"
+          required
+          className={`input w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.name ? "border-red-500" : "border-gray-300"
+          }`}
+          value={formData.name}
+          onChange={handleChange}
+        />
+        {errors.name && (
+          <p className="text-red-500 text-xs mt-1">Name is required</p>
+        )}
+      </div>
+
+
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Unit<span className="text-red-500">*</span>
+        </label>
+        <div className="flex flex-row gap-4 pb-2 w-full max-w-full">
+          <input
+            name="quantity"
+            type="text"
+            min="1"
+            required
+            placeholder="Qty"
+            className={`input w-[30%] bg-[#F6F8FA] rounded border ${
+              errors.quantity ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.quantity}
+            onChange={handleChange}
+          />
+          {errors.quantity && (
+            <p className="text-red-500 text-xs mt-1">Quantity is required</p>
+          )}
+          <select
+            name="unit"
+            required
+            className={`input w-[70%] bg-[#F6F8FA] font-robotoR text-gray-500 p-2 rounded border ${
+              errors.unit ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.unit}
+            onChange={handleChange}
+          >
+            <option value="">e.g. hrs, pcs, sessions</option>
+            <option value="hrs">Hours</option>
+            <option value="pcs">Pieces</option>
+            <option value="session">Session</option>
+          </select>
+          {errors.unit && (
+            <p className="text-red-500 text-xs mt-1">Unit is required</p>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Sale Price <span className="text-red-500">*</span>
+        </label>
+        <div className="w-full">
+          <input
+            name="sales_price"
+            type="text"
+            min="0"
+            step="0.01"
+            required
+            placeholder="₹ 0.00"
+            className={`input w-full bg-[#F6F8FA] p-2 rounded border ${
+              errors.sales_price ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.sales_price}
+            onChange={handleChange}
+          />
+          {errors.sales_price && (
+            <p className="text-red-500 text-xs mt-1">Sale Price is required</p>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div
+      className="bg-[#F6F8FA] p-3 rounded-md text-bluecol font-semibold text-sm cursor-pointer"
+      onClick={() => setShowAdvanced(!showAdvanced)}
+    >
+      {showAdvanced ? "▴ Advanced Fields" : "▾ Advanced Fields"}
+    </div>
+
+    {showAdvanced && (
+      <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            HSN/SCN Code
+          </label>
+          <input
+            type="text"
+            name="hsn_number"
+            placeholder="Enter code"
+            className="w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
+            value={formData.hsn_number || ""}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Tax
+          </label>
+          <select
+            name="tax"
+            className="w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
+            value={formData.tax || ""}
+            onChange={handleChange}
+          >
+            <option value="">Select</option>
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="10">10%</option>
+            <option value="18">18%</option>
+            <option value="28">28%</option>
+          </select>
+        </div>
+
+              <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Image
+        </label>
+<div className="flex flex-col md:flex-row gap-4">
+  <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
+    {formData.product_image ? (
+      // Preview Image
+      <img
+        src={URL.createObjectURL(formData.product_image)}
+        alt="Preview"
+        className="w-40 h-40 object-cover rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
+      />
+    ) : (
+      // Default State
+      <div className="flex flex-col items-center gap-2 text-center">
+        <ImagePlus className="text-blue-600 w-8 h-8" />
+        <span className="text-sm text-blue-600 font-medium">
+          Add Service Image
+        </span>
+        <span className="text-xs text-gray-400">Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px</span>
+      </div>
+    )}
+
+    <input
+      type="file"
+      name="product_image"
+      accept="image/*"
+      className="hidden"
+      onChange={handleChange}
+    />
+
+    {/* Optional File Name */}
+    {formData.product_image && (
+      <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-md">
+        {(() => {
+          const name = formData.product_image.name;
+          const dotIndex = name.lastIndexOf(".");
+          const ext = dotIndex !== -1 ? name.slice(dotIndex) : "";
+          const base = dotIndex !== -1 ? name.slice(0, dotIndex) : name;
+          const displayBase = base.length > 15 ? base.slice(0, 15) : base;
+          return displayBase + ext;
+        })()}
+      </span>
+    )}
+  </label>
+</div>
+
+      </div>
+      </div>
+    )}
+
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2">
+      <button
+        type="button"
+        className="flex items-center gap-2 text-bluecol text-sm border px-4 py-2 rounded shadow-sm hover:bg-gray-100"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
+        </svg>
+        Import CSV
+      </button>
+
+      <div className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="appearance-none h-5 w-5 border border-gray-300 rounded-sm checked:bg-white checked:border-white checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center"
+          name="gstInclusive"
+          checked={formData.gstInclusive}
+          onChange={handleChange}
+        />
+        <label htmlFor="gstInclusive">GST Inclusive Pricing</label>
+      </div>
+    </div>
+
+    <div className="flex justify-end gap-4 pb-2">
+      <button
+        type="button"
+        className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="px-4 py-2 bg-bluecol text-white rounded hover:bg-blue-700"
+      >
+        Save Service
+      </button>
+    </div>
+  </form>
+);
+
+// =================================================================
+// 📦 Main D3Product Component (Modified to use 'Button' component)
+// =================================================================
+export default function D3Product() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("product");
+  const [formData, setFormData] = useState(initialFormData);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isEditMode, setIsEditMode] = useState(!!id);
+  // State for the custom notification/pop-up component
+  const [popupType, setPopupType] = useState(null);
+  const [message, setMessage] = useState("");
+
+  /**
+   * Helper function to convert field names to user-friendly labels.
+   * @param {string} field - The internal field name.
+   * @returns {string} The user-friendly name.
+   */
+  const friendlyFieldName = (field) => {
+    const map = {
+      name: "Name",
+      quantity: "Quantity",
+      unit: "Unit",
+      min_quantity: "Minimum Quantity",
+      sales_price: "Sale Price",
+      purchase_price: "Purchase Price",
+      category: "Category",
+      hsn_number: "HSN/SCN Code",
+      tax: "Tax",
+      price_type: "Price Type",
+    };
+    return map[field] || field;
+  };
+
+  // 🔄 Fetch product data for edit mode
+  useEffect(() => {
+    if (id) {
+      const fetchProduct = async () => {
+        try {
+          setPopupType("processing");
+
+          const { product, success, error } =
+            await ProductService.fetchProductById(id);
+
+          if (success && product) {
+            const newFormData = {
+              name: product.name || "",
+              product_image: null,
+              quantity: String(product.quantity || ""),
+              unit: product.unit || "",
+              min_quantity: String(product.min_quantity || ""),
+              sales_price: String(product.sales_price || ""),
+              purchase_price: String(product.purchase_price || ""),
+              category: product.category || "",
+              gstInclusive:
+                product.gstInclusive === "true" ||
+                product.gstInclusive === true,
+              hsn_number: product.hsn_number || "",
+              tax: String(product.tax || ""),
+              price_type: product.price_type || "",
+            };
+
+            setFormData(newFormData);
+            setActiveTab(
+              product.product_type === "service" ? "service" : "product"
+            );
+
+            if (
+              newFormData.hsn_number ||
+              newFormData.tax ||
+              newFormData.price_type
+            ) {
+              setShowAdvanced(true);
+            }
+            setPopupType(null); // Clear processing
+          } else {
+            const errorMsg = error || `Failed to fetch product with ID: ${id}`;
+            setMessage(errorMsg);
+            setPopupType("error");
+            // Auto-clear error after a delay (e.g., 5 seconds)
+            setTimeout(() => setPopupType(null), 5000);
+            navigate("/dashboard/product-list");
+          }
+        } catch (err) {
+          console.error("Error fetching product:", err);
+          setMessage("Failed to fetch product data.");
+          setPopupType("error");
+          setTimeout(() => setPopupType(null), 5000);
+          navigate("/dashboard/product-list");
+        }
+      };
+      fetchProduct();
+    }
+  }, [id, navigate]);
+
+  /**
+   * Handles changes in form inputs, including file validation.
+   * @param {Event} e - The change event.
+   */
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    console.log(name, value, type, checked, files);
+
+    // Handle file input separately
+    if (files && files.length > 0) {
+      const file = files[0];
+      const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
+
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        const errorMsg = `Image too large. Max ${mb} MB allowed.`;
+        setMessage(errorMsg);
+        setPopupType("error");
+        setTimeout(() => setPopupType(null), 5000);
+
+        setErrors((prev) => ({ ...prev, product_image: `Max ${mb}MB` }));
+        setFormData((prev) => ({ ...prev, [name]: null })); // Clear invalid file
+        return;
+      }
+      setFormData((prev) => ({ ...prev, [name]: file }));
+      setErrors((prev) => ({ ...prev, [name]: false }));
+      return;
+    }
+
+    // Handle standard inputs and checkbox
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+
+    setErrors((prev) => ({ ...prev, [name]: false }));
+  };
+
+  /**
+   * Validates required form fields based on the active tab.
+   * @returns {boolean} True if the form is valid, false otherwise.
+   */
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields =
+      activeTab === "product"
+        ? [
+            "name",
+            "quantity",
+            "unit",
+            "min_quantity",
+            "sales_price",
+            "purchase_price",
+            "category",
+          ]
+        : ["name", "quantity", "unit", "sales_price"];
+
+    const missingFields = [];
+
+    requiredFields.forEach((field) => {
+      const val = formData[field];
+      // Check for empty string, null, or undefined
+      if (val === "" || val === null || val === undefined) {
+        newErrors[field] = true;
+        missingFields.push(friendlyFieldName(field));
+      }
+    });
+
+    setErrors(newErrors);
+
+    if (missingFields.length > 0) {
+      const errorMsg = `Please fill all required fields: ${missingFields.join(
+        ", "
+      )}`;
+      setMessage(errorMsg);
+      setPopupType("error");
+      setTimeout(() => setPopupType(null), 5000);
+      return false;
+    }
+    return true;
+  };
+
+  /**
+   * Handles the form submission for creating or updating a product/service.
+   * @param {Event} e - The form submission event.
+   */
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      // validateForm already sets error message and popup type
+      return;
+    }
+
+    setPopupType("processing");
+    setMessage(isEditMode ? "Updating item..." : "Saving new item...");
+
+    try {
+      const payload = { ...formData };
+      const file = formData.product_image || null;
+      delete payload.product_image;
+
+      // 🔹 Set safe defaults for optional fields if they are missing
+      if (!payload.hsn_number) payload.hsn_number = "DEFAULT_HSN";
+      if (!payload.tax) payload.tax = "0";
+      if (!payload.price_type) payload.price_type = "fixed";
+
+      if (activeTab === "service") {
+        // Set product-specific fields to safe defaults for services
+        if (!payload.purchase_price || payload.purchase_price === "")
+          payload.purchase_price = "0";
+        if (!payload.category || payload.category === "")
+          payload.category = "General";
+        if (!payload.min_quantity || payload.min_quantity === "")
+          payload.min_quantity = "0";
+      } else {
+        payload.min_quantity = payload.min_quantity || "0";
+      }
+
+      // Always stringify gstInclusive for backend API consistency
+      payload.gstInclusive = String(payload.gstInclusive);
+
+      // =========================
+      // 🧮 Tax Calculation Logic
+      // =========================
+      const sales = parseFloat(payload.sales_price || "0");
+      const taxRate = parseFloat(payload.tax || "0");
+
+      if (taxRate > 0) {
+        if (activeTab === "product") {
+          // 'without' means the sales_price entered is exclusive of tax, so calculate the inclusive price
+          // if (payload.price_type === "without") {
+          //   const inclusivePrice = sales + (sales * taxRate) / 100;
+          //   payload.sales_price = inclusivePrice.toFixed(2);
+          // }
+          // 'fixed' means the sales_price is already inclusive, so no calculation needed
+        }
+
+        if (activeTab === "service") {
+          // 'false' means the sales_price entered is exclusive of GST, so calculate the inclusive price
+          // if (payload.gstInclusive === "false") {
+          //   const inclusivePrice = sales + (sales * taxRate) / 100;
+          //   payload.sales_price = inclusivePrice.toFixed(2);
+          // }
+          // 'true' means the sales_price is already inclusive, so no calculation needed
+        }
+      }
+
+      console.log("Final payload before API call:", payload, "File:", file);
+
+      // Product type mapping for the API call
+      const productType = activeTab === "product" ? "inventory" : "service";
+
+      // =========================
+      // 🔹 API CALL
+      // =========================
+      let res;
+      if (isEditMode) {
+        res = await ProductService.updateProduct(
+          id,
+          payload,
+          file,
+          productType
+        );
+      } else {
+        res = await ProductService.createProduct(payload, file, productType);
+      }
+
+      if (res.success) {
+        const itemType = activeTab === "product" ? "Product" : "Service";
+        const action = isEditMode ? "updated" : "saved";
+        const successMessage = `${itemType} ${action} successfully! 🎉`;
+
+        setMessage(successMessage);
+        setPopupType("success");
+        setTimeout(() => setPopupType(null), 3000);
+
+        // Reset form or redirect
+        if (!isEditMode) {
+          setFormData(initialFormData);
+          setErrors({});
+          setShowAdvanced(false);
+        } else {
+          navigate("/dashboard/product-list");
+        }
+      } else {
+        // Backend indicated an error but didn't throw an HTTP error
+        throw new Error(
+          res.error || "Operation failed due to an unknown error."
+        );
+      }
+    } catch (err) {
+      console.error(
+        `❌ Error ${isEditMode ? "updating" : "saving"} item:`,
+        err
+      );
+
+      const mb = MAX_FILE_SIZE_BYTES / (1024 * 1024);
+      let errorMessage = `Failed to ${isEditMode ? "update" : "save"} ${
+        activeTab === "product" ? "product" : "service"
+      }. Please try again.`;
+
+      const backendMessage =
+        err?.response?.data?.message || err?.response?.data?.error;
+      const status = err?.response?.status;
+
+      // Handle file size errors
+      if (
+        (backendMessage &&
+          backendMessage.toLowerCase().includes("file too large")) ||
+        status === 413
+      ) {
+        errorMessage = `Uploaded image is too large. Max ${mb} MB allowed.`;
+      } else if (backendMessage) {
+        // Use a more specific backend error message if available
+        errorMessage = backendMessage;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+
+      setPopupType("error");
+      setMessage(errorMessage);
+      setTimeout(() => setPopupType(null), 5000); // Clear error after 5 seconds
+    } finally {
+      // Note: We don't clear processing here, because either 'success' or 'error' will be set,
+      // and they manage their own timeout or depend on the user closing the modal.
+      // However, if the error happens before setting an 'error' type, we must clear 'processing'.
+      if (popupType === "processing") {
+        setPopupType(null);
+      }
+    }
+  };
+
+  // =================================================================
+  // 💻 Component Render
+  // =================================================================
+  return (
+    <div className="max-w-5xl mx-auto  px-5 md:px-10 py-10  bg-white rounded-lg shadow-customCard">
+      {/* Removed: <ToastContainer /> */}
+      <div className="bg-blue-600 text-white px-6 py-3 rounded-t-md text-lg font-semibold">
+        Items
+      </div>
+
+      <div className="flex space-x-24 px-10 py-4">
         {["product", "service"].map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-2 border-b-2 ${
+            onClick={() => {
+              // Prevent tab switching in edit mode
+              if (!isEditMode) {
+                setActiveTab(tab);
+                setFormData(initialFormData); // Reset form data on tab switch
+                setErrors({});
+              }
+            }}
+            className={`pb-2 text-lg font-medium border-b-2 ${
               activeTab === tab
-                ? "border-blue-600 text-blue-600"
+                ? "border-bluecol text-bluecol"
                 : "border-transparent text-gray-500"
-            }`}
+            } ${isEditMode ? "cursor-not-allowed opacity-50" : ""}`}
+            disabled={isEditMode}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}s
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
 
-      {/* Search */}
-      <div className="flex gap-5 flex-wrap text-nowrap px-6 py-3 items-center mb-4">
-        <div className="w-full md:w-60 relative">
-          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
-            <CiSearch size={18} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search by name"
-            className="w-full pl-8 pr-2 py-2 border rounded bg-gray-100 text-sm"
-            value={searchQuery}
-            onChange={handleSearch}
-            onFocus={() => setShowSuggestions(suggestions.length > 0)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          />
-          {/* {showSuggestions && suggestions.length > 0 && (
-            <ul className="absolute z-50 w-full bg-white border rounded mt-1 shadow-lg max-h-60 overflow-y-auto">
-              {suggestions.map((item) => (
-                <li
-                  key={item._id}
-                  onClick={() => {
-                    setSearchQuery(item.name);
-                    setShowSuggestions(false);
-                    setPage(1);
-                    fetchItems(); // fetch full table based on selection
-                  }}
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                >
-                  {item.name}
-                </li>
-              ))}
-            </ul>
-          )} */}
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto p-3 align-middle border rounded bg-white shadow">
-        {renderTable()}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-4">
-        <div className="text-xs md:text-sm">
-          Showing {(page - 1) * limit + 1} to{" "}
-          {Math.min(page * limit, totalItems)} of {totalItems} items
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            disabled={page === 1}
-            className="px-4 py-2 border rounded text-xs md:text-sm "
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-            disabled={page === totalPages}
-            className="px-4 py-2 border rounded text-xs md:text-sm"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-
-      {/* Export/Import */}
-<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-6">
-  
-
-  {/* Action Area */}
-  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-    {/* Download Section */}
-    <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded-md border border-gray-200 w-full lg:w-1/2">
-      <div className="flex items-center gap-2">
-        <div className="p-2 bg-green-100 rounded-lg">
-          <svg
-            className="w-5 h-5 text-green-600"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
-          </svg>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-800">Bulk Upload</h4>
-          <p className="text-xs text-gray-500">Get the Excel format file</p>
-        </div>
-      </div>
-
-      <button
-        onClick={handeluploadexceldummy}
-        className="flex items-center gap-2 px-5 py-2 bg-green-600 text-white text-sm rounded shadow hover:bg-green-700 transition-all"
-      >
-        <svg
-          className="w-4 h-4"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
-        </svg>
-        Download Excel
-      </button>
-    </div>
-
-    {/* Upload Section */}
-    <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded-md border border-gray-200 w-full lg:w-1/2">
-      <label className="flex items-center justify-center w-full sm:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition text-sm text-gray-700">
-        <svg
-          className="w-5 h-5 mr-2 text-gray-500"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
-        </svg>
-        {excelFile ? excelFile.name : "Choose Excel/CSV file"}
-        <input
-          type="file"
-          accept=".xlsx, .xls, .csv"
-          onChange={handleFileChange}
-          className="hidden"
+      {activeTab === "product" ? (
+        <ProductForm
+          formData={formData}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          showAdvanced={showAdvanced}
+          setShowAdvanced={setShowAdvanced}
+          errors={errors}
         />
-      </label>
-
-      <button
-        onClick={handleImportExcel}
-
-        className={`flex items-center gap-2 px-5 py-2 text-sm rounded shadow transition-all bg-blue-600 hover:bg-blue-700 text-white
-         `}
-      >
-        <svg
-          className="w-4 h-4"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
-        </svg>
-        Import Excel
-      </button>
-    </div>
-  </div>
-</div>
-
-      {/* Stock Popup */}
-      {showStockPopup && selectedProduct && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md relative transition-all">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-              Add New Stock{" "}
-              <span className="text-blue-600">– {selectedProduct.name}</span>
-            </h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Previous Stock
-              </label>
-              <input
-                type="number"
-                value={selectedProduct.quantity || 0}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              />
-            </div>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                New Stock
-              </label>
-              <input
-                type="number"
-                value={newStock}
-                onChange={(e) => setNewStock(e.target.value)}
-                placeholder="Enter quantity to add"
-                className="w-full px-3 py-2 border bg-white text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-            <div className="flex justify-end gap-3 align-middle">
-              <button
-                onClick={() => setShowStockPopup(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdateStock}
-                className="px-5 py-2 rounded-lg bg-blue-600 text-white font-medium shadow-md hover:bg-blue-700 hover:shadow-lg transition"
-              >
-                Update Stock
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* History Popup */}
-      {showHistoryPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg relative transition-all">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
-              Product History – {selectedProduct?.name}
-            </h2>
-            <div className="max-h-80 overflow-y-auto">
-              {productHistory.length === 0 ? (
-                <p className="text-center text-gray-500">No history found.</p>
-              ) : (
-                <table className="w-full text-sm text-left border">
-                  <thead>
-                    <tr>
-                      <th className="p-2 border-b">Date</th>
-                      <th className="p-2 border-b">Action</th>
-                      <th className="p-2 border-b">Previous Stock</th>
-                      <th className="p-2 border-b">Updated Stock</th>
-                      <th className="p-2 border-b">Change</th>
-
-                      <th className="p-2 border-b">Updated By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {productHistory.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan="6"
-                          className="p-3 text-center text-gray-500"
-                        >
-                          No updates found
-                        </td>
-                      </tr>
-                    ) : (
-                      productHistory.map((h, index) => (
-                        <tr key={index} className="border-b hover:bg-gray-50">
-                          <td className="p-2">
-                            {new Date(h.updated_at).toLocaleString()}
-                          </td>
-                          <td className="p-2">{h.action || "Stock Update"}</td>
-                          <td className="p-2">
-                            {h.changes?.before?.quantity ?? "No Update"}
-                          </td>
-                          <td className="p-2">
-                            {h.changes?.after?.quantity ?? "No Update"}
-                          </td>
-                          <td className="p-2">
-                            {Number(h.changes?.after?.quantity || 0) -
-                              Number(h.changes?.before?.quantity || 0)}
-                          </td>
-
-                          <td className="p-2">{h.updated_by || "Admin"}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </div>
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={() => setShowHistoryPopup(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+      ) : (
+        <ServiceForm
+          formData={formData}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          showAdvanced={showAdvanced}
+          setShowAdvanced={setShowAdvanced}
+          errors={errors}
+        />
       )}
 
       {/* 🟢 The requested Button component integration for pop-up messages */}
@@ -759,20 +1104,6 @@ const D4ProductList = () => {
           onClose={() => setPopupType(null)}
         />
       )}
-
-      {/* ✅ NEW: Render the custom Delete Confirmation Modal */}
-      {deleteProductId && (
-        <DeleteConfirmationModal
-          productName={deleteProductName}
-          onConfirm={confirmDelete}
-          onCancel={() => {
-            setDeleteProductId(null);
-            setDeleteProductName("");
-          }}
-        />
-      )}
     </div>
   );
-};
-
-export default D4ProductList;
+}
