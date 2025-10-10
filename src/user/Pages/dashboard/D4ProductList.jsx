@@ -210,7 +210,7 @@ const D4ProductList = () => {
       setPopupType("error"); // ✅ ADDED
       setMessage(err.message || "Delete failed"); // ✅ ADDED
     }
-  };
+  }; 
   // =========================================================================
 
   // ✅ Render Table

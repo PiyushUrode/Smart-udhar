@@ -13,6 +13,8 @@ import { FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import product1 from "../../assets/dummyimage/product1.png";
 import { useParams, useNavigate } from "react-router-dom";
+import Button from "../../common/Button.jsx";
+
 
 
 // ----------------- STAT CONFIG -----------------
@@ -65,6 +67,10 @@ const D5StaffRole = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [staffImage, setStaffImage] = useState(null);
   const [dynamicRoles, setDynamicRoles] = useState([]);
+  const [popupType, setPopupType] = useState(null); // 'success', 'error', 'processing'
+
+  const [message, setMessage] = useState("");
+
 
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -173,11 +179,15 @@ useEffect(() => {
     if (!window.confirm("Are you sure you want to delete this staff member?")) return;
     try {
       await StaffService.deleteStaff(id);
-      toast.success("✅ Staff deleted successfully");
+      // toast.success("✅ Staff deleted successfully");
+      setPopupType("success");
+      setMessage("Staff deleted successfully");
       fetchStaff();
     } catch (err) {
       console.error("❌ Delete failed:", err);
-      toast.error(err.response?.data?.message || "Failed to delete staff");
+      // toast.error(err.response?.data?.message || "Failed to delete staff");
+      setPopupType("error");
+      setMessage(err.response?.data?.message || "Failed to delete staff");
     }
   };
   return (
@@ -332,7 +342,26 @@ useEffect(() => {
             ))}
           </div>
         </div>
+
+
+          {popupType && (
+
+ <Button
+
+     type={popupType}
+
+     message={message}
+
+     onClose={() => setPopupType(null)}
+
+    />
+
+   )}
       </div>
+
+     
+
+
 
       {/* Recent Activity */}
     <div className="bg-white rounded-lg shadow-md border-2">
