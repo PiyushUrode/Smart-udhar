@@ -1,4 +1,4 @@
- import axiosClient from "./axiosclient.js";
+import axiosClient from "./axiosclient.js";
 import { AuthService } from "./authservice.js";
 import Cookies from "js-cookie";
 import { API_BASE } from "../config/constant.js";
@@ -385,9 +385,24 @@ async updateMilestones(invoiceId, milestones = []) {
   link.remove();
 
   return { success: true };
-}
-,
+},
 
 
+async fetchInvoiceId () {
+  try {
+    const { token, storeProfile_id } = getAuthContext();
+
+    const { data } = await axiosClient.get(
+      `/store-invoice/sequence-value/${storeProfile_id}`,
+      { headers: authHeaders(token) }
+    );
+
+    console.log("✅ [InvoiceService] Invoice ID:", data);
+    return { success: true, invoiceId: data?.NextInvoiceId || "" };
+  } catch (err) {
+    console.error("❌ Fetch invoice ID error:", err.message);
+    return { success: false, invoiceId: "" };
+  } 
+},
 
 };
