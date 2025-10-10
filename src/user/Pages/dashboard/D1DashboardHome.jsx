@@ -41,11 +41,29 @@ const last6Months = (() => {
   return months;
 })();
 
-// function formatMonth(dateStr) {
-//   if (!dateStr) return "";
-//   const d = new Date(dateStr);
-//   return d.toLocaleString("default", { month: "short", year: "numeric" });
-// }
+
+// 🔹 Format date to dd-mm-yyyy
+// 🕒 Convert ISO date → dd-mm-yyyy format
+const formatDate = (isoDate) => {
+  if (!isoDate) return "-";
+  const date = new Date(isoDate);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+
+// 🔹 Get current month start and end date
+function getCurrentMonthRange() {
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  endDate.setHours(23, 59, 59, 999);
+  return { startDate, endDate };
+}
+
+
 
 const TRANSACTION_TYPE_MAP = {
   Purchase: {
@@ -180,7 +198,7 @@ const formatPercentForUI = (pct) => {
   const sign = pct >= 0 ? "+" : "";
   return `${sign}${pct}%`;
 };
-
+ 
 const D1DashboardHome = () => {
   const [selectedType, setSelectedType] = useState("All");
   const [dashboardData, setDashboardData] = useState(null);
@@ -196,20 +214,45 @@ const D1DashboardHome = () => {
     const [transactionStats, setTransactionStats] = useState({});
 
   // 🔹 Fetch Expenses
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        setLoadingExpenses(true);
-        const res = await ExpenseService.getAllExpenses();
-        setExpenses(res?.data || res?.expenses || []);
-      } catch (err) {
-        console.error("Error fetching expenses:", err);
-      } finally {
-        setLoadingExpenses(false);
-      }
-    };
-    fetchExpenses();
-  }, []);
+ useEffect(() => {
+  const fetchExpenses = async () => {
+    try {
+      setLoadingExpenses(true);
+
+      // Fetch all expenses
+      const res = await ExpenseService.filterExpenses();
+      let allExpenses = res?.data || res?.expenses || [];
+
+      // Get current month range
+      const { startDate, endDate } = getCurrentMonthRange();
+
+      // Filter only current month expenses
+      const currentMonthExpenses = allExpenses.filter((e) => {
+        const expenseDate = new Date(e.date);
+        return expenseDate >= startDate && expenseDate <= endDate;
+      });
+
+      // Sort by date descending (latest first)
+      const sortedExpenses = currentMonthExpenses.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
+      // Take only the last 10
+      const latest10Expenses = sortedExpenses.slice(0, 10);
+
+      // Update state
+      setExpenses(latest10Expenses);
+
+    } catch (err) {
+      console.error("Error fetching expenses:", err);
+    } finally {
+      setLoadingExpenses(false);
+    }
+  };
+
+  fetchExpenses();
+}, []);
+
 
 // 🔹 Fetch last 6 months dashboard data
 useEffect(() => {
@@ -395,7 +438,7 @@ useEffect(() => {
       ? collectionData
       : selectedType === "Expense"
       ? expenses.map((exp) => ({
-          date: exp.date,
+          date: formatDate(exp.date),
           type: "Expense",
           description: exp.itemName || exp.expenseCategory,
           amount: exp.amount,

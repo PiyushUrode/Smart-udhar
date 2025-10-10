@@ -573,7 +573,7 @@ const D4ProductList = () => {
           </svg>
         </div>
         <div>
-          <h4 className="text-sm font-medium text-gray-800">Download Template</h4>
+          <h4 className="text-sm font-medium text-gray-800">Bulk Upload</h4>
           <p className="text-xs text-gray-500">Get the Excel format file</p>
         </div>
       </div>

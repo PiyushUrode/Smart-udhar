@@ -469,7 +469,7 @@ const clearFilters = () => {
               </svg>
             </div>
             <div>
-              <h4 className="text-sm sm:text-base font-medium text-gray-800">Download Template</h4>
+              <h4 className="text-sm sm:text-base font-medium text-gray-800">Bulk Upload</h4>
               <p className="text-xs sm:text-sm text-gray-500">Get the Excel format file</p>
             </div>
           </div>

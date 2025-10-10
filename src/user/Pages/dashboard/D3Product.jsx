@@ -59,29 +59,35 @@ const ProductForm = ({
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Image
-        </label>
-        <label className="bg-[#F6F8FA] p-2 rounded border cursor-pointer flex justify-between items-center">
-          <span className="flex items-center gap-2 text-sm text-gray-700">
-            <ImagePlus color="#2563EB" />
-            <span className="text-[#2563EB]">Add Product Image</span>
-          </span>
-          <input
-            type="file"
-            name="product_image"
-            accept="image/*"
-            className="hidden"
-            onChange={handleChange}
-          />
-          {formData.product_image && (
-            <span className="text-xs text-gray-400 ml-2">
-              {formData.product_image.name}
-            </span>
-          )}
-        </label>
-      </div>
+          <div>
+      <label className="block text-sm font-medium text-gray-700 mb-3">
+        Categories<span className="text-red-500">*</span>
+      </label>
+      <select
+        name="category"
+        required
+        className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
+          errors.category ? "border-red-500" : "border-gray-300"
+        }`}
+        value={formData.category || ""}
+        onChange={handleChange}
+      >
+        <option value="">Select Category</option>
+        <option value="Food">Food</option>
+        <option value="Bakery">Bakery</option>
+        <option value="Grociers">Grociers</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Pendrive">Pendrive</option>
+        <option value="Hardisk">Hardisk</option>
+        <option value="Storage">Storage</option>
+      </select>
+      {errors.category && (
+        <p className="text-red-500 text-xs mt-1">Category is required</p>
+      )}
+    </div>
+
+
+
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
@@ -387,6 +393,68 @@ const ProductForm = ({
             <option value="without">Without tax</option>
           </select>
         </div>
+
+      
+
+
+
+
+<div className="flex flex-col md:flex-row gap-4">
+  <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
+    {formData.product_image ? (
+      // Preview Image
+      <img
+        src={URL.createObjectURL(formData.product_image)}
+        alt="Preview"
+        className="w-40 h-40 object-cover rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
+      />
+    ) : (
+      // Default State
+      <div className="flex flex-col items-center gap-2 text-center">
+        <ImagePlus className="text-blue-600 w-8 h-8" />
+        <span className="text-sm text-blue-600 font-medium">
+          Add Product Image
+        </span>
+        <span className="text-xs text-gray-400">Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px</span>
+      </div>
+    )}
+
+    <input
+      type="file"
+      name="product_image"
+      accept="image/*"
+      className="hidden"
+      onChange={handleChange}
+    />
+
+    {/* Optional File Name */}
+    {formData.product_image && (
+      <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-md">
+        {(() => {
+          const name = formData.product_image.name;
+          const dotIndex = name.lastIndexOf(".");
+          const ext = dotIndex !== -1 ? name.slice(dotIndex) : "";
+          const base = dotIndex !== -1 ? name.slice(0, dotIndex) : name;
+          const displayBase = base.length > 15 ? base.slice(0, 15) : base;
+          return displayBase + ext;
+        })()}
+      </span>
+    )}
+  </label>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
       </div>
     )}
 
@@ -421,7 +489,7 @@ const ServiceForm = ({
   errors,
 }) => (
   <form onSubmit={handleSubmit} className="space-y-4 px-4 pt-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 pb-2">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">
           Name<span className="text-red-500">*</span>
@@ -442,37 +510,7 @@ const ServiceForm = ({
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Image
-        </label>
-        <div className="flex flex-row justify-start items-center gap-3">
-          <label className="w-full md:w-[60%] bg-[#F6F8FA] p-2 rounded border cursor-pointer flex justify-between items-center">
-            <span className="flex items-center gap-2 text-sm text-gray-700">
-              <ImagePlus color="#2563EB" />
-              <span className="text-[#2563EB]">Add Service Image</span>
-            </span>
-            <input
-              type="file"
-              name="product_image"
-              className="hidden"
-              accept="image/*"
-              onChange={handleChange}
-            />
-            {formData.product_image && (
-              <span className="text-xs text-gray-400 ml-2">
-                {formData.product_image.name}
-              </span>
-            )}
-          </label>
-          {/* Note: This "No file chosen" text might be misleading if the file is chosen but the component re-renders. A better UX would show the filename or a clearer status. */}
-          {!formData.product_image && (
-            <span className="font-robotoR text-sm text-gray-500">
-              No file chosen
-            </span>
-          )}
-        </div>
-      </div>
+
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
@@ -582,6 +620,56 @@ const ServiceForm = ({
             <option value="28">28%</option>
           </select>
         </div>
+
+              <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Image
+        </label>
+<div className="flex flex-col md:flex-row gap-4">
+  <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
+    {formData.product_image ? (
+      // Preview Image
+      <img
+        src={URL.createObjectURL(formData.product_image)}
+        alt="Preview"
+        className="w-40 h-40 object-cover rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
+      />
+    ) : (
+      // Default State
+      <div className="flex flex-col items-center gap-2 text-center">
+        <ImagePlus className="text-blue-600 w-8 h-8" />
+        <span className="text-sm text-blue-600 font-medium">
+          Add Service Image
+        </span>
+        <span className="text-xs text-gray-400">Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px</span>
+      </div>
+    )}
+
+    <input
+      type="file"
+      name="product_image"
+      accept="image/*"
+      className="hidden"
+      onChange={handleChange}
+    />
+
+    {/* Optional File Name */}
+    {formData.product_image && (
+      <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-md">
+        {(() => {
+          const name = formData.product_image.name;
+          const dotIndex = name.lastIndexOf(".");
+          const ext = dotIndex !== -1 ? name.slice(dotIndex) : "";
+          const base = dotIndex !== -1 ? name.slice(0, dotIndex) : name;
+          const displayBase = base.length > 15 ? base.slice(0, 15) : base;
+          return displayBase + ext;
+        })()}
+      </span>
+    )}
+  </label>
+</div>
+
+      </div>
       </div>
     )}
 

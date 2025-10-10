@@ -969,10 +969,11 @@ letter-spacing: 0%;
   gap: 20px;
   margin-top: 30px;
   flex-wrap: wrap;
+ 
 }
 
 .phone-img {
-  max-width: 392px;
+  max-width: 300px;
   height: auto;
 }
 

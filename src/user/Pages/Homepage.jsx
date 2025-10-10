@@ -492,7 +492,7 @@ const Homepage = () => {
           </div>
         </div>
         <div className="smart-right">
-          <img src={app} alt="App Screenshot 1" className=" " />
+          <img src={app} alt="App Screenshot 1" className="max-h-[75vh] object-contain " />
         </div>
       </section>
       {/* App section end */}

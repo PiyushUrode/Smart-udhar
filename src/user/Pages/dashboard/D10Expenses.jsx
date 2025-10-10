@@ -383,7 +383,7 @@ const D10Expenses = () => {
             <h2 className="text-lg font-semibold text-gray-800 flex flex-row gap-3">
               <FaChartPie color="#22C55E" /> Expense Summary
             </h2>
-            <div className="relative">
+            {/* <div className="relative">
               <button
                 className="text-sm text-[#1E40AF] hover:underline flex items-center gap-1"
                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
@@ -407,7 +407,7 @@ const D10Expenses = () => {
                   ))}
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
 
           <div className="flex flex-row justify-between items-center bg-[#EFF6FF] py-4 px-3 gap-4">
