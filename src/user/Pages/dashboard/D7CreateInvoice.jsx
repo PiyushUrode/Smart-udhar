@@ -94,12 +94,12 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
     handleTaxTypeChange,
   } = useCreateInvoiceController({ onCustomerSelect });
   const handleCreateDate = (date) => {
-    setCreatedDate(date);   
+    setCreatedDate(date);
   };
 
   const handleView = (id) => {
     navigate(`/dashboard/invoice-view/${id}`);
-  }
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6 mt-5 md:mt-10   grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -121,7 +121,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
 
             {/* {created date as input box } */}
             <div className="mb-4">
-              <p className="my-6">Invoice ID : <strong>{invoceId}</strong> </p>
+              <p className="my-6">
+                Invoice ID : <strong>{invoceId}</strong>{" "}
+              </p>
               <label className="block text-sm font-medium text-gray-700 my-3">
                 Invoice Created Date
               </label>
@@ -657,17 +659,28 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
 
                       <input
                         className="border px-2 py-1 rounded bg-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                        placeholder="0"
+                        placeholder="0.00"
                         type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
+                        inputMode="decimal" // Changed from 'numeric' to 'decimal'
+                        pattern="[0-9]*[.]?[0-9]*" // Updated pattern to allow optional decimal
                         value={ms.amount}
                         onChange={(e) => {
                           const newMilestones = [...milestones];
-                          const onlyDigits = e.target.value.replace(/\D/g, "");
-                          newMilestones[index].amount = onlyDigits
-                            ? parseInt(onlyDigits, 10)
-                            : "";
+                          const rawValue = e.target.value;
+
+                          // 1. Allow digits and a single decimal point
+                          const sanitizedValue = rawValue
+                            .replace(/[^\d.]/g, "") // Remove all non-digits except '.'
+                            .replace(
+                              /^(\d*\.)(.*)$/,
+                              (match, p1, p2) => p1 + p2.replace(/\./g, "")
+                            ); // Only allow one '.'
+
+                          // 2. Update the milestone amount
+                          // We store the string to allow for '5.' or '5.0' before the user types the final digit.
+                          // If the string is empty, use an empty string.
+                          newMilestones[index].amount = sanitizedValue;
+
                           setMilestones(newMilestones);
                         }}
                       />
@@ -762,43 +775,33 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
 
       {/* ---------- Invoice Preview Modal ---------- */}
       {/* ---------- Invoice Preview Modal (with 3 format options) ---------- */}
- {/* ---------- Invoice Preview Modal ---------- */}
-{showPreview && previewInvoice && (
-  <div className="fixed  z-50 inset-0 flex items-start justify-center p-6 bg-black/40">
-    <div className=" bg-white w-full max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[90vh]">
+      {/* ---------- Invoice Preview Modal ---------- */}
+    {showPreview && previewInvoice && (
+  // 1. MODAL OVERLAY: Full screen on mobile, larger on desktop
+  <div className="fixed z-50 inset-0 flex items-start justify-center p-2 sm:p-6 bg-black/40">
+    {/* 1. MODAL CONTAINER: 
+      - max-w-full on mobile, max-w-4xl on desktop 
+      - max-h-[98vh] on mobile, max-h-[90vh] on desktop
+    */}
+    <div className="bg-white w-full max-w-full sm:max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[98vh] sm:max-h-[90vh]">
+      
       {/* ---------- Modal Header ---------- */}
-      <div className="flex justify-between items-center p-4 border-b">
+      {/* Fixed header for better mobile scrolling experience */}
+      <div className="sticky top-0 bg-white z-10 flex justify-between items-center p-4 border-b">
         <h3 className="text-lg font-robotoSb">Invoice Preview</h3>
 
         <div className="flex items-center gap-3">
-          {/* Format selector (can be removed if only one format is used) */}
-          <select
-            value={selectedFormat}
-            onChange={(e) => setSelectedFormat(e.target.value)}
-            className="border-2  rounded px-10 py-1 text-sm text-gray-700 hidden"
-          >
-            {/* <option value="modern">Modern</option> */}
-            <option value="classic">Classic</option>
-          </select>
-           <span value="border-2 border-gray-400 rounded px-10 py-1 text-sm text-gray-700">Classic</span>
-{/* 
-          <button
-            onClick={() =>
-              downloadPreviewAsPDF(
-                `invoice-${previewInvoice._id || Date.now()}.pdf`
-              )
-            }
-            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Download PDF
-          </button> */}
-
+          {/* Format selector: Keep hidden as it only supports 'Classic' */}
+          <span className="border-2 border-gray-400 rounded px-3 py-1 text-xs sm:text-sm text-gray-700">
+            Classic
+          </span>
+          
           <button
             onClick={() => {
               setShowPreview(false);
               setPreviewInvoice(null);
             }}
-            className="px-3 py-1 border rounded hover:bg-gray-100"
+            className="px-3 py-1 border rounded hover:bg-gray-100 text-sm"
           >
             Close
           </button>
@@ -806,42 +809,63 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
       </div>
 
       {/* ---------- Body: Printable Area ---------- */}
-      <div className="p-4 md:p-6">
-        {/* ========== MODERN FORMAT ========== */}
+      {/* Padding adjusted for smaller screens: p-3 on mobile, md:p-6 on desktop */}
+      <div className="p-3 md:p-6">
+        
+        {/* ========== CLASSIC FORMAT (Invoice Content) ========== */}
         {selectedFormat === "classic" && (
-          <div ref={previewRef} className="bg-white border border-gray-300 p-8 pt-6 shadow-xl rounded-lg text-gray-800">
-
+          // 2. INVOICE WRAPPER: Responsive/Print-Friendly Container
+          <div
+            ref={previewRef}
+            className="bg-white border border-gray-300 p-4 sm:p-8 pt-6 shadow-xl rounded-lg text-gray-800"
+          >
+            
             {/* ---------- Header / Title & Invoice Details ---------- */}
-            <div className="flex justify-between items-start border-b-2 border-gray-400 pb-4 mb-6">
-              <div className="text-left">
-                <h1 className="text-3xl font-bold uppercase text-blue-800 tracking-wider">
+            {/* Swapping flex-row to flex-col on mobile for stacking */}
+            <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-gray-400 pb-4 mb-6">
+              <div className="text-left mb-4 sm:mb-0">
+                <h1 className="text-2xl sm:text-3xl font-bold uppercase text-blue-800 tracking-wider">
                   INVOICE
                 </h1>
                 {/* Company Info */}
                 <h2 className="font-semibold mt-2 text-gray-700">
-                    {storeProfile?.businessName || "Your Company Name"}
+                  {storeProfile?.businessName || "Your Company Name"}
                 </h2>
-                <p className="text-sm text-gray-500">{storeProfile?.address || "Company Address"}</p>
-                <p className="text-sm text-gray-500">
-                    {storeProfile?.mobile ? `Phone: ${storeProfile.mobile}` : ""}
-                    {storeProfile?.email ? ` / Email: ${storeProfile.email}` : ""}
+                <p className="text-xs sm:text-sm text-gray-500">
+                  {storeProfile?.address || "Company Address"}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  {storeProfile?.mobile ? `Phone: ${storeProfile.mobile}` : ""}
+                  {storeProfile?.email ? ` / Email: ${storeProfile.email}` : ""}
                 </p>
               </div>
-              <div className="text-right text-sm">
+              
+              {/* Invoice Details: Adjusted font size to text-xs on mobile */}
+              <div className="text-left sm:text-right text-xs sm:text-sm">
                 <p className="mb-1">
-                  <strong className="font-semibold text-gray-700">Invoice ID:</strong>{" "}
-                  <span className="text-blue-600 font-bold">{invoceId}</span>
+                  <strong className="font-semibold text-gray-700">
+                    Invoice ID:
+                  </strong>{" "}
+                  <span className="text-blue-600 font-bold">
+                    {invoceId}
+                  </span>
                 </p>
                 <p className="mb-1">
-                  <strong className="font-semibold text-gray-700">Invoice Date:</strong>{" "}
-                  {previewInvoice.InvoiceCreatedDate || new Date().toLocaleDateString()}
+                  <strong className="font-semibold text-gray-700">
+                    Invoice Date:
+                  </strong>{" "}
+                  {previewInvoice.InvoiceCreatedDate ||
+                    new Date().toLocaleDateString()}
                 </p>
                 <p className="mb-1">
-                  <strong className="font-semibold text-gray-700">Status:</strong>{" "}
+                  <strong className="font-semibold text-gray-700">
+                    Status:
+                  </strong>{" "}
                   <span
                     className={`font-bold ${
                       (previewInvoice?.paymentStatus ||
-                        (invoiceSummary.totalReceived === invoiceSummary.total
+                        (invoiceSummary.totalReceived ===
+                        invoiceSummary.total
                           ? "Paid"
                           : "Unpaid")) === "Paid"
                         ? "text-green-600"
@@ -849,7 +873,8 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                     }`}
                   >
                     {previewInvoice?.paymentStatus ||
-                      (invoiceSummary.totalReceived === invoiceSummary.total
+                      (invoiceSummary.totalReceived ===
+                      invoiceSummary.total
                         ? "Paid"
                         : invoiceSummary.totalReceived > 0
                         ? "Partial"
@@ -860,7 +885,8 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
             </div>
 
             {/* ---------- Customer Info ---------- */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-8 pb-4 border-b border-gray-300">
+            {/* Removed md:grid-cols-2 to keep it a single column stack on all screen sizes */}
+            <div className="grid grid-cols-1 gap-4 text-sm mb-6 sm:mb-8 pb-4 border-b border-gray-300">
               <div>
                 <h3 className="font-bold text-base mb-2 uppercase text-gray-700 border-b border-blue-200 pb-1">
                   Billed To
@@ -868,74 +894,120 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                 <p className="font-bold text-lg text-gray-800">
                   {previewInvoice.name || selectedCustomer?.name}
                 </p>
-                <p>Phone: {previewInvoice.phone || selectedCustomer?.mobile}</p>
-                <p>Address: {previewInvoice.address || selectedCustomer?.address}</p>
+                <p>
+                  Phone:{" "}
+                  {previewInvoice.phone || selectedCustomer?.mobile}
+                </p>
+                <p>
+                  Address:{" "}
+                  {previewInvoice.address || selectedCustomer?.address}
+                </p>
               </div>
             </div>
 
             {/* ---------- Products Table ---------- */}
             <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-700 mb-3">Itemized Charges</h3>
-              <table className="w-full border-collapse">
-                <thead className="bg-gray-100 border-b border-gray-300">
-                  <tr className="text-left text-xs font-semibold uppercase text-gray-600">
-                    <th className="p-3 w-10">#</th>
-                    <th className="p-3">Product</th>
-                    <th className="p-3 text-center w-20">Qty</th>
-                    <th className="p-3 text-right w-24">Unit Price</th>
-                    {taxType === "taxable" && (
-                      <th className="p-3 text-right w-16">Tax</th>
-                    )}
-                    <th className="p-3 text-right w-32">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(previewInvoice.products || []).map((p, i) => (
-                    <tr key={i} className="text-gray-700 odd:bg-gray-50 text-sm">
-                      <td className="p-3 border-b border-gray-200">{i + 1}</td>
-                      <td className="p-3 border-b border-gray-200">{p.name}</td>
-                      <td className="p-3 border-b border-gray-200 text-center">{p.qty}</td>
-                      <td className="p-3 border-b border-gray-200 text-right">
-                        ₹{Number(p.price).toFixed(2)}
-                      </td>
+              <h3 className="text-lg font-bold text-gray-700 mb-3">
+                Itemized Charges
+              </h3>
+              {/* 3. RESPONSIVE TABLE: Add overflow-x-auto so the table 
+                can be scrolled horizontally on very small screens (like a narrow phone). 
+                The 'print:table' ensures it renders as a proper table on paper.
+              */}
+              <div className="overflow-x-auto print:overflow-visible">
+                <table className="w-full border-collapse min-w-[500px] print:min-w-full">
+                  <thead className="bg-gray-100 border-b border-gray-300">
+                    <tr className="text-left text-xs font-semibold uppercase text-gray-600">
+                      <th className="p-3 w-8 sm:w-10">#</th>
+                      <th className="p-3">Product</th>
+                      <th className="p-3 text-center w-16 sm:w-20">Qty</th>
+                      <th className="p-3 text-right w-20 sm:w-24">Unit Price</th>
                       {taxType === "taxable" && (
-                        <td className="p-3 border-b border-gray-200 text-right">{p.tax}%</td>
+                        <th className="p-3 text-right w-14 sm:w-16">Tax</th>
                       )}
-                      <td className="p-3 border-b border-gray-200 text-right font-medium">
-                        ₹{Number(p.total || p.qty * p.price + (p.qty * p.price * p.tax) / 100).toFixed(2)}
-                      </td>
+                      <th className="p-3 text-right w-28 sm:w-32">Total</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {(previewInvoice.products || []).map((p, i) => (
+                      <tr
+                        key={i}
+                        className="text-gray-700 odd:bg-gray-50 text-sm"
+                      >
+                        <td className="p-3 border-b border-gray-200">
+                          {i + 1}
+                        </td>
+                        <td className="p-3 border-b border-gray-200">
+                          {p.name}
+                        </td>
+                        <td className="p-3 border-b border-gray-200 text-center">
+                          {p.qty}
+                        </td>
+                        <td className="p-3 border-b border-gray-200 text-right">
+                          ₹{Number(p.price).toFixed(2)}
+                        </td>
+                        {taxType === "taxable" && (
+                          <td className="p-3 border-b border-gray-200 text-right">
+                            {p.tax}%
+                          </td>
+                        )}
+                        <td className="p-3 border-b border-gray-200 text-right font-medium">
+                          ₹
+                          {Number(
+                            p.total ||
+                              p.qty * p.price +
+                                (p.qty * p.price * p.tax) / 100
+                          ).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* ---------- Summary & Notes ---------- */}
+            {/* Swapping flex-row to flex-col on mobile for stacking */}
             <div className="flex flex-col sm:flex-row justify-between pt-4 border-t-2 border-gray-400">
               {/* Notes & Payment Section */}
-              <div className="sm:w-1/2 text-sm">
-                <h3 className="font-bold text-base mb-1 text-gray-700">Details:</h3>
+              {/* Changed sm:w-1/2 to w-full sm:w-1/2 for mobile first width */}
+              <div className="w-full sm:w-1/2 text-sm">
+                <h3 className="font-bold text-base mb-1 text-gray-700">
+                  Details:
+                </h3>
                 <div className="text-gray-600 italic border p-3 bg-gray-50 rounded min-h-[50px] space-y-1">
                   <p>
-                    <strong>Payment Mode:</strong> {previewInvoice.paymentMode || paymentMode}
+                    <strong>Payment Mode:</strong>{" "}
+                    {previewInvoice.paymentMode || paymentMode}
                   </p>
                   {paymentMode !== "cash" && (
                     <p>
-                      <strong>Payment Method:</strong> {previewInvoice.paymentMethod || paymentMethod}{" "}
-                      {previewInvoice.transactionId ? `/ ${previewInvoice.transactionId}`: ""}
+                      <strong>Payment Method:</strong>{" "}
+                      {previewInvoice.paymentMethod || paymentMethod}{" "}
+                      {previewInvoice.transactionId
+                        ? `/ ${previewInvoice.transactionId}`
+                        : ""}
                     </p>
                   )}
-                  {previewInvoice.note && <p><strong>Note:</strong> {previewInvoice.note}</p>}
+                  {previewInvoice.note && (
+                    <p>
+                      <strong>Note:</strong> {previewInvoice.note}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Summary Totals */}
-              <div className="sm:w-1/3 mt-6 sm:mt-0">
+              {/* Changed sm:w-1/3 to w-full sm:w-1/3 for mobile first width */}
+              <div className="w-full sm:w-1/3 mt-6 sm:mt-0">
                 <div className="space-y-1 text-sm text-gray-700">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
                     <span className="font-medium">
-                      ₹{Number(previewInvoice.subtotal || invoiceSummary.subtotal).toFixed(2)}
+                      ₹
+                      {Number(
+                        previewInvoice.subtotal || invoiceSummary.subtotal
+                      ).toFixed(2)}
                     </span>
                   </div>
 
@@ -943,7 +1015,10 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                     <div className="flex justify-between">
                       <span>Tax:</span>
                       <span className="font-medium">
-                        ₹{Number(previewInvoice.tax || invoiceSummary.totalTax).toFixed(2)}
+                        ₹
+                        {Number(
+                          previewInvoice.tax || invoiceSummary.totalTax
+                        ).toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -951,65 +1026,100 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   <div className="flex justify-between">
                     <span>Delivery Fee:</span>
                     <span className="font-medium">
-                      ₹{Number(previewInvoice.deliveryFee || invoiceSummary.deliveryFee).toFixed(2)}
+                      ₹
+                      {Number(
+                        previewInvoice.deliveryFee ||
+                          invoiceSummary.deliveryFee
+                      ).toFixed(2)}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
-                    <span>Discount:</span>
-                    <span className="font-medium text-red-600">
-                      -₹{Number(previewInvoice.discount || invoiceSummary.discount).toFixed(2)}
+                    <span>Packing Charges:</span>
+                    <span className="font-medium">
+                      ₹
+                      {Number(
+                        previewInvoice.packingCharges ||
+                          invoiceSummary.packingCharges
+                      ).toFixed(2)}
                     </span>
                   </div>
+
+                    <div className="flex justify-between">
+                      <span>Other:</span>
+                      <span className="font-medium">
+                        ₹
+                        {Number(
+                          previewInvoice.other || invoiceSummary.other
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Discount:</span>
+                      <span className="font-medium text-red-600">
+                        -&nbsp; ₹
+                        {Number(
+                          previewInvoice.discount || invoiceSummary.discount
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+
                 </div>
 
                 {/* Total, Paid, Due */}
                 <div className="mt-3 pt-3 border-t border-gray-400">
-                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded mb-2">
-                        <span className="text-lg font-bold text-gray-800">TOTAL:</span>
-                        <span className="text-lg font-bold text-gray-800">
-                         ₹{Number(previewInvoice.total || invoiceSummary.total).toFixed(2)}
-                        </span>
-                    </div>
-                     <div className="flex justify-between text-sm">
-                        <span>Amount Paid:</span>
-                        <span className="font-medium text-green-600">
-                        ₹{Number(previewInvoice.totalReceived || invoiceSummary.totalReceived).toFixed(2)}
-                        </span>
-                    </div>
-                     <div className="flex justify-between items-center mt-2 bg-blue-50 p-2 rounded">
-                        <span className="text-xl font-bold text-blue-800">TOTAL DUE:</span>
-                        <span className="text-xl font-bold text-blue-800">
-                         ₹{Number(previewInvoice.dueBalance || invoiceSummary.dueBalance).toFixed(2)}
-                        </span>
-                    </div>
+                  <div className="flex justify-between items-center bg-gray-100 p-2 rounded mb-2">
+                    <span className="text-base font-bold text-gray-800">
+                      TOTAL:
+                    </span>
+                    <span className="text-base font-bold text-gray-800">
+                      ₹
+                      {Number(
+                        previewInvoice.total || invoiceSummary.total
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Amount Paid:</span>
+                    <span className="font-medium text-green-600">
+                      ₹
+                      {Number(
+                        previewInvoice.totalReceived ||
+                          invoiceSummary.totalReceived
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2 bg-blue-50 p-2 rounded">
+                    <span className="text-lg font-bold text-blue-800">
+                      TOTAL DUE:
+                    </span>
+                    <span className="text-lg font-bold text-blue-800">
+                      ₹
+                      {Number(
+                        previewInvoice.dueBalance ||
+                          invoiceSummary.dueBalance
+                      ).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
-
               </div>
             </div>
           </div>
         )}
-
-        {/* You can keep your old "classic" format here as an option */}
-        {selectedFormat === "classic" && (
-            <div ref={previewRef}>
-                {/* ... your original classic format code ... */}
-            </div>
-        )}
-
       </div>
 
       {/* ---------- Modal Footer Buttons ---------- */}
       <div className="flex justify-end gap-3 p-4 border-t">
         <button
           onClick={() => setShowPreview(false)}
-          className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200"
+          className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200 text-sm"
         >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
         >
           Submit Invoice
         </button>

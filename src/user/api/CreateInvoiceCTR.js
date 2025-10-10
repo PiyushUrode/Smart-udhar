@@ -255,7 +255,10 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       subtotal + totalTax + deliveryFee + packingCharges - discount + other;
 
     const totalReceived = Number(partialCashAmount) || 0;
-    const dueBalance = total - totalReceived;
+    let dueBalance = total - totalReceived;
+    if(paymentMode === "cash"){
+       dueBalance = 0;
+    } 
 
     setInvoiceSummary({
       subtotal,
@@ -459,6 +462,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       totalReceived,
       dueBalance,
       paymentStatus:
+        paymentMode === "cash"? "Paid":
         totalReceived === total
           ? "Paid"
           : totalReceived > 0
