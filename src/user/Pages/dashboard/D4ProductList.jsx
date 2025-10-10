@@ -13,6 +13,7 @@ import { ProductService } from "../../api/productservice.js";
 import product1 from "../../assets/dummyimage/product1.png";
 import * as XLSX from "xlsx";
 import Button from "../../common/Button.jsx";
+import NoData from "../../assets/common/beforecreatebussiness.png"
 
 const API_URL = import.meta.env.VITE_API_URL;
 import ProductDummy from "../../../../public/Download/productdummy.xlsx"
@@ -179,6 +180,11 @@ const D4ProductList = () => {
     navigate(`/dashboard/product/${product._id}`, { state: { product } });
   };
 
+ const handleAdd = () => {
+    navigate("/dashboard/product");
+  };
+
+
   // =========================================================================
   // ✅ UPDATED: Delete function to show modal
   // =========================================================================
@@ -210,7 +216,7 @@ const D4ProductList = () => {
       setPopupType("error"); // ✅ ADDED
       setMessage(err.message || "Delete failed"); // ✅ ADDED
     }
-  };
+  }; 
   // =========================================================================
 
   // ✅ Render Table
@@ -251,11 +257,24 @@ const D4ProductList = () => {
               </td>
             </tr>
           ) : filteredItems.length === 0 ? (
-            <tr>
-              <td colSpan="9" className="text-center p-3 align-middle">
-                No {activeTab}s found.
-              </td>
-            </tr>
+         <tr>
+  <td colSpan="9" className="p-6">
+    <div className="flex flex-col items-center justify-center text-center "         onClick={handleAdd}>
+         <p
+            className="text-lg font-medium cursor-pointer underline text-blue-500 hover:text-blue-600 capitalize"
+          >
+            Create Your first {activeTab}s 
+          </p>
+      <img
+        src={NoData}
+        onClick={handleAdd}
+        alt="No data illustration"
+        className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain cursor-pointer"
+      />
+    </div>
+  </td>
+</tr>
+
           ) : (
             filteredItems
               .filter(

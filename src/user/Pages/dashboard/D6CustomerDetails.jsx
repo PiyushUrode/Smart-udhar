@@ -5,6 +5,7 @@ import { CustomerService } from "../../api/customerService.js";
 import { useCustomerForm } from "../../api/addCustomerService.js";
 import Button from "../../common/Button.jsx";
 import CustomerDummy from "../../../../public/Download/customer_report.xlsx"
+import NoData from "../../assets/common/beforecreatebussiness.png"
 
 const CustomerDetailsForm = () => {
 
@@ -100,6 +101,10 @@ const CustomerDetailsForm = () => {
     navigate(`/dashboard/add-customer/${customer.mongoId}`);
   };
 
+   const handleAdd = () => {
+    navigate("/dashboard/add-customer");
+  };
+
   const getScoreColor = (score) => {
     if (score < 40) return "text-red-600";
     if (score <= 70) return "text-yellow-500";
@@ -149,6 +154,7 @@ const CustomerDetailsForm = () => {
       <div className="overflow-x-auto">
         {loading ? (
           <p className="text-center py-5">Loading customers...</p>
+          
         ) : (
           <table className="min-w-full text-sm border-separate border-spacing-0 border-[#E5E7EB] border-y border-x-2 rounded-lg shadow-customSoft">
             <thead>
@@ -164,38 +170,67 @@ const CustomerDetailsForm = () => {
                 <th className="p-3 font-semibold py-5 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {customers.map((cust, index) => (
-                <tr
-                  key={cust.displayId}
-                  className="bg-white text-left shadow-customSoft"
-                >
-                  {/* Serial Number */}
-                  <td className="p-3">{(page - 1) * limit + index + 1}</td>
-                  <td className="p-3">{cust.displayId || "--"}</td>
-                  <td className="p-3">{cust.name || "--"}</td>
-                  <td className="p-3">{cust.mobile || "--"}</td>
-                  <td className="p-3 text-blue-600 hover:underline cursor-pointer">
-                    {cust.email || "--"}
-                  </td>
-                  <td className={`p-3 ${getScoreColor(cust.score)}`}>
-                    {cust.score}
-                  </td>
-                  <td className="p-3">{cust.city || "--"}</td>
-                  <td className="p-3">{cust.state || "--" }</td>
-                  <td className="p-3 text-center space-x-2">
-                    <button onClick={() => handleEdit(cust)}>
-                      <FiEdit className="w-5 h-5 text-blue-500" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(cust.mongoId, cust.displayId)}
-                    >
-                      <FiTrash2 className="w-5 h-5 text-red-500" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+ <tbody>
+  {loading ? (
+    <tr>
+      <td colSpan="9" className="text-center p-6">
+        <p className="text-gray-600 text-lg">Loading businesses...</p>
+      </td>
+    </tr>
+  ) : customers.length === 0 ? (
+    <tr>
+      <td colSpan="9" className="p-6">
+        <div
+          className="flex flex-col items-center justify-center gap-4 text-center text-gray-600 py-8"
+          onClick={handleAdd}
+        >
+          <p
+            className="text-lg font-medium cursor-pointer underline text-blue-500 hover:text-blue-600 capitalize"
+          >
+            Create your first Customer Profile
+          </p>
+
+          <img
+            src={NoData}
+            alt="No data illustration"
+            className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain cursor-pointer"
+            aria-hidden="false"
+          />
+        </div>
+      </td>
+    </tr>
+  ) : (
+    customers.map((cust, index) => (
+      <tr
+        key={cust.displayId}
+        className="bg-white text-left shadow-customSoft"
+      >
+        {/* Serial Number */}
+        <td className="p-3">{(page - 1) * limit + index + 1}</td>
+        <td className="p-3">{cust.displayId || "--"}</td>
+        <td className="p-3">{cust.name || "--"}</td>
+        <td className="p-3">{cust.mobile || "--"}</td>
+        <td className="p-3 text-blue-600 hover:underline cursor-pointer">
+          {cust.email || "--"}
+        </td>
+        <td className={`p-3 ${getScoreColor(cust.score)}`}>{cust.score}</td>
+        <td className="p-3">{cust.city || "--"}</td>
+        <td className="p-3">{cust.state || "--"}</td>
+        <td className="p-3 text-center space-x-2">
+          <button onClick={() => handleEdit(cust)}>
+            <FiEdit className="w-5 h-5 text-blue-500" />
+          </button>
+          <button
+            onClick={() => handleDelete(cust.mongoId, cust.displayId)}
+          >
+            <FiTrash2 className="w-5 h-5 text-red-500" />
+          </button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
+
           </table>
         )}
       </div>

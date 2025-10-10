@@ -12,6 +12,7 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveBusiness } from "../../../reactStore/businessSlice.js";
+import NoData from "../../assets/common/beforecreatebussiness.png"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -266,10 +267,19 @@ const D2BusinessList = () => {
             {loading ? (
               <p>Loading businesses...</p>
             ) : businesses.length === 0 ? (
-              <p className="text-gray-600">
-                {" "}
-                Create your first Business Profile{" "}
-              </p>
+             <div className="flex flex-col items-center gap-4 text-center text-gray-600 p-6" onClick={handleAdd}>
+  <p className="text-lg font-medium cursor-pointer underline text-blue-500 "     onClick={handleAdd}>Create your first Business Profile</p>
+  
+
+  <img
+    src={NoData}
+    onClick={handleAdd}
+    alt="No data illustration"
+    className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain"
+    aria-hidden="false"
+  />
+</div>
+
             ) : (
               <table className="w-full text-sm border border-gray-200">
                 <thead className="bg-[#E8E8E8] text-left text-[#111827] font-robotoM text-base border-b border-gray-300 text-nowrap">

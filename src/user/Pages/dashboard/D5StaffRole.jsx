@@ -13,7 +13,9 @@ import { FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import product1 from "../../assets/dummyimage/product1.png";
 import { useParams, useNavigate } from "react-router-dom";
+import Button from "../../common/Button.jsx";
 
+import NoData from "../../assets/common/beforecreatebussiness.png"
 
 // ----------------- STAT CONFIG -----------------
 const STAT_TYPE_MAP = {
@@ -65,6 +67,10 @@ const D5StaffRole = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [staffImage, setStaffImage] = useState(null);
   const [dynamicRoles, setDynamicRoles] = useState([]);
+  const [popupType, setPopupType] = useState(null); // 'success', 'error', 'processing'
+
+  const [message, setMessage] = useState("");
+
 
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -95,6 +101,12 @@ useEffect(() => {
     setDynamicRoles(Object.values(roleMap));
   }
 }, [members]);
+
+
+ const handleAdd = () => {
+    navigate("/dashboard/product");
+  };
+
 
 
   // ✅ Handle image change with validation
@@ -173,11 +185,15 @@ useEffect(() => {
     if (!window.confirm("Are you sure you want to delete this staff member?")) return;
     try {
       await StaffService.deleteStaff(id);
-      toast.success("✅ Staff deleted successfully");
+      // toast.success("✅ Staff deleted successfully");
+      setPopupType("success");
+      setMessage("Staff deleted successfully");
       fetchStaff();
     } catch (err) {
       console.error("❌ Delete failed:", err);
-      toast.error(err.response?.data?.message || "Failed to delete staff");
+      // toast.error(err.response?.data?.message || "Failed to delete staff");
+      setPopupType("error");
+      setMessage(err.response?.data?.message || "Failed to delete staff");
     }
   };
   return (
@@ -211,11 +227,11 @@ useEffect(() => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Team Members */}
         <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-md border-2">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3  ">
             <h2 className="text-base font-semibold text-black">
               Team Members
             </h2>
-            <div className="flex gap-3 flex-row">
+            {/* <div className="flex gap-3 flex-row">
               <div className="relative w-full sm:w-64">
                 <input
                   type="text"
@@ -227,78 +243,98 @@ useEffect(() => {
               <button className="bg-gray-100 px-3 py-2 rounded-md text-sm">
                 <FaFilter />
               </button>
-            </div>
+            </div> */}
           </div>
 
-          {/* List */}
-          {loading ? (
-            <div className="text-center py-10">Loading staff...</div>
-          ) : (
-            <div className="space-y-3">
-              {members.map((member, index) => (
-                <div
-                  key={member.id}
-                  className="flex flex-col md:flex-row  gap-5 items-start  md:items-center justify-between p-3 border rounded-md"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={member.avatar}
-                      alt={member.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div>
-                      <div className="text-sm font-medium text-[#1F2937]">
-                        {member.name}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {member.email}
-                      </div>
-                    </div>
-                  </div>
+         {/* Staff List */}
+{loading ? (
+  <div className="text-center py-10 text-gray-600">Loading staff...</div>
+) : members.length === 0 ? (
+  <div
+    className="flex flex-col items-center justify-center gap-4 text-center text-gray-600 py-10"
+    onClick={handleAdd} // 👈 Opens add staff form when clicked
+  >
+    <p
+      className="text-lg font-medium cursor-pointer underline text-blue-500"
+      onClick={handleAdd}
+    >
+      Create your first Staff Profile
+    </p>
 
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full font-medium ${member.roleColor}`}
-                    >
-                      {member.role}
-                    </span>
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full ${
-                        member.online ? "bg-green-500" : "bg-gray-400"
-                      }`}
-                    ></span>
-
-                    {/* Dropdown */}
-                    <div className="relative">
-                      <button
-                        className="text-sm text-[#1E40AF] hover:underline flex items-center gap-1"
-                        onClick={() => toggleDropdown(index)}
-                      >
-                        <FaEllipsisV size={16} />
-                      </button>
-
-                        {openDropdownIndex === index && (
-                      <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
-                        <div
-                          onClick={() => handleEdit(member.id)}
-                          className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                        >
-                          Edit
-                        </div>
-                        <div
-                          onClick={() => handleDelete(member.id)}
-                          className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer text-red-600"
-                        >
-                          Delete
-                        </div>
-                      </div>
-                    )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+    <img
+      src={NoData}
+      alt="No staff data"
+      className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain cursor-pointer"
+    />
+  </div>
+) : (
+  <div className="space-y-3">
+    {members.map((member, index) => (
+      <div
+        key={member.id}
+        className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between p-3 border rounded-md shadow-sm bg-white"
+      >
+        {/* Left: Avatar + Info */}
+        <div className="flex items-center gap-3">
+          <img
+            src={member.avatar}
+            alt={member.name}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+          <div>
+            <div className="text-sm font-medium text-[#1F2937]">
+              {member.name}
             </div>
-          )}
+            <div className="text-xs text-gray-500">{member.email}</div>
+          </div>
+        </div>
+
+        {/* Right: Role + Status + Actions */}
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-xs px-2 py-1 rounded-full font-medium ${member.roleColor}`}
+          >
+            {member.role}
+          </span>
+
+          <span
+            className={`w-2.5 h-2.5 rounded-full ${
+              member.online ? "bg-green-500" : "bg-gray-400"
+            }`}
+          ></span>
+
+          {/* Dropdown */}
+          <div className="relative">
+            <button
+              className="text-sm text-[#1E40AF] hover:underline flex items-center gap-1"
+              onClick={() => toggleDropdown(index)}
+            >
+              <FaEllipsisV size={16} />
+            </button>
+
+            {openDropdownIndex === index && (
+              <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
+                <div
+                  onClick={() => handleEdit(member.id)}
+                  className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                >
+                  Edit
+                </div>
+                <div
+                  onClick={() => handleDelete(member.id)}
+                  className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer text-red-600"
+                >
+                  Delete
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
         </div>
 
         <div className="bg-white py-4 rounded-lg shadow-md border-2">
@@ -332,7 +368,26 @@ useEffect(() => {
             ))}
           </div>
         </div>
+
+
+          {popupType && (
+
+ <Button
+
+     type={popupType}
+
+     message={message}
+
+     onClose={() => setPopupType(null)}
+
+    />
+
+   )}
       </div>
+
+     
+
+
 
       {/* Recent Activity */}
     <div className="bg-white rounded-lg shadow-md border-2">

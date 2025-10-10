@@ -1,7 +1,9 @@
 import React from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import star from "../../assets/homepage/testimonial/star.png";
-import review1 from "../../assets/homepage/testimonial/review1.png";
+import review1 from "../../assets/homepage/testimonial/review4.png";
+import review2 from "../../assets/homepage/testimonial/review2.png";
+import review3 from "../../assets/homepage/testimonial/review3.png";
 
 // ✅ Correct imports
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -30,7 +32,7 @@ const testimonials = [
     role: "Shop Owner, Delhi",
     text: "Managing client payments is now effortless and transparent.",
     desc: "SMARTUDHAR has simplified my finances, improved trust, and saved me hours of manual work.",
-    img: review1,
+    img: review2,
   },
   {
     id: 3,
@@ -38,7 +40,7 @@ const testimonials = [
     role: "Freelancer, Mumbai",
     text: "With SmartUdhar, I can manage multiple clients easily.",
     desc: "The reminders and repayment tracking keep me stress-free and focused on work instead of chasing payments.",
-    img: review1,
+    img: review3,
   },
 ];
 
