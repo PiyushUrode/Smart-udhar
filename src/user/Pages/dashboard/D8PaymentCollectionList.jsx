@@ -1,14 +1,10 @@
-import {
-  FaEdit,
-  FaSearch,
-  FaFilePdf
-} from "react-icons/fa";
+import { FaEdit, FaSearch, FaFilePdf } from "react-icons/fa";
 import { FaFileExcel } from "react-icons/fa6";
 import { RiBankCardFill } from "react-icons/ri";
 import { FaChartPie } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { FaRegChartBar } from "react-icons/fa6";
-import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiEdit, FiEye, FiTrash2 } from "react-icons/fi";
 import { Invoice } from "../../api/Invoice.js";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -78,7 +74,8 @@ const D8PaymentCollectionList = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this invoice?")) return;
+    if (!window.confirm("Are you sure you want to delete this invoice?"))
+      return;
     try {
       const res = await Invoice.deleteInvoice(id);
       if (res.success) {
@@ -88,6 +85,9 @@ const D8PaymentCollectionList = () => {
       console.error("❌ Error deleting:", err);
     }
   };
+  const handleView = (id) => {
+    navigate(`/dashboard/invoice-view/${id}`);
+  }
 
   const handleEdit = (invoice) => {
     navigate("/dashboard/payment-collection", { state: { invoice } });
@@ -114,7 +114,9 @@ const D8PaymentCollectionList = () => {
     doc.text("Payment Collection List", 14, 10);
 
     autoTable(doc, {
-      head: [["Customer Name", "Mobile", "Amount", "Due Date", "Promise", "Status"]],
+      head: [
+        ["Customer Name", "Mobile", "Amount", "Due Date", "Promise", "Status"],
+      ],
       body: filteredData.map((entry) => [
         entry.name || "-",
         entry.phone || "-",
@@ -160,8 +162,12 @@ const D8PaymentCollectionList = () => {
         {/* Today's Collection */}
         <div className="border border-green-200 rounded-lg p-4 flex flex-row justify-between items-center">
           <div>
-            <p className="text-gray-500 font-robotoM text-sm">Today's Collection</p>
-            <p className="text-[#16A34A] font-robotoSb text-2xl">₹{summary.today}</p>
+            <p className="text-gray-500 font-robotoM text-sm">
+              Today's Collection
+            </p>
+            <p className="text-[#16A34A] font-robotoSb text-2xl">
+              ₹{(summary.today).toFixed(2)}
+            </p>
           </div>
           <div className="p-3 bg-[#DCFCE7] rounded-xl">
             <RiBankCardFill size={20} color="#16A34A" />
@@ -171,8 +177,12 @@ const D8PaymentCollectionList = () => {
         {/* Total Collection */}
         <div className="border border-blue-200 rounded-lg p-4 flex flex-row justify-between items-center">
           <div>
-            <p className="text-gray-500 font-robotoM text-sm">Total Collection</p>
-            <p className="text-[#2563EB] font-robotoSb text-2xl">₹{summary.total}</p>
+            <p className="text-gray-500 font-robotoM text-sm">
+              Total Collection
+            </p>
+            <p className="text-[#2563EB] font-robotoSb text-2xl">
+              ₹{(summary.total).toFixed(2)}
+            </p>
           </div>
           <div className="p-3 bg-[#DBEAFE] rounded-xl">
             <FaRegChartBar size={20} color="#2563EB" />
@@ -181,25 +191,36 @@ const D8PaymentCollectionList = () => {
 
         {/* Top Collections */}
         <div className="border border-yellow-200 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Top Collections</h3>
+          <h3 className="text-sm font-medium text-gray-600 mb-2">
+            Top Collections
+          </h3>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center justify-between">
               <span className="flex items-center gap-2 text-[#374151]">
-                <span className="w-3 h-3 rounded-full bg-[#3B82F6]"></span> This week
+                <span className="w-3 h-3 rounded-full bg-[#3B82F6]"></span> This
+                week
               </span>
-              <span className="font-interM text-[#1F2937]">₹{summary.topCollections.week}</span>
+              <span className="font-interM text-[#1F2937]">
+                ₹{(summary.topCollections.week).toFixed(2)}
+              </span>
             </li>
             <li className="flex items-center justify-between">
               <span className="flex items-center gap-2 text-[#374151]">
-                <span className="w-3 h-3 rounded-full bg-[#22C55E]"></span> This month
+                <span className="w-3 h-3 rounded-full bg-[#22C55E]"></span> This
+                month
               </span>
-              <span className="font-interM text-[#1F2937]">₹{summary.topCollections.month}</span>
+              <span className="font-interM text-[#1F2937]">
+                ₹{(summary.topCollections.month).toFixed(2)}
+              </span>
             </li>
             <li className="flex items-center justify-between">
               <span className="flex items-center gap-2 text-[#374151]">
-                <span className="w-3 h-3 rounded-full bg-[#EAB308]"></span> This year
+                <span className="w-3 h-3 rounded-full bg-[#EAB308]"></span> This
+                year
               </span>
-              <span className="font-interM text-[#1F2937]">₹{summary.topCollections.year}</span>
+              <span className="font-interM text-[#1F2937]">
+                ₹{(summary.topCollections.year).toFixed(2)}
+              </span>
             </li>
           </ul>
         </div>
@@ -244,14 +265,20 @@ const D8PaymentCollectionList = () => {
                     key={index}
                     className="border-2 shadow-md rounded-xl font-robotoR text-[12px] sm:text-[14px] md:text-[16px] text-[#111827]"
                   >
-                    <td className="p-3 whitespace-nowrap">{entry.name || "-"}</td>
-                    <td className="p-3 whitespace-nowrap">{entry.phone || "-"}</td>
                     <td className="p-3 whitespace-nowrap">
-                      ₹{entry.dueBalance ?? entry.balance ?? 0}
+                      {entry.name || "-"}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {entry.phone || "-"}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      ₹{entry.total ?? entry.total ?? 0}
                     </td>
                     <td className="p-3 whitespace-nowrap">
                       {nextMilestone?.dueDate
-                        ? new Date(nextMilestone.dueDate).toLocaleDateString("en-IN")
+                        ? new Date(nextMilestone.dueDate).toLocaleDateString(
+                            "en-IN"
+                          )
                         : "-"}
                     </td>
                     <td className="p-3 whitespace-nowrap">
@@ -272,6 +299,12 @@ const D8PaymentCollectionList = () => {
                         onClick={() => handleDelete(entry._id)}
                       >
                         <FiTrash2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        className="text-bluecol hover:text-blue-700"
+                        onClick={() => handleView(entry._id)}
+                      >
+                        <FiEye className="w-5 h-5" />
                       </button>
                     </td>
                   </tr>
@@ -310,7 +343,6 @@ const D8PaymentCollectionList = () => {
           </div>
         </div>
       </div>
- 
     </div>
   );
 };

@@ -415,12 +415,12 @@ const ProductForm = ({
     )}
 
     <div className="flex justify-end gap-4 pb-2">
-      <button
+      {/* <button
         type="button"
         className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
       >
         Cancel
-      </button>
+      </button> */}
 
       <button
         type="submit"
@@ -653,12 +653,12 @@ const ServiceForm = ({
     </div>
 
     <div className="flex justify-end gap-4 pb-2">
-      <button
+      {/* <button
         type="button"
         className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
       >
         Cancel
-      </button>
+      </button> */}
       <button
         type="submit"
         className="px-4 py-2 bg-bluecol text-white rounded hover:bg-blue-700"
