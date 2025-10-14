@@ -90,6 +90,12 @@ export const AuthService = {
     return id;
   },
 
+  getstoreProfileIdLS() {
+    const id = localStorage.getItem(STORAGE_KEYS.storeProfileIdLS);
+    console.log("[AuthService] getstoreProfileIdLS:", id);
+    return id;
+  },
+
   logout() {
     console.log("[AuthService] logout called");
     Cookies.remove(STORAGE_KEYS.tokenCookie);

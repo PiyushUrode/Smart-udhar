@@ -292,6 +292,7 @@ useEffect(() => {
       const salePrev = prev.totalSum || 0;
       const paidCurr = curr.paidSum || 0;
       const paidPrev = prev.paidSum || 0;
+      const pendingSum = curr.pendingSum || 0; // not used
 
       // 🔹 Pending calculation (invoice pending + same month expenses only)
       const currMonthObj = last6Months[last6Months.length - 1];
@@ -313,7 +314,7 @@ useEffect(() => {
         )
         .reduce((s, e) => s + (e.amount || 0), 0);
 
-      const pendingCurr = (saleCurr - paidCurr) + currMonthExpenses;
+      const pendingCurr = pendingSum;
       const pendingPrev = (salePrev - paidPrev) + prevMonthExpenses;
 
       // Percentage changes
@@ -323,17 +324,17 @@ useEffect(() => {
 
       setStatValues({
         sale: {
-          value: `₹${saleCurr}`,
+          value: `₹${saleCurr.toFixed(2)}`,
           pct: formatPercentForUI(salePct),
           isPositive: salePct === null ? true : salePct >= 0,
         },
         paid: {
-          value: `₹${paidCurr}`,
+          value: `₹${paidCurr.toFixed(2)}`,
           pct: formatPercentForUI(paidPct),
           isPositive: paidPct === null ? true : paidPct >= 0,
         },
         pending: {
-          value: `₹${pendingCurr}`,
+          value: `₹${pendingCurr.toFixed(2)}`,
           pct: formatPercentForUI(pendingPct),
           isPositive: pendingPct === null ? false : pendingPct <= 0,
         },

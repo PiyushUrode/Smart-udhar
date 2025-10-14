@@ -321,7 +321,7 @@ const ProductForm = ({
       <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            HSN/SCN Code
+            HSN/SAC Code
           </label>
           <input
             type="text"
@@ -346,14 +346,14 @@ const ProductForm = ({
             <option value="">Select</option>
             <option value="0">0%</option>
             <option value="5">5%</option>
-            <option value="10">10%</option>
+            <option value="12">12%</option>
             <option value="18">18%</option>
             <option value="28">28%</option>
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+        <div className="hidden">
+          <label className="block text-sm font-medium text-gray-700 mb-3 ">
             Price
           </label>
           <select
@@ -362,7 +362,7 @@ const ProductForm = ({
             value={formData.price_type || ""}
             onChange={handleChange}
           >
-            <option value="fixed">With tax</option>
+            <option selected value="fixed">With tax</option>
             <option value="without">Without tax</option>
           </select>
         </div>
@@ -499,10 +499,57 @@ const ServiceForm = ({
             value={formData.unit}
             onChange={handleChange}
           >
-            <option value="">e.g. hrs, pcs, sessions</option>
-            <option value="hrs">Hours</option>
-            <option value="pcs">Pieces</option>
-            <option value="session">Session</option>
+               {/* <!-- Units in Alphabetical Order --> */}
+            <option value="acre">acre</option>
+            <option value="bag">bag</option>
+            <option value="barrel">barrel</option>
+            <option value="bottle">bottle</option>
+            <option value="box">box</option>
+            <option value="bundle">bundle</option>
+            <option value="can">can</option>
+            <option value="carton">carton</option>
+            <option value="cc">cc</option>
+            <option value="cft">cft</option>
+            <option value="cm">cm</option>
+            <option value="container">container</option>
+            <option value="cubicm">cubic meter</option>
+            <option value="day">day</option>
+            <option value="dozen">dozen</option>
+            <option value="ft">ft</option>
+            <option value="g">g</option>
+            <option value="gal">gallon</option>
+            <option value="hectare">hectare</option>
+            <option value="hour">hour</option>
+            <option value="inch">inch</option>
+            <option value="jar">jar</option>
+            <option value="kg">kg</option>
+            <option value="kl">kl</option>
+            <option value="km">km</option>
+            <option value="ltr">ltr</option>
+            <option value="m">m</option>
+            <option value="mg">mg</option>
+            <option value="ml">ml</option>
+            <option value="month">month</option>
+            <option value="nos">nos</option>
+            <option value="packet">packet</option>
+            <option value="pack">pack</option>
+            <option value="pair">pair</option>
+            <option value="pcs">pcs</option>
+            <option value="piece">piece</option>
+            <option value="quintal">quintal</option>
+            <option value="roll">roll</option>
+            <option value="set">set</option>
+            <option value="sheet">sheet</option>
+            <option value="sqcm">sqcm</option>
+            <option value="sqft">sqft</option>
+            <option value="sqm">sqm</option>
+            <option value="sqyard">sqyard</option>
+            <option value="tin">tin</option>
+            <option value="ton">ton</option>
+            <option value="tube">tube</option>
+            <option value="unit">unit</option>
+            <option value="yard">yard</option>
+            <option value="year">year</option>
           </select>
           {errors.unit && (
             <p className="text-red-500 text-xs mt-1">Unit is required</p>
@@ -546,7 +593,7 @@ const ServiceForm = ({
       <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            HSN/SCN Code
+            HSN/SAC Code
           </label>
           <input
             type="text"
@@ -698,7 +745,7 @@ export default function D3Product() {
       sales_price: "Sale Price",
       purchase_price: "Purchase Price",
       category: "Category",
-      hsn_number: "HSN/SCN Code",
+      hsn_number: "HSN/SAC Code",
       tax: "Tax",
       price_type: "Price Type",
     };

@@ -5,6 +5,7 @@ import { ProfileService } from "./profileservice.js";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { parse, format, isValid } from "date-fns";
+import CustomerService from "./customerService.js";
 
 export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   // =========================================================================
@@ -30,12 +31,14 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   const [taxType, setTaxType] = useState("taxable");
 
   // Payment State
-  const [showStep3, setShowStep3] = useState(true);
-  const [showStep4, setShowStep4] = useState(false);
-  const [paymentMode, setPaymentMode] = useState("cash");
+  const [showStep3, setShowStep3] = useState(false);
+  const [showStep4, setShowStep4] = useState(true);
+  const [paymentMode, setPaymentMode] = useState("debt");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [transactionId, setTransactionId] = useState("");
   const [partialCashAmount, setPartialCashAmount] = useState(0);
+
+  const [customerProfile, setCustomerProfile] = useState(null);
 
   // Milestones State
   const [milestones, setMilestones] = useState([
@@ -175,6 +178,25 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
     fetchInvoices();
   }, []);
 
+    useEffect(() => {
+      const loadProfile = async () => {
+        try {
+          const customerData = await CustomerService.getCustomerById(
+            previewInvoice?.customerId
+          );
+          if (customerData) {
+            console.log("Fetched customer data:", customerData.customer);
+            setCustomerProfile(customerData.customer);
+          }
+        } catch (error) {
+          console.error("Error loading customer:", error);
+        }
+      };
+      if (previewInvoice?.customerId) {
+        loadProfile();
+      }
+    }, [previewInvoice?.customerId]);
+
   // Effect 5: Fetch Store Profile
   useEffect(() => {
     const fetchProfile = async () => {
@@ -255,7 +277,10 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       subtotal + totalTax + deliveryFee + packingCharges - discount + other;
 
     const totalReceived = Number(partialCashAmount) || 0;
-    const dueBalance = total - totalReceived;
+    let dueBalance = total - totalReceived;
+    if(paymentMode === "cash"){
+       dueBalance = 0;
+    } 
 
     setInvoiceSummary({
       subtotal,
@@ -296,6 +321,8 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
           : row
       )
     );
+
+    
   };
 
   const handleAddRow = () => {
@@ -459,6 +486,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
       totalReceived,
       dueBalance,
       paymentStatus:
+        paymentMode === "cash"? "Paid":
         totalReceived === total
           ? "Paid"
           : totalReceived > 0
@@ -693,6 +721,13 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
   // 7. RETURN HOOK INTERFACE
   // =========================================================================
 
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return "₹0.00";
+    return `₹${Number(amount).toFixed(2)}`;
+  };
+
+
   return {
     invoceId,
 
@@ -765,8 +800,13 @@ const downloadPreviewAsPDF = async (fileName = "invoice.pdf") => {
     todayCollection,
     totalCollection,
 
+    //customer
+    customerProfile,
+    setCustomerProfile,
+
     // PDF
     previewRef,
     downloadPreviewAsPDF,
+    formatCurrency
   };
 }
