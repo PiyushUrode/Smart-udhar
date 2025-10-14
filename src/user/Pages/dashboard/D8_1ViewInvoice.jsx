@@ -237,11 +237,11 @@ const D8_1ViewInvoice = () => {
           </div>
           {/* ---------- Header ---------- */}
           <div className="flex flex-row justify-between items-start border-b-2 border-gray-400 pb-4 mb-6">
-            <div className="text-left mb-0">
+            <div className="text-left mb-0 max-w-[50%]">
               <h3 className="font-bold text-base  pb-2 uppercase text-gray-700">
-                <span className="">Billed From</span>
+                <span className="">Bill From</span>
               </h3>
-              <div className="max-w-[50%] word-break leading-relaxed  text-sm">
+              <div className="word-break leading-relaxed  text-sm">
                 {businessProfile?.businessName && (
                   <p className="font-bold text-lg">
                     {businessProfile.businessName}
@@ -305,7 +305,7 @@ const D8_1ViewInvoice = () => {
           <div className="grid grid-cols-3 gap-6 text-sm mb-8 pb-4 border-b border-gray-300">
             <div className="col-span-2">
               <h3 className="font-bold text-base pb-2 uppercase text-gray-700">
-                <span className="">Billed To</span>
+                <span className="">Bill To</span>
               </h3>
               <p className="font-bold text-lg text-gray-800">
                 {customerProfile?.name && (
@@ -382,7 +382,7 @@ const D8_1ViewInvoice = () => {
                   <th className="p-3">Description</th>
                   <th className="p-3 text-center">Qty</th>
                   <th className="p-3 text-center">Unit</th>
-                  <th className="p-3 text-right">Price</th>
+                  <th className="p-3 text-right">Price/Unit</th>
                   {invoice.productType === "taxable" && (
                     <th className="p-3 text-right">Tax</th>
                   )}

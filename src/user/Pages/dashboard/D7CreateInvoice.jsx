@@ -826,9 +826,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   {/* ---------- Header / Title & Invoice Details ---------- */}
                   {/* Swapping flex-row to flex-col on mobile for stacking */}
                   <div className="flex flex-row justify-between items-start border-b-2 border-gray-400 pb-4 mb-6">
-                    <div className="text-left mb-4 sm:mb-0">
+                    <div className="text-left mb-4 sm:mb-0 max-w-[50%]">
                       <h3 className="font-bold text-base  pb-2 uppercase text-gray-700">
-                        <span className="">Billed From</span>
+                        <span className="">Bill From</span>
                       </h3>
                       <div className="word-break leading-relaxed  text-sm">
                         {storeProfile?.businessName && (
@@ -914,7 +914,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                   <div className="flex justify-between gap-4 text-sm mb-6 sm:mb-8 pb-4 border-b border-gray-300">
                     <div className="text-left">
                       <h3 className="font-bold text-base pb-2 uppercase text-gray-700">
-                        <span className="">Billed To</span>
+                        <span className="">Bill To</span>
                       </h3>
                       <p className="font-bold text-lg text-gray-800">
                         {customerProfile?.name && (
@@ -998,7 +998,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                               Qty
                             </th>
                             <th className="p-3 text-right w-20 sm:w-24">
-                              Unit Price
+                              Price/Unit
                             </th>
                             {taxType === "taxable" && (
                               <th className="p-3 text-right w-14 sm:w-16">
