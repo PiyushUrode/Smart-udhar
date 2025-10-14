@@ -463,10 +463,10 @@ useEffect(() => {
             <div className="text-xs text-gray-500">Monthly Total</div>
           </div>
         </div>
-        <div className="text-right">
+        {/* <div className="text-right">
           <div className={`font-semibold ${config.text}`}>{amount}</div>
           <div className={`text-xs ${config.percentText}`}>{percent}</div>
-        </div>
+        </div> */}
       </div>
     );
   };

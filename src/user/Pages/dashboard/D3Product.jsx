@@ -679,7 +679,7 @@ const ServiceForm = ({
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2">
       <button
         type="button"
-        className="flex items-center gap-2 text-bluecol text-sm border px-4 py-2 rounded shadow-sm hover:bg-gray-100"
+        className="f hidden  items-center gap-2 text-bluecol text-sm border px-4 py-2 rounded shadow-sm hover:bg-gray-100"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 8a1 1 0 011-1h12a1 1 0 011 1v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm7 2a1 1 0 00-1 1v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1v-1a1 1 0 00-1-1z" />
@@ -687,12 +687,12 @@ const ServiceForm = ({
         Import CSV
       </button>
 
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm hidden">
         <input
           type="checkbox"
           className="appearance-none h-5 w-5 border border-gray-300 rounded-sm checked:bg-white checked:border-white checked:after:content-['✔'] checked:after:text-blue-500 checked:after:block checked:after:text-center"
           name="gstInclusive"
-          checked={formData.gstInclusive}
+          checked={true}
           onChange={handleChange}
         />
         <label htmlFor="gstInclusive">GST Inclusive Pricing</label>

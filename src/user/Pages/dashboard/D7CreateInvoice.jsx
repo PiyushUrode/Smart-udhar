@@ -190,24 +190,24 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
 
             {/* Selected Customer Details */}
             {selectedCustomer && (
-              <div className="text-sm text-gray-700 bg-white p-3 rounded mt-3">
+              <div className="text-sm  p-3 rounded mt-3 bg-blue-500 text-white">
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
                   <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">Name:</strong>{" "}
+                    <strong className=" font-robotoM font-bold text-md capitalize">Name:</strong>{" "}
                     {selectedCustomer.name}
                   </p>
                   <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">mobile:</strong>{" "}
+                    <strong className=" font-robotoM font-bold text-md capitalize">mobile:</strong>{" "}
                     {selectedCustomer.mobile}
                   </p>
                   <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">
+                    <strong className=" font-robotoM font-bold text-md capitalize">
                       Credit Score:
                     </strong>{" "}
                     {selectedCustomer.creditScore || "N/A"}
                   </p>
                   <p className="font-robotoR">
-                    <strong className="text-black font-robotoM">
+                    <strong className=" font-robotoM font-bold text-md capitalize">
                       Address:
                     </strong>{" "}
                     {selectedCustomer.address || "N/A"}
