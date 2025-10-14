@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "../Styles/Homepage.css";
 import logo from "../assets/logo/logo_hr.png";
-import { Link } from "react-router-dom";
+import { href, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Testimonial from "../Components/Homepage/Testimonial.jsx";
 import FAQSection from "../Components/Homepage/FAQSection.jsx";
@@ -12,9 +12,9 @@ import community from "../assets/homepage/community.png";
 import dot from "../assets/homepage/dot.png";
 
 import connectImg from "../assets/homepage/connect.png";
-import whyImage from "../assets/homepage/secure/whayimage.png";
-import howImage from "../assets/homepage/secure/how.png";
-import whoImage from "../assets/homepage/secure/who.png";
+import whyImage from "../assets/homepage/secure/whayimage.webp";
+import howImage from "../assets/homepage/secure/how.webp";
+import whoImage from "../assets/homepage/secure/who.webp";
 import hicon from "../assets/homepage/secure/icon-head.png";
 import icon1 from "../assets/homepage/secure/icon1.png";
 import icon2 from "../assets/homepage/secure/icon2.png";
@@ -30,18 +30,9 @@ import apple from "../assets/homepage/appdowload/apple store.png";
 import playstore from "../assets/homepage/appdowload/google play.png";
 import app from "../assets/homepage/appdowload/SMART UDHAR.png";
 
-import flogo from "../assets/logo/logo_hr.png";
-import { FaClock } from "react-icons/fa";
-import downloadBtn from "../assets/homepage/app-download.png";
-import facebook from "../assets/homepage/Footer/facebook.png";
-import twitter from "../assets/homepage/Footer/twitter.png";
-import instagram from "../assets/homepage/Footer/instagram.png";
-import telegram from "../assets/homepage/Footer/telegram.png";
-import call from "../assets/homepage/Footer/call.png";
-import whatsapp from "../assets/homepage/Footer/logos_whatsapp-icon.png";
-import mail from "../assets/homepage/Footer/logos_google-gmail.png";
 import Navbar from "../Components/Homepage/Navbar.jsx";
 import UseScrollToElement from "../Components/UseScrollToElement.js";
+import Footer from "../Components/Homepage/Footer.jsx";
 
 
 const Homepage = () => {
@@ -184,7 +175,6 @@ const Homepage = () => {
       </section>
       {/* hero section End */}
 
-
       
 
       {/* About section Start */}
@@ -203,47 +193,51 @@ const Homepage = () => {
           effortlessly with SMARTUDHAR's intelligent accounting tools designed for
           smarter, faster, and more reliable repayment management.
         </p>
-
-        {/* Tabs */}
+        
         <div className="flex justify-center flex-wrap gap-5 mb-16 font-robotoM">
           <button
-            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer ${activeTab === "why"
-              ? "bg-[#2563EB] text-white   font-robotoM"
-              : "bg-white text-black font-robotoR border-2 border-gray-400"
+            type="button"
+            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer transition-colors ${activeTab === "why"
+              ? "bg-[#2563EB] text-white font-robotoM"
+              : "bg-white text-black font-robotoR border-2 border-gray-400 hover:border-gray-500"
               }`}
-            onClick={() => setActiveTab("why")}
+            onClick={() => { if (activeTab !== "why") setActiveTab("why")  ; }}
           >
             Why We Built Smart Udhar?
           </button>
+
           <button
-            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer ${activeTab === "how"
-              ? "bg-[#2563EB] text-white  font-robotoM"
-              : "bg-white text-black font-robotoR border-2 border-gray-400"
+            type="button"
+            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer transition-colors ${activeTab === "how"
+              ? "bg-[#2563EB] text-white font-robotoM"
+              : "bg-white text-black font-robotoR border-2 border-gray-400 hover:border-gray-500"
               }`}
-            onClick={() => setActiveTab("how")}
+            onClick={() => { if (activeTab !== "how") setActiveTab("how"); }}
           >
             How Smart Udhar Works
           </button>
+
           <button
-            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer ${activeTab === "who"
-              ? "bg-[#2563EB] text-white  font-robotoM"
-              : "bg-white text-black font-robotoR border-2 border-gray-400"
+            type="button"
+            className={`px-5 py-3 w-[360px] h-[67px] rounded-tr-[26px] rounded-bl-[22px] text-lg leading-tight text-center cursor-pointer transition-colors ${activeTab === "who"
+              ? "bg-[#2563EB] text-white font-robotoM"
+              : "bg-white text-black font-robotoR border-2 border-gray-400 hover:border-gray-500"
               }`}
-            onClick={() => setActiveTab("who")}
+            onClick={() => { if (activeTab !== "who") setActiveTab("who"); }}
           >
             Who It's For
           </button>
         </div>
 
         {/* Tab Content */}
-        <div className="flex   lg:flex-row flex-col gap-5 justify-between max-w-[70rem] mx-auto items-center">
+        <div className="flex lg:flex-row flex-col gap-5 justify-between max-w-[70rem] mx-auto items-center">
           {activeTab === "why" && (
             <>
-              <div className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
+              <div id="why" className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
                 <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-5 leading-[120%]">
                   Why We Built Smart Udhar?
                 </h3>
-                <p className="font-robotoR text-lg leading-tight text-[#484848] mb-10 leading-[135%]">
+                <p className="font-robotoR text-lg text-[#484848] mb-10 leading-[135%]">
                   Small businesses across India run on trust — but there’s no system
                   to prove that trust. Thousands repay on time, but still struggle to
                   get credit, discounts, or partnerships.
@@ -252,51 +246,62 @@ const Homepage = () => {
                   Smart Udhar is India's first platform to:
                 </h4>
                 <ul className="list-none">
-                  <li className="flex items-center font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="flex items-center font-robotoR text-lg text-[#484848] mb-[10px] leading-[135%]">
                     <img
                       src={icon1}
-                      alt="icon1"
+                      alt=""
                       className="w-6 h-6 mr-5"
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
                     />
                     Track real udhar (credit) transactions.
                   </li>
-                  <li className="flex items-center font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="flex items-center font-robotoR text-lg text-[#484848] mb-[10px] leading-[135%]">
                     <img
                       src={icon2}
-                      alt="icon2"
+                      alt=""
                       className="w-6 h-6 mr-5"
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
                     />
                     Build a verifiable digital credit score
                   </li>
-                  <li className="flex items-center font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="flex items-center font-robotoR text-lg text-[#484848] mb-[10px] leading-[135%]">
                     <img
                       src={icon3}
-                      alt="icon3"
+                      alt=""
                       className="w-6 h-6 mr-5"
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
                     />
                     Help small businesses grow with credibility
                   </li>
                 </ul>
               </div>
-              
+
               <div className="max-w-[30rem]">
                 <img
                   src={whyImage}
                   alt="Why Smart Udhar"
                   className="w-full rounded-[20px]"
+                  fetchpriority="high"
+                  decoding="async"
+                  draggable="false"
                 />
               </div>
             </>
           )}
 
-
           {activeTab === "how" && (
             <>
-              <div className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
+              <div id="how" className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
                 <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-5">
                   How Smart Udhar Works
                 </h3>
-                <p className="font-robotoR text-lg leading-tight text-[#484848] mb-10">
+                <p className="font-robotoR text-lg text-[#484848] mb-10 leading-[135%]">
                   Smart Udhar enables you to record every credit (udhar) transaction
                   digitally. Whether you're giving credit or receiving it, every entry
                   gets timestamped and securely stored.
@@ -305,36 +310,38 @@ const Homepage = () => {
                   What happens next?
                 </h4>
                 <ul className="list-none">
-                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="font-robotoR text-lg text-[#484848] mb-[10px] leading-[135%]">
                     ⚙️ Your customers are reminded about repayment dates.
                   </li>
-                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="font-robotoR text-lg text-[#484848] mb-[10px] leading-[135%]">
                     ⚙️ You build a digital repayment history.
                   </li>
-                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px] leading-[135%]">
+                  <li className="font-robotoR text-lg text-[#484848] mb-[10px] leading-[135%]">
                     ⚙️ A credit score is automatically generated.
                   </li>
                 </ul>
               </div>
-              
+
               <div className="max-w-[30rem]">
                 <img
                   src={whoImage}
-                  alt="Why Smart Udhar"
+                  alt="How Smart Udhar works"
                   className="w-full rounded-[20px]"
+                  fetchpriority="high"
+                  decoding="async"
+                  draggable="false"
                 />
               </div>
             </>
           )}
 
-
           {activeTab === "who" && (
             <>
-              <div className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
+              <div id="who" className="max-w-[35rem] bg-white p-10 rounded-[20px] text-left border-2 border-gray-400">
                 <h3 className="font-robotoM text-[27px] text-[#2D2D2D] mb-5">
                   Who It’s For
                 </h3>
-                <p className="font-robotoR text-lg leading-tight text-[#484848] mb-10">
+                <p className="font-robotoR text-lg text-[#484848] mb-10 leading-[135%]">
                   Smart Udhar is built for India’s small and medium businesses that
                   want to grow but face barriers due to lack of credit history or
                   informal systems.
@@ -343,42 +350,44 @@ const Homepage = () => {
                   Perfect for:
                 </h4>
                 <ul className="list-none">
-                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px]">
+                  <li className="font-robotoR text-lg text-[#484848] mb-[10px]">
                     👨‍🍳 Kirana Stores, Retail Shops
                   </li>
-                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px]">
+                  <li className="font-robotoR text-lg text-[#484848] mb-[10px]">
                     👷‍♂️ Local Service Providers & Distributors
                   </li>
-                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px]">
+                  <li className="font-robotoR text-lg text-[#484848] mb-[10px]">
                     👩‍💼 Wholesalers & Small Manufacturers
                   </li>
-                  <li className="font-robotoR text-lg leading-tight text-[#484848] mb-[10px]">
+                  <li className="font-robotoR text-lg text-[#484848] mb-[10px]">
                     📱 Digital Lenders & Fintech Companies
                   </li>
                 </ul>
               </div>
-              
+
               <div className="max-w-[30rem]">
                 <img
                   src={howImage}
-                  alt="Why Smart Udhar"
+                  alt="Who Smart Udhar is for"
                   className="w-full rounded-[20px]"
+                  fetchpriority="high"
+                  decoding="async"
+                  draggable="false"
                 />
               </div>
             </>
           )}
-
-        
-
-         
         </div>
       </section>
 
       {/* About section end */}
 
+
+
+
       {/* Why Smart Udhar start */}
 
-      <section id="why-smart-udhar" className="why-smart-udhar">
+      <section id="why-smart-udhar" className=" py-20 px-20 max-md:px-10 max-sm:px-5 why-smart-udhar">
         <div className="heading">
           <h2>
             <span className="highlight">Why Smart Udhar?</span> Because India's
@@ -472,7 +481,7 @@ const Homepage = () => {
       <Blogs />
 
       {/* App section start */}
-      <section id="smart-udhar-app"  className="smart-udhar-section">
+      <section id="smart-udhar-app"  className="  py-10 px-20 max-md:px-10 max-sm:px-5  app-section flex lg:flex-row flex-col-reverse  items-center justify-between gap-10">
         <div className="smart-left">
           <h2>
             Smart Credit. Easy Collections. Get{" "}
@@ -482,109 +491,25 @@ const Homepage = () => {
             Track payments, send reminders, manage udhar, invoices, and credit
             scores - all-in-one app to grow your business faster.
           </p>
-          <div className="store-buttons gap-7">
-            <a href="#" className="store-btn">
+          <div className="store-buttons gap-5 md:gap-7">
+            <a href="#" className=" w-36 md:w-60 " >
               <img src={apple} alt="Apple Store" />
             </a>
-            <a href="#" className="store-btn">
+            <a href="#" className=" w-36 md:w-60 " >
               <img src={playstore} alt="Google Play" />
             </a>
           </div>
         </div>
         <div className="smart-right">
-          <img src={app} alt="App Screenshot 1" className="max-h-[75vh] object-contain " />
+          <img src={app} alt="App Screenshot 1" className="max-h-[65vh] object-contain " />
         </div>
       </section>
       {/* App section end */}
 
       <FAQSection />
 
-      {/* Footer start */}
-      <footer className="footer">
-        <div className="footer-content">
-          {/* Left Section */}
-          <div className="footer-section start">
-            <h3>
-              Ready to <span className="highlight">Get Started?</span>
-            </h3>
-            <p>
-              Join thousands of businesses using SmartUdhar to manage credit,
-              track payments, and grow smarter—start free today with just your
-              mobile.
-            </p>
-            <img
-              src={downloadBtn}
-              alt="Download SmartUdhar"
-              className="download-btn"
-            />
-          </div>
-
-          {/* Center Section */}
-          <div className="footer-section links">
-            <h4>Quick Links</h4>
-            <ul>
-              <li>About Us</li>
-              <li>Features</li>
-              <li>FAQs</li>
-              <li>Privacy Policy</li>
-              <li>Support</li>
-            </ul>
-          </div>
-
-          <div className="footer-section support">
-            <h4>Contact & Support</h4>
-            <ul>
-              <li>
-                {/* <FaPhoneAlt /> */}
-                <img
-                  src={call}
-                  style={{ width: "16px", height: "auto" }}
-                  alt=""
-                />
-                +91-XXXXXXXXXX
-              </li>
-              <li>
-                {/* <MdEmail />  */}
-                <img
-                  src={mail}
-                  style={{ width: "16px", height: "auto" }}
-                  alt=""
-                />
-                support@smartudhar.in
-              </li>
-              <li>
-                <img
-                  src={whatsapp}
-                  style={{ width: "16px", height: "auto" }}
-                  alt=""
-                />
-                {/* <FaWhatsapp />  */}
-                WhatsApp Support
-              </li>
-              <li>
-                <FaClock size={16} /> Mon-Sat, 10am - 7pm
-              </li>
-            </ul>
-          </div>
-
-          {/* Right Section */}
-          <div className="footer-section brand">
-            <img src={flogo} alt="SmartUdhar" className="brand-logo" />
-            <div className="social-icons">
-              <img src={facebook} alt="" className="w-14" />
-              <img src={twitter} alt="" className="w-14" />
-              <img src={instagram} alt="" className="w-14" />
-              <img src={telegram} alt="" className="w-14" />
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-bottom">
-          <p>© 2025 SmartUdhar. All Rights Reserved.</p>
-          <p>Made for India's small businesses</p>
-        </div>
-      </footer>
-      {/* Footer end */}
+      <Footer/>
+ 
     </div>
   );
 };

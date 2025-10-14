@@ -1,7 +1,7 @@
 import React from "react";
-import img1 from "../../assets/homepage/blog/blog1.png";
-import img2 from "../../assets/homepage/blog/blog2.png";
-import img3 from "../../assets/homepage/blog/blog3.png";
+import img1 from "../../assets/homepage/blog/blog1.webp";
+import img2 from "../../assets/homepage/blog/blog2.webp";
+import img3 from "../../assets/homepage/blog/blog3.webp";
 import { FiArrowUpRight } from "react-icons/fi";
 
 const cards = [

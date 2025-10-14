@@ -128,29 +128,25 @@ body {
 }
 
 /* --------- Hide/Transparent Scrollbar Globally --------- */
-* {
+/* * {
   scrollbar-width: none;
-  /* Firefox me scrollbar gayab */
   -ms-overflow-style: none;
-  /* IE/Edge ke liye */
 }
 
 *::-webkit-scrollbar {
   width: 0px;
-  /* Chrome, Safari, Edge me scrollbar hat jayega */
   height: 0px;
   background: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
   background: transparent;
-  /* thumb invisible */
 }
 
 *::-webkit-scrollbar-track {
   background: transparent;
-  /* track invisible */
-}
+
+} */
 
 /* Full dashboard wrapper */
 /* dashboard layout css */

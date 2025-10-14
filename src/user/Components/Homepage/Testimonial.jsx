@@ -1,9 +1,9 @@
 import React from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import star from "../../assets/homepage/testimonial/star.png";
-import review1 from "../../assets/homepage/testimonial/review4.png";
-import review2 from "../../assets/homepage/testimonial/review2.png";
-import review3 from "../../assets/homepage/testimonial/review3.png";
+import review1 from "../../assets/homepage/testimonial/review2.webp";
+import review2 from "../../assets/homepage/testimonial/review1.webp";
+import review3 from "../../assets/homepage/testimonial/review3.webp";
 
 // ✅ Correct imports
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -46,7 +46,7 @@ const testimonials = [
 
 export default function TestimonialSlider() {
   return (
-    <div className="bg-[#0B0C1A] pt-10">
+    <div className="bg-[#0B0C1A] py-20">
       {/* Header */}
       <div className="px-5 sm:px-10 md:px-20 flex flex-col lg:flex-row justify-between gap-6">
         <div className="flex-1 text-center lg:text-left">
