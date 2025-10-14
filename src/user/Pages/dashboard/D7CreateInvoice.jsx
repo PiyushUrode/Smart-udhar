@@ -86,12 +86,18 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
     // todayCollection, // available if needed
     // totalCollection, // available if needed
 
+    //customer
+    customerProfile,
+    setCustomerProfile,
+
     previewRef,
     downloadPreviewAsPDF,
     setSearchTriggered,
 
     taxType,
     handleTaxTypeChange,
+
+    formatCurrency,
   } = useCreateInvoiceController({ onCustomerSelect });
   const handleCreateDate = (date) => {
     setCreatedDate(date);
@@ -236,7 +242,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                             Product/Service
                           </label>
                           <Select
-                            className="text-sm w-[100%] md:w-[50%]"
+                            className="text-sm w-[100%] md:w-[50%] hover:text-black"
                             placeholder="Select Product..."
                             isClearable
                             isSearchable
@@ -346,7 +352,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                             Qty
                           </label>
                           <input
-                            type="number"
+                            type="text"
                             min="1"
                             value={row.qty}
                             onChange={(e) =>
@@ -377,7 +383,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                             Price
                           </label>
                           <input
-                            type="number"
+                            type="text"
                             placeholder="0.00"
                             value={row.price}
                             onChange={(e) =>
@@ -470,7 +476,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                       className="w-full border px-2 py-1 rounded bg-white 
       "
                       placeholder="0.00"
-                      type="number"
+                      type="text"
                       min="0" // ❌ Negative values block
                       inputMode="decimal" // ✅ Mobile keyboards show numeric with dot
                       value={additionalCharges.deliveryFee}
@@ -491,7 +497,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                       className="w-full border px-2 py-1 rounded bg-white 
        "
                       placeholder="0.00"
-                      type="number"
+                      type="text"
                       min="0"
                       inputMode="decimal"
                       value={additionalCharges.packingCharges}
@@ -512,7 +518,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                       className="w-full border px-2 py-1 rounded bg-white 
      "
                       placeholder="0.00"
-                      type="number"
+                      type="text"
                       min="0"
                       inputMode="decimal"
                       value={additionalCharges.discount}
@@ -533,7 +539,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                       className="w-full border px-2 py-1 rounded bg-white 
 "
                       placeholder="0.00"
-                      type="number"
+                      type="text"
                       min="0"
                       inputMode="decimal"
                       value={additionalCharges.other}
@@ -623,7 +629,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                       Partial Cash Paid (Mixed Payment)
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       value={partialCashAmount}
                       onChange={(e) => setPartialCashAmount(e.target.value)}
                       className="border px-2 py-1 rounded bg-white w-full"
@@ -660,7 +666,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                       <input
                         className="border px-2 py-1 rounded bg-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         placeholder="0.00"
-                        type="number"
+                        type="text"
                         inputMode="decimal" // Changed from 'numeric' to 'decimal'
                         pattern="[0-9]*[.]?[0-9]*" // Updated pattern to allow optional decimal
                         value={ms.amount}
@@ -756,9 +762,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-start gap-4 p-4">
-              <button className="bg-gray-600 text-white font-robotoR text-md px-4 py-2 rounded">
+              {/* <button className="bg-gray-600 text-white font-robotoR text-md px-4 py-2 rounded">
                 Save as Draft
-              </button>
+              </button> */}
               <button
                 onClick={handlePreview}
                 className="flex justify-center items-center gap-2 bg-bluecol text-white font-robotoM text-md px-4 py-2 rounded"
@@ -776,357 +782,462 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
       {/* ---------- Invoice Preview Modal ---------- */}
       {/* ---------- Invoice Preview Modal (with 3 format options) ---------- */}
       {/* ---------- Invoice Preview Modal ---------- */}
-    {showPreview && previewInvoice && (
-  // 1. MODAL OVERLAY: Full screen on mobile, larger on desktop
-  <div className="fixed z-50 inset-0 flex items-start justify-center p-2 sm:p-6 bg-black/40">
-    {/* 1. MODAL CONTAINER: 
+      {showPreview && customerProfile && previewInvoice && (
+        // 1. MODAL OVERLAY: Full screen on mobile, larger on desktop
+        <div className="fixed z-50 inset-0 flex items-start justify-center p-2 sm:p-6 bg-black/40">
+          {/* 1. MODAL CONTAINER: 
       - max-w-full on mobile, max-w-4xl on desktop 
       - max-h-[98vh] on mobile, max-h-[90vh] on desktop
     */}
-    <div className="bg-white w-full max-w-full sm:max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[98vh] sm:max-h-[90vh]">
-      
-      {/* ---------- Modal Header ---------- */}
-      {/* Fixed header for better mobile scrolling experience */}
-      <div className="sticky top-0 bg-white z-10 flex justify-between items-center p-4 border-b">
-        <h3 className="text-lg font-robotoSb">Invoice Preview</h3>
+          <div className="bg-white w-full max-w-full sm:max-w-6xl rounded-lg shadow-lg overflow-auto max-h-[98vh] sm:max-h-[90vh]">
+            {/* ---------- Modal Header ---------- */}
+            {/* Fixed header for better mobile scrolling experience */}
+            <div className="sticky top-0 bg-white z-10 flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-robotoSb">Invoice Preview</h3>
 
-        <div className="flex items-center gap-3">
-          {/* Format selector: Keep hidden as it only supports 'Classic' */}
-          <span className="border-2 border-gray-400 rounded px-3 py-1 text-xs sm:text-sm text-gray-700">
-            Classic
-          </span>
-          
-          <button
-            onClick={() => {
-              setShowPreview(false);
-              setPreviewInvoice(null);
-            }}
-            className="px-3 py-1 border rounded hover:bg-gray-100 text-sm"
-          >
-            Close
-          </button>
-        </div>
-      </div>
+              <div className="flex items-center gap-3">
+                {/* Format selector: Keep hidden as it only supports 'Classic' */}
+                <span className="border-2 border-gray-400 rounded px-3 py-1 text-xs sm:text-sm text-gray-700">
+                  Classic
+                </span>
 
-      {/* ---------- Body: Printable Area ---------- */}
-      {/* Padding adjusted for smaller screens: p-3 on mobile, md:p-6 on desktop */}
-      <div className="p-3 md:p-6">
-        
-        {/* ========== CLASSIC FORMAT (Invoice Content) ========== */}
-        {selectedFormat === "classic" && (
-          // 2. INVOICE WRAPPER: Responsive/Print-Friendly Container
-          <div
-            ref={previewRef}
-            className="bg-white border border-gray-300 p-4 sm:p-8 pt-6 shadow-xl rounded-lg text-gray-800"
-          >
-            
-            {/* ---------- Header / Title & Invoice Details ---------- */}
-            {/* Swapping flex-row to flex-col on mobile for stacking */}
-            <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-gray-400 pb-4 mb-6">
-              <div className="text-left mb-4 sm:mb-0">
-                <h1 className="text-2xl sm:text-3xl font-bold uppercase text-blue-800 tracking-wider">
-                  INVOICE
-                </h1>
-                {/* Company Info */}
-                <h2 className="font-semibold mt-2 text-gray-700">
-                  {storeProfile?.businessName || "Your Company Name"}
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-500">
-                  {storeProfile?.address || "Company Address"}
-                </p>
-                <p className="text-xs sm:text-sm text-gray-500">
-                  {storeProfile?.mobile ? `Phone: ${storeProfile.mobile}` : ""}
-                  {storeProfile?.email ? ` / Email: ${storeProfile.email}` : ""}
-                </p>
-              </div>
-              
-              {/* Invoice Details: Adjusted font size to text-xs on mobile */}
-              <div className="text-left sm:text-right text-xs sm:text-sm">
-                <p className="mb-1">
-                  <strong className="font-semibold text-gray-700">
-                    Invoice ID:
-                  </strong>{" "}
-                  <span className="text-blue-600 font-bold">
-                    {invoceId}
-                  </span>
-                </p>
-                <p className="mb-1">
-                  <strong className="font-semibold text-gray-700">
-                    Invoice Date:
-                  </strong>{" "}
-                  {previewInvoice.InvoiceCreatedDate ||
-                    new Date().toLocaleDateString()}
-                </p>
-                <p className="mb-1">
-                  <strong className="font-semibold text-gray-700">
-                    Status:
-                  </strong>{" "}
-                  <span
-                    className={`font-bold ${
-                      (previewInvoice?.paymentStatus ||
-                        (invoiceSummary.totalReceived ===
-                        invoiceSummary.total
-                          ? "Paid"
-                          : "Unpaid")) === "Paid"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {previewInvoice?.paymentStatus ||
-                      (invoiceSummary.totalReceived ===
-                      invoiceSummary.total
-                        ? "Paid"
-                        : invoiceSummary.totalReceived > 0
-                        ? "Partial"
-                        : "Unpaid")}
-                  </span>
-                </p>
+                <button
+                  onClick={() => {
+                    setShowPreview(false);
+                    setPreviewInvoice(null);
+                  }}
+                  className="px-3 py-1 border rounded hover:bg-gray-100 text-sm"
+                >
+                  Close
+                </button>
               </div>
             </div>
 
-            {/* ---------- Customer Info ---------- */}
-            {/* Removed md:grid-cols-2 to keep it a single column stack on all screen sizes */}
-            <div className="grid grid-cols-1 gap-4 text-sm mb-6 sm:mb-8 pb-4 border-b border-gray-300">
-              <div>
-                <h3 className="font-bold text-base mb-2 uppercase text-gray-700 border-b border-blue-200 pb-1">
-                  Billed To
-                </h3>
-                <p className="font-bold text-lg text-gray-800">
-                  {previewInvoice.name || selectedCustomer?.name}
-                </p>
-                <p>
-                  Phone:{" "}
-                  {previewInvoice.phone || selectedCustomer?.mobile}
-                </p>
-                <p>
-                  Address:{" "}
-                  {previewInvoice.address || selectedCustomer?.address}
-                </p>
-              </div>
-            </div>
+            {/* ---------- Body: Printable Area ---------- */}
+            {/* Padding adjusted for smaller screens: p-3 on mobile, md:p-6 on desktop */}
+            <div className="p-3 md:p-6">
+              {/* ========== CLASSIC FORMAT (Invoice Content) ========== */}
+              {selectedFormat === "classic" && (
+                // 2. INVOICE WRAPPER: Responsive/Print-Friendly Container
+                <div
+                  ref={previewRef}
+                  className="bg-white border border-gray-300 p-4 sm:p-8 pt-6 shadow-xl rounded-lg text-gray-800"
+                >
+                  {/* ---------- Header / Title & Invoice Details ---------- */}
+                  {/* Swapping flex-row to flex-col on mobile for stacking */}
+                  <div className="flex flex-row justify-between items-start border-b-2 border-gray-400 pb-4 mb-6">
+                    <div className="text-left mb-4 sm:mb-0">
+                      <h3 className="font-bold text-base  pb-2 uppercase text-gray-700">
+                        <span className="">Billed From</span>
+                      </h3>
+                      <div className="word-break leading-relaxed  text-sm">
+                        {storeProfile?.businessName && (
+                          <p className="font-bold text-lg">
+                            {storeProfile.businessName}
+                          </p>
+                        )}
 
-            {/* ---------- Products Table ---------- */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-700 mb-3">
-                Itemized Charges
-              </h3>
-              {/* 3. RESPONSIVE TABLE: Add overflow-x-auto so the table 
+                        {storeProfile?.address && (
+                          <p>
+                            <strong>Address:</strong> {storeProfile.address}
+                          </p>
+                        )}
+
+                        {/* {storeProfile?.city}, {storeProfile?.state} - {storeProfile?.zipCode} */}
+
+                        {storeProfile?.mobile && (
+                          <p>
+                            <strong>Mobile:</strong> {storeProfile.mobile}
+                          </p>
+                        )}
+
+                        {storeProfile?.email && (
+                          <p>
+                            <strong>Email:</strong> {storeProfile.email}
+                          </p>
+                        )}
+
+                        {storeProfile?.gstNumber && (
+                          <p>
+                            <strong>GSTIN:</strong> {storeProfile.gstNumber}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Invoice Details: Adjusted font size to text-xs on mobile */}
+                    <div className="text-left sm:text-right text-xs sm:text-sm">
+                      <p className="mb-1">
+                        <strong className="font-semibold text-gray-700">
+                          Invoice ID:
+                        </strong>{" "}
+                        <span className="text-blue-600 font-bold">
+                          {invoceId}
+                        </span>
+                      </p>
+                      <p className="mb-1">
+                        <strong className="font-semibold text-gray-700">
+                          Invoice Date:
+                        </strong>{" "}
+                        {previewInvoice.InvoiceCreatedDate ||
+                          new Date().toLocaleDateString()}
+                      </p>
+                      <p className="mb-1">
+                        <strong className="font-semibold text-gray-700">
+                          Status:
+                        </strong>{" "}
+                        <span
+                          className={`font-bold ${
+                            (previewInvoice?.paymentStatus ||
+                              (invoiceSummary.totalReceived ===
+                              invoiceSummary.total
+                                ? "Paid"
+                                : "Unpaid")) === "Paid"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {previewInvoice?.paymentStatus ||
+                            (invoiceSummary.totalReceived ===
+                            invoiceSummary.total
+                              ? "Paid"
+                              : invoiceSummary.totalReceived > 0
+                              ? "Partial"
+                              : "Unpaid")}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ---------- Customer Info ---------- */}
+                  {/* Removed md:grid-cols-2 to keep it a single column stack on all screen sizes */}
+                  <div className="flex justify-between gap-4 text-sm mb-6 sm:mb-8 pb-4 border-b border-gray-300">
+                    <div className="text-left">
+                      <h3 className="font-bold text-base pb-2 uppercase text-gray-700">
+                        <span className="">Billed To</span>
+                      </h3>
+                      <p className="font-bold text-lg text-gray-800">
+                        {customerProfile?.name && (
+                          <>
+                            {customerProfile.name}
+                            <br />
+                          </>
+                        )}
+                      </p>
+                      <p>
+                        {customerProfile?.companyName && (
+                          <>
+                            {customerProfile.companyName}
+                            <br />
+                          </>
+                        )}
+                      </p>
+                      <p>
+                        {customerProfile?.address && (
+                          <>
+                            <strong>Address</strong>: {customerProfile.address}
+                            <br />
+                          </>
+                        )}
+                      </p>
+                      <p>
+                        {customerProfile?.mobile && (
+                          <>
+                            <strong>Phone</strong>: {customerProfile.mobile}
+                            <br />
+                          </>
+                        )}
+                      </p>
+
+                      <p>
+                        {customerProfile?.gstNumber && (
+                          <>
+                            <strong>GSTIN</strong>: {customerProfile.gstNumber}
+                            <br />
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <h3 className="font-bold text-base mb-2 uppercase text-gray-700 pb-1">
+                        <span className=""> Payment Details</span>
+                      </h3>
+                      <p>
+                        <strong>Mode:</strong> {previewInvoice.paymentMode}
+                      </p>
+                      {previewInvoice.paymentMethod && (
+                        <p>
+                          <strong>Method:</strong>{" "}
+                          {previewInvoice.paymentMethod}
+                        </p>
+                      )}
+                      {/* <p>
+                        <strong>Current Balance:</strong>{" "}
+                        {formatCurrency(previewInvoice.balance)}
+                      </p> */}
+                    </div>
+                  </div>
+
+                  {/* ---------- Products Table ---------- */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-bold text-gray-700 mb-3">
+                      Itemized Charges
+                    </h3>
+                    {/* 3. RESPONSIVE TABLE: Add overflow-x-auto so the table 
                 can be scrolled horizontally on very small screens (like a narrow phone). 
                 The 'print:table' ensures it renders as a proper table on paper.
               */}
-              <div className="overflow-x-auto print:overflow-visible">
-                <table className="w-full border-collapse min-w-[500px] print:min-w-full">
-                  <thead className="bg-gray-100 border-b border-gray-300">
-                    <tr className="text-left text-xs font-semibold uppercase text-gray-600">
-                      <th className="p-3 w-8 sm:w-10">#</th>
-                      <th className="p-3">Product</th>
-                      <th className="p-3 text-center w-16 sm:w-20">Qty</th>
-                      <th className="p-3 text-right w-20 sm:w-24">Unit Price</th>
-                      {taxType === "taxable" && (
-                        <th className="p-3 text-right w-14 sm:w-16">Tax</th>
-                      )}
-                      <th className="p-3 text-right w-28 sm:w-32">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(previewInvoice.products || []).map((p, i) => (
-                      <tr
-                        key={i}
-                        className="text-gray-700 odd:bg-gray-50 text-sm"
-                      >
-                        <td className="p-3 border-b border-gray-200">
-                          {i + 1}
-                        </td>
-                        <td className="p-3 border-b border-gray-200">
-                          {p.name}
-                        </td>
-                        <td className="p-3 border-b border-gray-200 text-center">
-                          {p.qty}
-                        </td>
-                        <td className="p-3 border-b border-gray-200 text-right">
-                          ₹{Number(p.price).toFixed(2)}
-                        </td>
-                        {taxType === "taxable" && (
-                          <td className="p-3 border-b border-gray-200 text-right">
-                            {p.tax}%
-                          </td>
+                    <div className="overflow-x-auto print:overflow-visible">
+                      <table className="w-full border-collapse min-w-[500px] print:min-w-full">
+                        <thead className="bg-gray-100 border-b border-gray-300">
+                          <tr className="text-left text-xs font-semibold uppercase text-gray-600">
+                            <th className="p-3 w-8 sm:w-10">#</th>
+                            <th className="p-3">Product</th>
+                            
+                            <th className="p-3 text-center w-16 sm:w-20">
+                              Qty
+                            </th>
+                            <th className="p-3 text-right w-20 sm:w-24">
+                              Unit Price
+                            </th>
+                            {taxType === "taxable" && (
+                              <th className="p-3 text-right w-14 sm:w-16">
+                                Tax
+                              </th>
+                            )}
+                            <th className="p-3 text-right w-28 sm:w-32">
+                              Total
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(previewInvoice.products || []).map((p, i) => (
+                            <tr
+                              key={i}
+                              className="text-gray-700 odd:bg-gray-50 text-sm"
+                            >
+                              <td className="p-3 border-b border-gray-200">
+                                {i + 1}
+                              </td>
+                              <td className="p-3 border-b border-gray-200">
+                                {p.name}
+                              </td>
+                              <td className="p-3 border-b border-gray-200 text-center">
+                                {p.qty}
+                              </td>
+                              <td className="p-3 border-b border-gray-200 text-right">
+                                ₹{Number(p.price).toFixed(2)}
+                              </td>
+                              {taxType === "taxable" && (
+                                <td className="p-3 border-b border-gray-200 text-right">
+                                  {p.tax}%
+                                </td>
+                              )}
+                              <td className="p-3 border-b border-gray-200 text-right font-medium">
+                                ₹
+                                {Number(
+                                  p.total ||
+                                    p.qty * p.price +
+                                      (p.qty * p.price * p.tax) / 100
+                                ).toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* ---------- Summary & Notes ---------- */}
+                  {/* Swapping flex-row to flex-col on mobile for stacking */}
+                  <div className="flex flex-col sm:flex-row justify-between pt-4 border-t-2 border-gray-400">
+                    {/* Notes & Payment Section */}
+                    {/* Changed sm:w-1/2 to w-full sm:w-1/2 for mobile first width */}
+                    <div className="w-full sm:w-1/2 text-sm">
+                      <h3 className="font-bold text-base mb-1 text-gray-700">
+                        Details:
+                      </h3>
+                      <div className="text-gray-600 italic border p-3 bg-gray-50 rounded min-h-[50px] space-y-1">
+                        <p>
+                          <strong>Payment Mode:</strong>{" "}
+                          {previewInvoice.paymentMode || paymentMode}
+                        </p>
+                        {paymentMode == "cash" && (
+                          <p>
+                            <strong>Payment Method:</strong>{" "}
+                            {previewInvoice.paymentMethod || paymentMethod}{" "}
+                            {previewInvoice.transactionId
+                              ? `/ ${previewInvoice.transactionId}`
+                              : ""}
+                          </p>
                         )}
-                        <td className="p-3 border-b border-gray-200 text-right font-medium">
-                          ₹
-                          {Number(
-                            p.total ||
-                              p.qty * p.price +
-                                (p.qty * p.price * p.tax) / 100
-                          ).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        {previewInvoice.note && (
+                          <p>
+                            <strong>Note:</strong> {previewInvoice.note}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Summary Totals */}
+                    {/* Changed sm:w-1/3 to w-full sm:w-1/3 for mobile first width */}
+                    <div className="w-full sm:w-1/3 mt-6 sm:mt-0">
+                      <div className="space-y-1 text-sm text-gray-700">
+                        <div className="flex justify-between">
+                          <span>Subtotal:</span>
+                          <span className="font-medium">
+                            ₹
+                            {Number(
+                              previewInvoice.subtotal || invoiceSummary.subtotal
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {taxType === "taxable" && (
+                          <>
+                            <div className="flex justify-between">
+                              <span>CGST:</span>
+                              <span className="font-medium">
+                                ₹
+                                {Number(
+                                  previewInvoice.tax / 2 ||
+                                    invoiceSummary.totalTax / 2
+                                ).toFixed(2)}
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between">
+                              <span>SGST:</span>
+                              <span className="font-medium">
+                                ₹
+                                {Number(
+                                  previewInvoice.tax / 2 ||
+                                    invoiceSummary.totalTax / 2
+                                ).toFixed(2)}
+                              </span>
+                            </div>
+                          </>
+                        )}
+
+                        {(previewInvoice.deliveryFee ||
+                          invoiceSummary.deliveryFee) ? (
+                          <div className="flex justify-between">
+                            <span>Delivery Fee:</span>
+                            <span className="font-medium">
+                              ₹
+                              {Number(
+                                previewInvoice.deliveryFee ||
+                                  invoiceSummary.deliveryFee
+                              ).toFixed(2)}
+                            </span>
+                          </div>
+                        ):''}
+
+                        {(previewInvoice.packingCharges ||
+                          invoiceSummary.packingCharges) ? (
+                          <div className="flex justify-between">
+                            <span>Packing Charges:</span>
+                            <span className="font-medium">
+                              ₹
+                              {Number(
+                                previewInvoice.packingCharges ||
+                                  invoiceSummary.packingCharges
+                              ).toFixed(2)}
+                            </span>
+                          </div>
+                        ):''}
+
+                        {(previewInvoice.other || invoiceSummary.other) ? (
+                          <div className="flex justify-between">
+                            <span>Other:</span>
+                            <span className="font-medium">
+                              ₹
+                              {Number(
+                                previewInvoice.other || invoiceSummary.other
+                              ).toFixed(2)}
+                            </span>
+                          </div>
+                        ):''}
+
+                        {(previewInvoice.discount ||
+                          invoiceSummary.discount) ? (
+                          <div className="flex justify-between">
+                            <span>Discount:</span>
+                            <span className="font-medium text-red-600">
+                              -&nbsp;₹
+                              {Number(
+                                previewInvoice.discount ||
+                                  invoiceSummary.discount
+                              ).toFixed(2)}
+                            </span>
+                          </div>
+                        ):''}
+                      </div>
+
+                      {/* Total, Paid, Due */}
+                      <div className="mt-3 pt-3 border-t border-gray-400">
+                        <div className="flex justify-between items-center bg-gray-100 p-2 rounded mb-2">
+                          <span className="text-base font-bold text-gray-800">
+                            TOTAL:
+                          </span>
+                          <span className="text-base font-bold text-gray-800">
+                            ₹
+                            {Number(
+                              previewInvoice.total || invoiceSummary.total
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Amount Paid:</span>
+                          <span className="font-medium text-green-600">
+                            ₹
+                            {Number(
+                              previewInvoice.totalReceived ||
+                                invoiceSummary.totalReceived
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mt-2 bg-blue-50 p-2 rounded">
+                          <span className="text-lg font-bold text-blue-800">
+                            TOTAL DUE:
+                          </span>
+                          <span className="text-lg font-bold text-blue-800">
+                            ₹
+                            {Number(
+                              previewInvoice.dueBalance ||
+                                invoiceSummary.dueBalance
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-center text-xs text-gray-500 mt-6">
+                    Generated By SmartUdhar - Computer Generated Invoice.
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* ---------- Summary & Notes ---------- */}
-            {/* Swapping flex-row to flex-col on mobile for stacking */}
-            <div className="flex flex-col sm:flex-row justify-between pt-4 border-t-2 border-gray-400">
-              {/* Notes & Payment Section */}
-              {/* Changed sm:w-1/2 to w-full sm:w-1/2 for mobile first width */}
-              <div className="w-full sm:w-1/2 text-sm">
-                <h3 className="font-bold text-base mb-1 text-gray-700">
-                  Details:
-                </h3>
-                <div className="text-gray-600 italic border p-3 bg-gray-50 rounded min-h-[50px] space-y-1">
-                  <p>
-                    <strong>Payment Mode:</strong>{" "}
-                    {previewInvoice.paymentMode || paymentMode}
-                  </p>
-                  {paymentMode !== "cash" && (
-                    <p>
-                      <strong>Payment Method:</strong>{" "}
-                      {previewInvoice.paymentMethod || paymentMethod}{" "}
-                      {previewInvoice.transactionId
-                        ? `/ ${previewInvoice.transactionId}`
-                        : ""}
-                    </p>
-                  )}
-                  {previewInvoice.note && (
-                    <p>
-                      <strong>Note:</strong> {previewInvoice.note}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Summary Totals */}
-              {/* Changed sm:w-1/3 to w-full sm:w-1/3 for mobile first width */}
-              <div className="w-full sm:w-1/3 mt-6 sm:mt-0">
-                <div className="space-y-1 text-sm text-gray-700">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span className="font-medium">
-                      ₹
-                      {Number(
-                        previewInvoice.subtotal || invoiceSummary.subtotal
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-
-                  {taxType === "taxable" && (
-                    <div className="flex justify-between">
-                      <span>Tax:</span>
-                      <span className="font-medium">
-                        ₹
-                        {Number(
-                          previewInvoice.tax || invoiceSummary.totalTax
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between">
-                    <span>Delivery Fee:</span>
-                    <span className="font-medium">
-                      ₹
-                      {Number(
-                        previewInvoice.deliveryFee ||
-                          invoiceSummary.deliveryFee
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span>Packing Charges:</span>
-                    <span className="font-medium">
-                      ₹
-                      {Number(
-                        previewInvoice.packingCharges ||
-                          invoiceSummary.packingCharges
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-
-                    <div className="flex justify-between">
-                      <span>Other:</span>
-                      <span className="font-medium">
-                        ₹
-                        {Number(
-                          previewInvoice.other || invoiceSummary.other
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span>Discount:</span>
-                      <span className="font-medium text-red-600">
-                        -&nbsp; ₹
-                        {Number(
-                          previewInvoice.discount || invoiceSummary.discount
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-
-                </div>
-
-                {/* Total, Paid, Due */}
-                <div className="mt-3 pt-3 border-t border-gray-400">
-                  <div className="flex justify-between items-center bg-gray-100 p-2 rounded mb-2">
-                    <span className="text-base font-bold text-gray-800">
-                      TOTAL:
-                    </span>
-                    <span className="text-base font-bold text-gray-800">
-                      ₹
-                      {Number(
-                        previewInvoice.total || invoiceSummary.total
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Amount Paid:</span>
-                    <span className="font-medium text-green-600">
-                      ₹
-                      {Number(
-                        previewInvoice.totalReceived ||
-                          invoiceSummary.totalReceived
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2 bg-blue-50 p-2 rounded">
-                    <span className="text-lg font-bold text-blue-800">
-                      TOTAL DUE:
-                    </span>
-                    <span className="text-lg font-bold text-blue-800">
-                      ₹
-                      {Number(
-                        previewInvoice.dueBalance ||
-                          invoiceSummary.dueBalance
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {/* ---------- Modal Footer Buttons ---------- */}
+            <div className="flex justify-end gap-3 p-4 border-t">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+              >
+                Submit Invoice
+              </button>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* ---------- Modal Footer Buttons ---------- */}
-      <div className="flex justify-end gap-3 p-4 border-t">
-        <button
-          onClick={() => setShowPreview(false)}
-          className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200 text-sm"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-        >
-          Submit Invoice
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        </div>
+      )}
 
       {/* Sidebar */}
       <div className="bg-white shadow-customCard  border rounded-lg p-4">
