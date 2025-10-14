@@ -1,16 +1,60 @@
 import { FaEdit, FaSearch, FaFilePdf } from "react-icons/fa";
 import { FaFileExcel } from "react-icons/fa6";
 import { RiBankCardFill } from "react-icons/ri";
+import { VscMilestone } from "react-icons/vsc";
 import { FaChartPie } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { FaRegChartBar } from "react-icons/fa6";
-import { FiEdit, FiEye, FiTrash2 } from "react-icons/fi";
+// We will use FiTrash2 for the modal icon as well
+import { FiEdit, FiEye, FiTrash2 } from "react-icons/fi"; 
 import { Invoice } from "../../api/Invoice.js";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 import React, { useState, useEffect } from "react";
+
+// --- New Delete Confirmation Modal Component ---
+const DeleteConfirmationModal = ({ invoiceName, onConfirm, onCancel }) => (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+    <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm relative transform transition-all scale-100 opacity-100">
+      <div className="text-center">
+        {/* Using FiTrash2 as the icon for visual confirmation */}
+        <FiTrash2 className="mx-auto h-12 w-12 text-red-500" />
+        <h3 className="mt-4 text-lg font-semibold text-gray-900">
+          Confirm Deletion
+        </h3>
+        <div className="mt-2">
+          <p className="text-sm text-gray-500">
+            Are you sure you want to delete the invoice for:
+            <br />
+            <strong className="text-red-600">
+              {invoiceName || "Unknown Customer"}
+            </strong>
+            ? This action cannot be undone.
+          </p>
+        </div>
+      </div>
+      <div className="mt-6 flex justify-end gap-3">
+        <button
+          type="button"
+          className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 transition sm:text-sm"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 transition sm:text-sm"
+          onClick={onConfirm}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+);
+// --------------------------------------------------
 
 const D8PaymentCollectionList = () => {
   const [invoices, setInvoices] = useState([]);
@@ -23,6 +67,13 @@ const D8PaymentCollectionList = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // ✅ New state for the modal
+  const [modal, setModal] = useState({
+    isOpen: false,
+    invoiceIdToDelete: null,
+    invoiceNameToDelete: "",
+  });
 
   const navigate = useNavigate();
 
@@ -45,7 +96,8 @@ const D8PaymentCollectionList = () => {
     weekEnd.setHours(23, 59, 59, 999);
 
     data.forEach((inv) => {
-      const collected = Number(inv.total || 0);
+      // NOTE: Assuming inv.total is the collected amount for the summary
+      const collected = Number(inv.total || 0); 
       const createdAt = new Date(inv.createdAt);
 
       total += collected;
@@ -73,9 +125,31 @@ const D8PaymentCollectionList = () => {
     fetchInvoices();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this invoice?"))
-      return;
+  // Handler to open the modal
+  const handleOpenDeleteModal = (id, name) => {
+    setModal({
+      isOpen: true,
+      invoiceIdToDelete: id,
+      invoiceNameToDelete: name,
+    });
+  };
+
+  // Handler to close the modal
+  const handleCloseDeleteModal = () => {
+    setModal({
+      isOpen: false,
+      invoiceIdToDelete: null,
+      invoiceNameToDelete: "",
+    });
+  };
+
+  // ✅ Updated handleDelete to use the modal
+  const handleDelete = async () => {
+    const id = modal.invoiceIdToDelete;
+    if (!id) return; // Should not happen if modal is open
+
+    handleCloseDeleteModal(); // Close the modal immediately
+
     try {
       const res = await Invoice.deleteInvoice(id);
       if (res.success) {
@@ -85,9 +159,10 @@ const D8PaymentCollectionList = () => {
       console.error("❌ Error deleting:", err);
     }
   };
+
   const handleView = (id) => {
     navigate(`/dashboard/invoice-view/${id}`);
-  }
+  };
 
   const handleEdit = (invoice) => {
     navigate("/dashboard/payment-collection", { state: { invoice } });
@@ -108,7 +183,7 @@ const D8PaymentCollectionList = () => {
   const currentData = filteredData.slice(indexOfFirstRow, indexOfLastRow);
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
-  // ✅ Export PDF
+  // ✅ Export PDF (Code remains the same)
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.text("Payment Collection List", 14, 10);
@@ -132,7 +207,7 @@ const D8PaymentCollectionList = () => {
     doc.save("PaymentCollectionList.pdf");
   };
 
-  // ✅ Export Excel
+  // ✅ Export Excel (Code remains the same)
   const exportExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredData.map((entry) => ({
@@ -157,7 +232,7 @@ const D8PaymentCollectionList = () => {
         Payment Collection List
       </h1>
 
-      {/* ✅ Collection Summary at the top */}
+      {/* --- Collection Summary at the top --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {/* Today's Collection */}
         <div className="border border-green-200 rounded-lg p-4 flex flex-row justify-between items-center">
@@ -226,7 +301,7 @@ const D8PaymentCollectionList = () => {
         </div>
       </div>
 
-      {/* ✅ Search */}
+      {/* --- Search --- */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center p-4 mb-4 gap-4 hidden">
         <div className="relative w-full md:max-w-2xl flex-1">
           <input
@@ -240,7 +315,7 @@ const D8PaymentCollectionList = () => {
         </div>
       </div>
 
-      {/* ✅ Full Width Table */}
+      {/* --- Full Width Table --- */}
       <div className="overflow-auto">
         <table className="w-full min-w-[600px] text-left bg-white rounded-md shadow border-separate border-spacing-y-2 text-nowrap overflow-hidden">
           <thead className="bg-gray-200 text-[#6B7280] text-xs font-robotoM">
@@ -251,7 +326,7 @@ const D8PaymentCollectionList = () => {
               <th className="p-3">Due Date</th>
               <th className="p-3">Promise Amount</th>
               <th className="p-3">Status</th>
-              <th className="p-3">Edit</th>
+              <th className="p-3 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -292,11 +367,14 @@ const D8PaymentCollectionList = () => {
                         className="text-[#2563EB] hover:text-blue-700"
                         onClick={() => handleEdit(entry)}
                       >
-                        <FiEdit className="w-5 h-5" />
+                        <VscMilestone className="w-5 h-5" />
                       </button>
+                      {/* --- DELETE BUTTON: CALLS OPEN MODAL HANDLER --- */}
                       <button
                         className="text-[#DC2626] hover:text-red-700"
-                        onClick={() => handleDelete(entry._id)}
+                        onClick={() =>
+                          handleOpenDeleteModal(entry._id, entry.name)
+                        }
                       >
                         <FiTrash2 className="w-5 h-5" />
                       </button>
@@ -320,7 +398,7 @@ const D8PaymentCollectionList = () => {
           </tbody>
         </table>
 
-        {/* Pagination */}
+        {/* --- Pagination --- */}
         <div className="flex justify-between items-center mt-4">
           <p className="text-sm text-gray-600">
             Page {currentPage} of {totalPages || 1}
@@ -343,6 +421,15 @@ const D8PaymentCollectionList = () => {
           </div>
         </div>
       </div>
+
+      {/* --- RENDER THE MODAL BASED ON STATE --- */}
+      {modal.isOpen && (
+        <DeleteConfirmationModal
+          invoiceName={modal.invoiceNameToDelete}
+          onConfirm={handleDelete}
+          onCancel={handleCloseDeleteModal}
+        />
+      )}
     </div>
   );
 };

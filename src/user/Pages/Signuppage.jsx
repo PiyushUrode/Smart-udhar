@@ -55,7 +55,7 @@ const handleGetOtp = async () => {
   setLoading(true);
   try {
     console.log("[Signup] Sending OTP to:", phone);
-    const res = await AuthService.register(phone);
+    const res = await AuthService.loginSendOtp(phone);
 
     // ✅ Success
     toast.success(res.message || "OTP sent successfully!");

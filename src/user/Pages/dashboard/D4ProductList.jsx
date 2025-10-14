@@ -117,7 +117,7 @@ const D4ProductList = () => {
           ? `${API_URL}/assets/uploadsProduct/${p.product_image}`
           : null,
       }));
-
+      
       setItems(processedProducts);
       setTotalPages(Math.ceil(total / limit) || 1); // ✅ pagination
     } catch (err) {
@@ -242,7 +242,7 @@ const D4ProductList = () => {
             <tr>
               <td
                 colSpan="9"
-                className="text-center  p-3 align-middle align-middle"
+                className="text-center  p-3 align-middle"
               >
                 Loading...
               </td>
@@ -257,7 +257,9 @@ const D4ProductList = () => {
               </td>
             </tr>
           ) : filteredItems.length === 0 ? (
+            
          <tr>
+         
   <td colSpan="9" className="p-6">
     <div className="flex flex-col items-center justify-center text-center "         onClick={handleAdd}>
          <p
@@ -671,7 +673,7 @@ const D4ProductList = () => {
             </div>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-600 mb-1">
-                New Stock
+                Add New Stock
               </label>
               <input
                 type="number"

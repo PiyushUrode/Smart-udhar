@@ -352,7 +352,7 @@ const ProductForm = ({
       <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            HSN/SCN Code
+            HSN/SAC Code
           </label>
           <input
             type="text"
@@ -594,7 +594,7 @@ const ServiceForm = ({
       <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            HSN/SCN Code
+            HSN/SAC Code
           </label>
           <input
             type="text"
@@ -746,7 +746,7 @@ export default function D3Product() {
       sales_price: "Sale Price",
       purchase_price: "Purchase Price",
       category: "Category",
-      hsn_number: "HSN/SCN Code",
+      hsn_number: "HSN/SAC Code",
       tax: "Tax",
       price_type: "Price Type",
     };

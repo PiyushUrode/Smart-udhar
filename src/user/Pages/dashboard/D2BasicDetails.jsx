@@ -47,8 +47,8 @@ const D2BasicDetails = () => {
 
   // Handle input change
   const handleChange = (e) => {
-    let { name, value } = e.target;
-
+    let { name, value } = e.target;     
+    
     // Clean mobile immediately
     if (name === "mobile") {
       // Remove +91 or leading 0 automatically
@@ -63,7 +63,9 @@ const D2BasicDetails = () => {
 
     setFormData({ ...formData, [name]: value });
   };
-
+  
+ 
+    
   // Handle blur (run validation on leaving field)
   const handleBlur = (e) => {
     validateForm();

@@ -169,10 +169,10 @@ const D3Product = () => {
 
         {showAdvanced && (
           <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 border">
-            {/* HSN/SCN Code */}
+            {/* HSN/SAC Code */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                HSN/SCN Code
+                HSN/SAC Code
               </label>
               <input
                 type="text"
