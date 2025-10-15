@@ -12,6 +12,85 @@ import { format, parse } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
 import StatusButton from "../../common/Button.jsx";
 
+
+function convertAmountToWords(amount) {
+  if (isNaN(amount)) return "";
+
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+
+  const numToWords = (num) => {
+    if (num < 20) return ones[num];
+    if (num < 100)
+      return (
+        tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "")
+      );
+    if (num < 1000)
+      return (
+        ones[Math.floor(num / 100)] +
+        " Hundred" +
+        (num % 100 ? " " + numToWords(num % 100) : "")
+      );
+    return "";
+  };
+
+  const number = Math.floor(amount);
+  const paise = Math.round((amount - number) * 100);
+
+  const crore = Math.floor(number / 10000000);
+  const lakh = Math.floor((number % 10000000) / 100000);
+  const thousand = Math.floor((number % 100000) / 1000);
+  const hundred = Math.floor((number % 1000) / 100);
+  const remainder = number % 100;
+
+  let words = "";
+  if (crore) words += numToWords(crore) + " Crore ";
+  if (lakh) words += numToWords(lakh) + " Lakh ";
+  if (thousand) words += numToWords(thousand) + " Thousand ";
+  if (hundred) words += numToWords(hundred) + " Hundred ";
+  if (remainder) words += numToWords(remainder) + " ";
+
+  words = words.trim() + " Rupees";
+  if (paise > 0) words += " and " + numToWords(paise) + " Paise";
+  words += " Only";
+
+  return words.replace(/\s+/g, " ");
+}
+
+
 const D10Expenses = () => {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("Monthly"); // default
@@ -256,6 +335,11 @@ const D10Expenses = () => {
                     className="w-full border border-gray-300 rounded-md pl-8 pr-3 py-2 bg-white"
                     required
                   />
+                  {convertAmountToWords(formData.amount) && (
+                            <p className="text-gray-500 text-[10px] mt-1">
+                              {convertAmountToWords(formData.amount)}
+                            </p>
+                          )}
                 </div>
               </div>
               <div>
