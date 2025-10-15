@@ -15,7 +15,7 @@ const initialFormData = {
   name: "",
   product_image: null,
   quantity: "",
-  unit: "",
+  unit: "piece",
   min_quantity: "",
   sales_price: "",
   purchase_price: "",
@@ -25,6 +25,83 @@ const initialFormData = {
   tax: "",
   price_type: "",
 };
+
+function convertAmountToWords(amount) {
+  if (isNaN(amount)) return "";
+
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+
+  const numToWords = (num) => {
+    if (num < 20) return ones[num];
+    if (num < 100)
+      return (
+        tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "")
+      );
+    if (num < 1000)
+      return (
+        ones[Math.floor(num / 100)] +
+        " Hundred" +
+        (num % 100 ? " " + numToWords(num % 100) : "")
+      );
+    return "";
+  };
+
+  const number = Math.floor(amount);
+  const paise = Math.round((amount - number) * 100);
+
+  const crore = Math.floor(number / 10000000);
+  const lakh = Math.floor((number % 10000000) / 100000);
+  const thousand = Math.floor((number % 100000) / 1000);
+  const hundred = Math.floor((number % 1000) / 100);
+  const remainder = number % 100;
+
+  let words = "";
+  if (crore) words += numToWords(crore) + " Crore ";
+  if (lakh) words += numToWords(lakh) + " Lakh ";
+  if (thousand) words += numToWords(thousand) + " Thousand ";
+  if (hundred) words += numToWords(hundred) + " Hundred ";
+  if (remainder) words += numToWords(remainder) + " ";
+
+  words = words.trim() + " Rupees";
+  if (paise > 0) words += " and " + numToWords(paise) + " Paise";
+  words += " Only";
+
+  return words.replace(/\s+/g, " ");
+}
 
 // =================================================================
 // 💰 ProductForm Component (Unchanged)
@@ -58,91 +135,460 @@ const ProductForm = ({
           <p className="text-red-500 text-xs mt-1">Name is required</p>
         )}
       </div>
-      
-          <div>
-      <label className="block text-sm font-medium text-gray-700 mb-3">
-        Categories<span className="text-red-500">*</span>
-      </label>
-     <select
-  name="category"
-  required
-  className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
-    errors.category ? "border-red-500" : "border-gray-300"
-  }`}
-  value={formData.category || ""}
-  onChange={handleChange}
->
-  <option value="">Select Category</option>
 
-  <option value="Accessories">Accessories</option>
-  <option value="Art Supplies">Art Supplies</option>
-  <option value="Automotive">Automotive</option>
-  <option value="Baby Products">Baby Products</option>
-  <option value="Bakery">Bakery</option>
-  <option value="Bags & Luggage">Bags & Luggage</option>
-  <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
-  <option value="Beverages">Beverages</option>
-  <option value="Bike Accessories">Bike Accessories</option>
-  <option value="Books">Books</option>
-  <option value="Cameras">Cameras</option>
-  <option value="Camping">Camping</option>
-  <option value="Car Accessories">Car Accessories</option>
-  <option value="Cleaning Supplies">Cleaning Supplies</option>
-  <option value="Clothing - Kids">Clothing - Kids</option>
-  <option value="Clothing - Men">Clothing - Men</option>
-  <option value="Clothing - Women">Clothing - Women</option>
-  <option value="Construction">Construction</option>
-  <option value="Crafts">Crafts</option>
-  <option value="Dairy">Dairy</option>
-  <option value="Electronics">Electronics</option>
-  <option value="Fitness">Fitness</option>
-  <option value="Food">Food</option>
-  <option value="Footwear">Footwear</option>
-  <option value="Frozen Foods">Frozen Foods</option>
-  <option value="Fruits & Vegetables">Fruits & Vegetables</option>
-  <option value="Furniture">Furniture</option>
-  <option value="Gadgets">Gadgets</option>
-  <option value="Games & Gaming">Games & Gaming</option>
-  <option value="Gardening">Gardening</option>
-  <option value="Gifts">Gifts</option>
-  <option value="Groceries">Groceries</option>
-  <option value="Harddisk">Harddisk</option>
-  <option value="Headphones">Headphones</option>
-  <option value="Health Care">Health Care</option>
-  <option value="Home Appliances">Home Appliances</option>
-  <option value="Home Decor">Home Decor</option>
-  <option value="Industrial">Industrial</option>
-  <option value="Jewellery">Jewellery</option>
-  <option value="Kitchen Appliances">Kitchen Appliances</option>
-  <option value="Lighting">Lighting</option>
-  <option value="Laptops">Laptops</option>
-  <option value="Lubricants">Lubricants</option>
-  <option value="Medical Supplies">Medical Supplies</option>
-  <option value="Mobiles">Mobiles</option>
-  <option value="Office Supplies">Office Supplies</option>
-  <option value="Other">Other</option>
-  <option value="Pendrive">Pendrive</option>
-  <option value="Personal Care">Personal Care</option>
-  <option value="Pet Supplies">Pet Supplies</option>
-  <option value="Smartwatches">Smartwatches</option>
-  <option value="Snacks">Snacks</option>
-  <option value="Spices & Condiments">Spices & Condiments</option>
-  <option value="Sports">Sports</option>
-  <option value="Stationery">Stationery</option>
-  <option value="Storage">Storage</option>
-  <option value="Tablets">Tablets</option>
-  <option value="Tools & Equipment">Tools & Equipment</option>
-  <option value="Toys">Toys</option>
-  <option value="Travel Accessories">Travel Accessories</option>
-  <option value="TV & Audio">TV & Audio</option>
-  <option value="Watches">Watches</option>
-</select>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Categories<span className="text-red-500">*</span>
+        </label>
+        <select
+          name="category"
+          required
+          className={`w-full bg-[#F6F8FA] p-2 rounded border text-lightblack ${
+            errors.category ? "border-red-500" : "border-gray-300"
+          }`}
+          value={formData.category || ""}
+          onChange={handleChange}
+        >
+          <option value="">Select Category</option>
 
-      {errors.category && (
-        <p className="text-red-500 text-xs mt-1">Category is required</p>
-      )}
+          <option value="Accessories">Accessories</option>
+          <option value="Art Supplies">Art Supplies</option>
+          <option value="Automotive">Automotive</option>
+          <option value="Baby Products">Baby Products</option>
+          <option value="Bakery">Bakery</option>
+          <option value="Bags & Luggage">Bags & Luggage</option>
+          <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+          <option value="Beverages">Beverages</option>
+          <option value="Bike Accessories">Bike Accessories</option>
+          <option value="Books">Books</option>
+          <option value="Cameras">Cameras</option>
+          <option value="Camping">Camping</option>
+          <option value="Car Accessories">Car Accessories</option>
+          <option value="Cleaning Supplies">Cleaning Supplies</option>
+          <option value="Clothing - Kids">Clothing - Kids</option>
+          <option value="Clothing - Men">Clothing - Men</option>
+          <option value="Clothing - Women">Clothing - Women</option>
+          <option value="Construction">Construction</option>
+          <option value="Crafts">Crafts</option>
+          <option value="Dairy">Dairy</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Fitness">Fitness</option>
+          <option value="Food">Food</option>
+          <option value="Footwear">Footwear</option>
+          <option value="Frozen Foods">Frozen Foods</option>
+          <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+          <option value="Furniture">Furniture</option>
+          <option value="Gadgets">Gadgets</option>
+          <option value="Games & Gaming">Games & Gaming</option>
+          <option value="Gardening">Gardening</option>
+          <option value="Gifts">Gifts</option>
+          <option value="Groceries">Groceries</option>
+          <option value="Harddisk">Harddisk</option>
+          <option value="Headphones">Headphones</option>
+          <option value="Health Care">Health Care</option>
+          <option value="Home Appliances">Home Appliances</option>
+          <option value="Home Decor">Home Decor</option>
+          <option value="Industrial">Industrial</option>
+          <option value="Jewellery">Jewellery</option>
+          <option value="Kitchen Appliances">Kitchen Appliances</option>
+          <option value="Lighting">Lighting</option>
+          <option value="Laptops">Laptops</option>
+          <option value="Lubricants">Lubricants</option>
+          <option value="Medical Supplies">Medical Supplies</option>
+          <option value="Mobiles">Mobiles</option>
+          <option value="Office Supplies">Office Supplies</option>
+          <option value="Other">Other</option>
+          <option value="Pendrive">Pendrive</option>
+          <option value="Personal Care">Personal Care</option>
+          <option value="Pet Supplies">Pet Supplies</option>
+          <option value="Smartwatches">Smartwatches</option>
+          <option value="Snacks">Snacks</option>
+          <option value="Spices & Condiments">Spices & Condiments</option>
+          <option value="Sports">Sports</option>
+          <option value="Stationery">Stationery</option>
+          <option value="Storage">Storage</option>
+          <option value="Tablets">Tablets</option>
+          <option value="Tools & Equipment">Tools & Equipment</option>
+          <option value="Toys">Toys</option>
+          <option value="Travel Accessories">Travel Accessories</option>
+          <option value="TV & Audio">TV & Audio</option>
+          <option value="Watches">Watches</option>
+        </select>
+
+        {errors.category && (
+          <p className="text-red-500 text-xs mt-1">Category is required</p>
+        )}
+      </div>
     </div>
 
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Stock Unit<span className="text-red-500">*</span>
+        </label>
+        <div className="flex flex-row gap-4 pb-2 w-full max-w-full">
+          <input
+            name="quantity"
+            type="text"
+            min="1"
+            required
+            placeholder="Qty"
+            className={`input w-[30%] bg-[#F6F8FA] rounded border ${
+              errors.quantity ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.quantity}
+            onChange={handleChange}
+          />
+          {errors.quantity && (
+            <p className="text-red-500 text-xs mt-1">Quantity is required</p>
+          )}
+          <select
+            name="unit"
+            required
+            className={`input w-[70%] bg-[#F6F8FA] font-robotoR text-gray-500 p-2 rounded border ${
+              errors.unit ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.unit}
+            onChange={handleChange}
+          >
+            {/* <!-- Units in Alphabetical Order --> */}
+            <option value="acre">acre</option>
+            <option value="bag">bag</option>
+            <option value="barrel">barrel</option>
+            <option value="bottle">bottle</option>
+            <option value="box">box</option>
+            <option value="bundle">bundle</option>
+            <option value="can">can</option>
+            <option value="carton">carton</option>
+            <option value="cc">cc</option>
+            <option value="cft">cft</option>
+            <option value="cm">cm</option>
+            <option value="container">container</option>
+            <option value="cubicm">cubic meter</option>
+            <option value="day">day</option>
+            <option value="dozen">dozen</option>
+            <option value="ft">ft</option>
+            <option value="g">g</option>
+            <option value="gal">gallon</option>
+            <option value="hectare">hectare</option>
+            <option value="hour">hour</option>
+            <option value="inch">inch</option>
+            <option value="jar">jar</option>
+            <option value="kg">kg</option>
+            <option value="kl">kl</option>
+            <option value="km">km</option>
+            <option value="ltr">ltr</option>
+            <option value="m">m</option>
+            <option value="mg">mg</option>
+            <option value="ml">ml</option>
+            <option value="month">month</option>
+            <option value="nos">nos</option>
+            <option value="packet">packet</option>
+            <option value="pack">pack</option>
+            <option value="pair">pair</option>
+            <option value="pcs">pcs</option>
+            <option value="piece" selected>
+              piece
+            </option>
+            <option value="quintal">quintal</option>
+            <option value="roll">roll</option>
+            <option value="set">set</option>
+            <option value="sheet">sheet</option>
+            <option value="sqcm">sqcm</option>
+            <option value="sqft">sqft</option>
+            <option value="sqm">sqm</option>
+            <option value="sqyard">sqyard</option>
+            <option value="tin">tin</option>
+            <option value="ton">ton</option>
+            <option value="tube">tube</option>
+            <option value="unit">unit</option>
+            <option value="yard">yard</option>
+            <option value="year">year</option>
+          </select>
+
+          {errors.unit && (
+            <p className="text-red-500 text-xs mt-1">Unit is required</p>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Minimum Quantity <span className="text-red-500">*</span>
+        </label>
+        <div className="w-full">
+          <input
+            name="min_quantity"
+            type="text"
+            min="1"
+            required
+            placeholder="0"
+            className={`input w-full bg-[#F6F8FA] rounded border ${
+              errors.min_quantity ? "border-red-500" : "border-gray-300"
+            }`}
+            value={formData.min_quantity}
+            onChange={handleChange}
+          />
+          {errors.min_quantity && (
+            <p className="text-red-500 text-xs mt-1">
+              Minimum Quantity is required
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Sale Price *
+        </label>
+        <input
+          name="sales_price"
+          type="text"
+          min="0"
+          step="0.01"
+          required
+          placeholder="₹ 0.00"
+          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.sales_price ? "border-red-500" : "border-gray-300"
+          }`}
+          value={formData.sales_price}
+          onChange={handleChange}
+        />
+        {convertAmountToWords(formData.sales_price) && (
+          <p className="text-gray-500 text-[10px] mt-1">
+            {convertAmountToWords(formData.sales_price)}
+          </p>
+        )}
+        {errors.sales_price && (
+          <p className="text-red-500 text-xs mt-1">Sale Price is required</p>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Purchase Price *
+        </label>
+        <input
+          name="purchase_price"
+          type="text"
+          min="0"
+          step="0.01"
+          required
+          placeholder="₹ 0.00"
+          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.purchase_price ? "border-red-500" : "border-gray-300"
+          }`}
+          value={formData.purchase_price}
+          onChange={handleChange}
+        />
+
+        {convertAmountToWords(formData.purchase_price) && (
+          <p className="text-gray-500 text-[10px] mt-1">
+            {convertAmountToWords(formData.purchase_price)}
+          </p>
+        )}
+
+        {errors.purchase_price && (
+          <p className="text-red-500 text-xs mt-1">
+            Purchase Price is required
+          </p>
+        )}
+      </div>
+    </div>
+
+    <div
+      className="bg-[#F6F8FA] p-3 rounded-md text-bluecol font-semibold text-sm cursor-pointer"
+      onClick={() => setShowAdvanced(!showAdvanced)}
+    >
+      {showAdvanced ? "▴ Advanced Fields" : "▾ Advanced Fields"}
+    </div>
+
+    {showAdvanced && (
+      <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            HSN/SAC Code
+          </label>
+          <input
+            type="text"
+            name="hsn_number"
+            placeholder="Enter code"
+            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
+            value={formData.hsn_number || ""}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Tax
+          </label>
+          <select
+            name="tax"
+            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
+            value={formData.tax || ""}
+            onChange={handleChange}
+          >
+            <option value="">Select</option>
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18">18%</option>
+            <option value="28">28%</option>
+          </select>
+        </div>
+
+        <div className="">
+          <label className="block text-sm font-medium text-gray-700 mb-3 ">
+            Price
+          </label>
+          <select
+            name="price_type"
+            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
+            value={formData.price_type || ""}
+            onChange={handleChange}
+          >
+            <option value="without">With tax(Include tax)</option>
+            <option selected value="fixed">
+              Without tax (Exclude tax)
+            </option>
+          </select>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4">
+          <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
+            {formData.product_image ? (
+              <div className="relative">
+                {/* Preview Image */}
+                <img
+                  src={URL.createObjectURL(formData.product_image)}
+                  alt="Preview"
+                  className="w-40 h-40 object-cover rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
+                />
+                {/* Remove Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleChange({
+                      target: {
+                        name: "product_image",
+                        value: null,
+                        files: null,
+                      },
+                    });
+                  }}
+                  className="absolute top-1 right-1 bg-white rounded-full p-1 shadow hover:bg-red-100 transition"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-red-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              // Default State
+              <div className="flex flex-col items-center gap-2 text-center">
+                <ImagePlus className="text-blue-600 w-8 h-8" />
+                <span className="text-sm text-blue-600 font-medium">
+                  Add Product Image
+                </span>
+                <span className="text-xs text-gray-400">
+                  Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px
+                </span>
+              </div>
+            )}
+
+            <input
+              type="file"
+              name="product_image"
+              accept="image/*"
+              className="hidden"
+              onChange={handleChange}
+            />
+
+            {/* Optional File Name */}
+            {formData.product_image && (
+              <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-md">
+                {(() => {
+                  const name = formData.product_image.name;
+                  const dotIndex = name.lastIndexOf(".");
+                  const ext = dotIndex !== -1 ? name.slice(dotIndex) : "";
+                  const base = dotIndex !== -1 ? name.slice(0, dotIndex) : name;
+                  const displayBase =
+                    base.length > 15 ? base.slice(0, 15) : base;
+                  return displayBase + ext;
+                })()}
+              </span>
+            )}
+          </label>
+        </div>
+      </div>
+    )}
+
+    <div className="flex justify-end gap-4 pb-2">
+      {/* <button
+        type="button"
+        className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+      >
+        Cancel
+      </button> */}
+
+      <button
+        type="submit"
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        {" "}
+        Save Product
+      </button>
+    </div>
+  </form>
+);
+
+// =================================================================
+// 🛠️ ServiceForm Component (Unchanged)
+// =================================================================
+const ServiceForm = ({
+  formData,
+  handleChange,
+  handleSubmit,
+  showAdvanced,
+  setShowAdvanced,
+  errors,
+}) => (
+  <form onSubmit={handleSubmit} className="space-y-4 px-4 pt-6">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 pb-2">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Name<span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          name="name"
+          placeholder="Enter service name"
+          required
+          className={`input w-full bg-[#F6F8FA] p-2 rounded border ${
+            errors.name ? "border-red-500" : "border-gray-300"
+          }`}
+          value={formData.name}
+          onChange={handleChange}
+        />
+        {errors.name && (
+          <p className="text-red-500 text-xs mt-1">Name is required</p>
+        )}
+      </div>
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
@@ -227,330 +673,6 @@ const ProductForm = ({
             <option value="yard">yard</option>
             <option value="year">year</option>
           </select>
-
-          {errors.unit && (
-            <p className="text-red-500 text-xs mt-1">Unit is required</p>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Minimum Quantity <span className="text-red-500">*</span>
-        </label>
-        <div className="w-full">
-          <input
-            name="min_quantity"
-            type="text"
-            min="1"
-            required
-            placeholder="0"
-            className={`input w-full bg-[#F6F8FA] rounded border ${
-              errors.min_quantity ? "border-red-500" : "border-gray-300"
-            }`}
-            value={formData.min_quantity}
-            onChange={handleChange}
-          />
-          {errors.min_quantity && (
-            <p className="text-red-500 text-xs mt-1">
-              Minimum Quantity is required
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Sale Price *
-        </label>
-        <input
-          name="sales_price"
-          type="text"
-          min="0"
-          step="0.01"
-          required
-          placeholder="₹ 0.00"
-          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
-            errors.sales_price ? "border-red-500" : "border-gray-300"
-          }`}
-          value={formData.sales_price}
-          onChange={handleChange}
-        />
-        {errors.sales_price && (
-          <p className="text-red-500 text-xs mt-1">Sale Price is required</p>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Purchase Price *
-        </label>
-        <input
-          name="purchase_price"
-          type="text"
-          min="0"
-          step="0.01"
-          required
-          placeholder="₹ 0.00"
-          className={`w-full bg-[#F6F8FA] p-2 rounded border ${
-            errors.purchase_price ? "border-red-500" : "border-gray-300"
-          }`}
-          value={formData.purchase_price}
-          onChange={handleChange}
-        />
-        {errors.purchase_price && (
-          <p className="text-red-500 text-xs mt-1">
-            Purchase Price is required
-          </p>
-        )}
-      </div>
-    </div>
-
-
-
-    <div
-      className="bg-[#F6F8FA] p-3 rounded-md text-bluecol font-semibold text-sm cursor-pointer"
-      onClick={() => setShowAdvanced(!showAdvanced)}
-    >
-      {showAdvanced ? "▴ Advanced Fields" : "▾ Advanced Fields"}
-    </div>
-
-    {showAdvanced && (
-      <div className="bg-[#F9FBFC] p-4 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 pb-2 border">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            HSN/SAC Code
-          </label>
-          <input
-            type="text"
-            name="hsn_number"
-            placeholder="Enter code"
-            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
-            value={formData.hsn_number || ""}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Tax
-          </label>
-          <select
-            name="tax"
-            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
-            value={formData.tax || ""}
-            onChange={handleChange}
-          >
-            <option value="">Select</option>
-            <option value="0">0%</option>
-            <option value="5">5%</option>
-            <option value="12">12%</option>
-            <option value="18">18%</option>
-            <option value="28">28%</option>
-          </select>
-        </div>
-
-        <div className="">
-          <label className="block text-sm font-medium text-gray-700 mb-3 ">
-            Price
-          </label>
-          <select
-            name="price_type"
-            className="input w-full bg-[#F6F8FA] p-2 rounded border border-gray-300"
-            value={formData.price_type || ""}
-            onChange={handleChange}
-          >
-            <option value="without">With tax(Include tax)</option>
-            <option selected value="fixed">Without tax (Exclude tax)</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-4">
-  <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
-    {formData.product_image ? (
-      // Preview Image
-      <img
-        src={URL.createObjectURL(formData.product_image)}
-        alt="Preview"
-        className="w-40 h-40 object-cover rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
-      />
-    ) : (
-      // Default State
-      <div className="flex flex-col items-center gap-2 text-center">
-        <ImagePlus className="text-blue-600 w-8 h-8" />
-        <span className="text-sm text-blue-600 font-medium">
-          Add Product Image
-        </span>
-        <span className="text-xs text-gray-400">Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px</span>
-      </div>
-    )}
-
-    <input
-      type="file"
-      name="product_image"
-      accept="image/*"
-      className="hidden"
-      onChange={handleChange}
-    />
-
-    {/* Optional File Name */}
-    {formData.product_image && (
-      <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-md">
-        {(() => {
-          const name = formData.product_image.name;
-          const dotIndex = name.lastIndexOf(".");
-          const ext = dotIndex !== -1 ? name.slice(dotIndex) : "";
-          const base = dotIndex !== -1 ? name.slice(0, dotIndex) : name;
-          const displayBase = base.length > 15 ? base.slice(0, 15) : base;
-          return displayBase + ext;
-        })()}
-      </span>
-    )}
-  </label>
-</div>
-
-      </div>
-    )}
-
-    <div className="flex justify-end gap-4 pb-2">
-      {/* <button
-        type="button"
-        className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
-      >
-        Cancel
-      </button> */}
-
-      <button
-        type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        {" "}
-        Save Product
-      </button>
-    </div>
-  </form>
-);
-
-// =================================================================
-// 🛠️ ServiceForm Component (Unchanged)
-// =================================================================
-const ServiceForm = ({
-  formData,
-  handleChange,
-  handleSubmit,
-  showAdvanced,
-  setShowAdvanced,
-  errors,
-}) => (
-  <form onSubmit={handleSubmit} className="space-y-4 px-4 pt-6">
-    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 pb-2">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Name<span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          name="name"
-          placeholder="Enter service name"
-          required
-          className={`input w-full bg-[#F6F8FA] p-2 rounded border ${
-            errors.name ? "border-red-500" : "border-gray-300"
-          }`}
-          value={formData.name}
-          onChange={handleChange}
-        />
-        {errors.name && (
-          <p className="text-red-500 text-xs mt-1">Name is required</p>
-        )}
-      </div>
-
-
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Unit<span className="text-red-500">*</span>
-        </label>
-        <div className="flex flex-row gap-4 pb-2 w-full max-w-full">
-          <input
-            name="quantity"
-            type="text"
-            min="1"
-            required
-            placeholder="Qty"
-            className={`input w-[30%] bg-[#F6F8FA] rounded border ${
-              errors.quantity ? "border-red-500" : "border-gray-300"
-            }`}
-            value={formData.quantity}
-            onChange={handleChange}
-          />
-          {errors.quantity && (
-            <p className="text-red-500 text-xs mt-1">Quantity is required</p>
-          )}
-          <select
-            name="unit"
-            required
-            className={`input w-[70%] bg-[#F6F8FA] font-robotoR text-gray-500 p-2 rounded border ${
-              errors.unit ? "border-red-500" : "border-gray-300"
-            }`}
-            value={formData.unit}
-            onChange={handleChange}
-          >
-               {/* <!-- Units in Alphabetical Order --> */}
-            <option value="acre">acre</option>
-            <option value="bag">bag</option>
-            <option value="barrel">barrel</option>
-            <option value="bottle">bottle</option>
-            <option value="box">box</option>
-            <option value="bundle">bundle</option>
-            <option value="can">can</option>
-            <option value="carton">carton</option>
-            <option value="cc">cc</option>
-            <option value="cft">cft</option>
-            <option value="cm">cm</option>
-            <option value="container">container</option>
-            <option value="cubicm">cubic meter</option>
-            <option value="day">day</option>
-            <option value="dozen">dozen</option>
-            <option value="ft">ft</option>
-            <option value="g">g</option>
-            <option value="gal">gallon</option>
-            <option value="hectare">hectare</option>
-            <option value="hour">hour</option>
-            <option value="inch">inch</option>
-            <option value="jar">jar</option>
-            <option value="kg">kg</option>
-            <option value="kl">kl</option>
-            <option value="km">km</option>
-            <option value="ltr">ltr</option>
-            <option value="m">m</option>
-            <option value="mg">mg</option>
-            <option value="ml">ml</option>
-            <option value="month">month</option>
-            <option value="nos">nos</option>
-            <option value="packet">packet</option>
-            <option value="pack">pack</option>
-            <option value="pair">pair</option>
-            <option value="pcs">pcs</option>
-            <option value="piece">piece</option>
-            <option value="quintal">quintal</option>
-            <option value="roll">roll</option>
-            <option value="set">set</option>
-            <option value="sheet">sheet</option>
-            <option value="sqcm">sqcm</option>
-            <option value="sqft">sqft</option>
-            <option value="sqm">sqm</option>
-            <option value="sqyard">sqyard</option>
-            <option value="tin">tin</option>
-            <option value="ton">ton</option>
-            <option value="tube">tube</option>
-            <option value="unit">unit</option>
-            <option value="yard">yard</option>
-            <option value="year">year</option>
-          </select>
           {errors.unit && (
             <p className="text-red-500 text-xs mt-1">Unit is required</p>
           )}
@@ -575,6 +697,11 @@ const ServiceForm = ({
             value={formData.sales_price}
             onChange={handleChange}
           />
+          {convertAmountToWords(formData.sales_price) && (
+            <p className="text-gray-500 text-[10px] mt-1">
+              {convertAmountToWords(formData.sales_price)}
+            </p>
+          )}
           {errors.sales_price && (
             <p className="text-red-500 text-xs mt-1">Sale Price is required</p>
           )}
@@ -624,55 +751,60 @@ const ServiceForm = ({
           </select>
         </div>
 
-          <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Image
-        </label>
-<div className="flex flex-col md:flex-row gap-4">
-  <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
-    {formData.product_image ? (
-      // Preview Image
-      <img
-        src={URL.createObjectURL(formData.product_image)}
-        alt="Preview"
-        className="w-40 h-40 object-cover rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
-      />
-    ) : (
-      // Default State
-      <div className="flex flex-col items-center gap-2 text-center">
-        <ImagePlus className="text-blue-600 w-8 h-8" />
-        <span className="text-sm text-blue-600 font-medium">
-          Add Service Image
-        </span>
-        <span className="text-xs text-gray-400">Supported formats : JPG , PNG | Max. 2 Mb | Min 224px * 244px</span>
-      </div>
-    )}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Image
+          </label>
+          <div className="flex flex-col md:flex-row gap-4">
+            <label className="relative w-full md:w-full border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg bg-gray-50 group">
+              {formData.product_image ? (
+                // Preview Image
+                <img
+                  src={URL.createObjectURL(formData.product_image)}
+                  alt="Preview"
+                  className="w-40 h-40 object-cover rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
+                />
+              ) : (
+                // Default State
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <ImagePlus className="text-blue-600 w-8 h-8" />
+                  <span className="text-sm text-blue-600 font-medium">
+                    Add Service Image
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    Supported formats : JPG , PNG | Max. 2 Mb | Min 224px *
+                    244px
+                  </span>
+                </div>
+              )}
 
-    <input
-      type="file"
-      name="product_image"
-      accept="image/*"
-      className="hidden"
-      onChange={handleChange}
-    />
+              <input
+                type="file"
+                name="product_image"
+                accept="image/*"
+                className="hidden"
+                onChange={handleChange}
+              />
 
-    {/* Optional File Name */}
-    {formData.product_image && (
-      <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-md">
-        {(() => {
-          const name = formData.product_image.name;
-          const dotIndex = name.lastIndexOf(".");
-          const ext = dotIndex !== -1 ? name.slice(dotIndex) : "";
-          const base = dotIndex !== -1 ? name.slice(0, dotIndex) : name;
-          const displayBase = base.length > 15 ? base.slice(0, 15) : base;
-          return displayBase + ext;
-        })()}
-      </span>
-    )}
-  </label>
-</div>
-
-      </div>
+              {/* Optional File Name */}
+              {formData.product_image && (
+                <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-md">
+                  {(() => {
+                    const name = formData.product_image.name;
+                    const dotIndex = name.lastIndexOf(".");
+                    const ext = dotIndex !== -1 ? name.slice(dotIndex) : "";
+                    const base =
+                      dotIndex !== -1 ? name.slice(0, dotIndex) : name;
+                    const displayBase =
+                      base.length > 15 ? base.slice(0, 15) : base;
+                    return displayBase + ext;
+                  })()}
+                </span>
+              )}
+            </label>
+          </div>
+        </div>
+        
       </div>
     )}
 
@@ -724,7 +856,7 @@ export default function D3Product() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("product");
   const [formData, setFormData] = useState(initialFormData);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(true);
   const [errors, setErrors] = useState({});
   const [isEditMode, setIsEditMode] = useState(!!id);
   // State for the custom notification/pop-up component

@@ -24,6 +24,83 @@ import "react-datepicker/dist/react-datepicker.css";
 import Button from "../../common/Button.jsx";
 import { useCreateInvoiceController } from "../../api/CreateInvoiceCTR.js";
 
+function convertAmountToWords(amount) {
+  if (isNaN(amount)) return "";
+
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+
+  const numToWords = (num) => {
+    if (num < 20) return ones[num];
+    if (num < 100)
+      return (
+        tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "")
+      );
+    if (num < 1000)
+      return (
+        ones[Math.floor(num / 100)] +
+        " Hundred" +
+        (num % 100 ? " " + numToWords(num % 100) : "")
+      );
+    return "";
+  };
+
+  const number = Math.floor(amount);
+  const paise = Math.round((amount - number) * 100);
+
+  const crore = Math.floor(number / 10000000);
+  const lakh = Math.floor((number % 10000000) / 100000);
+  const thousand = Math.floor((number % 100000) / 1000);
+  const hundred = Math.floor((number % 1000) / 100);
+  const remainder = number % 100;
+
+  let words = "";
+  if (crore) words += numToWords(crore) + " Crore ";
+  if (lakh) words += numToWords(lakh) + " Lakh ";
+  if (thousand) words += numToWords(thousand) + " Thousand ";
+  if (hundred) words += numToWords(hundred) + " Hundred ";
+  if (remainder) words += numToWords(remainder) + " ";
+
+  words = words.trim() + " Rupees";
+  if (paise > 0) words += " and " + numToWords(paise) + " Paise";
+  words += " Only";
+
+  return words.replace(/\s+/g, " ");
+}
+
 export default function D7CreateInvoice({ onCustomerSelect }) {
   const navigate = useNavigate();
   const {
@@ -193,11 +270,15 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
               <div className="text-sm  p-3 rounded mt-3 bg-blue-500 text-white">
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
                   <p className="font-robotoR">
-                    <strong className=" font-robotoM font-bold text-md capitalize">Name:</strong>{" "}
+                    <strong className=" font-robotoM font-bold text-md capitalize">
+                      Name:
+                    </strong>{" "}
                     {selectedCustomer.name}
                   </p>
                   <p className="font-robotoR">
-                    <strong className=" font-robotoM font-bold text-md capitalize">mobile:</strong>{" "}
+                    <strong className=" font-robotoM font-bold text-md capitalize">
+                      mobile:
+                    </strong>{" "}
                     {selectedCustomer.mobile}
                   </p>
                   <p className="font-robotoR">
@@ -234,7 +315,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                     <>
                       <div
                         key={row.id}
-                        className="grid grid-cols-2 sm:grid-cols-6 gap-3 sm:gap-4 items-end py-3 border-b sm:border-0"
+                        className="grid grid-cols-2 md:grid-cols-6 gap-3 sm:gap-4 items-end py-3 border-b sm:border-0"
                       >
                         {/* Product */}
                         <div className="col-span-2 md:col-span-6">
@@ -378,7 +459,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                         </div>
 
                         {/* Price */}
-                        <div className="col-span-1 md:col-span-2">
+                        <div className="col-span-1 md:col-span-2 h-full">
                           <label className="text-xs text-gray-600 font-robotoM">
                             Base Price
                           </label>
@@ -391,11 +472,17 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                             }
                             className="w-full h-9 border border-gray-300 px-2 rounded-md focus:border-blue-500 focus:ring-blue-500 outline-none text-sm"
                           />
+
+                          {convertAmountToWords(row.price) && (
+                            <p className="text-gray-500 text-[10px] mt-1">
+                              {convertAmountToWords(row.price)}
+                            </p>
+                          )}
                         </div>
 
                         {/* Tax */}
                         {taxType === "taxable" ? (
-                          <div className="col-span-1 md:col-span-2">
+                          <div className="col-span-1 md:col-span-2 h-full">
                             <label className="text-xs text-gray-600 font-robotoM">
                               Tax %
                             </label>
@@ -407,13 +494,20 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                               }
                               className="w-full h-9 border border-gray-300 px-2 rounded-md bg-gray-50 text-sm"
                             />
+
+                            {convertAmountToWords(calculateTotal(row)) && (
+                            <p className="text-gray-500 text-[10px] mt-1 hidden">
+                              {convertAmountToWords(calculateTotal(row))}
+                            </p>
+                          )}
+
                           </div>
                         ) : (
                           ""
                         )}
 
                         {/* Total */}
-                        <div className="col-span-1 md:col-span-2">
+                        <div className="col-span-1 md:col-span-2 h-full">
                           <label className="text-xs text-gray-600 font-robotoM">
                             Total
                           </label>
@@ -426,6 +520,12 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                               <FaTrash />
                             </button>
                           </div>
+
+                          {convertAmountToWords(calculateTotal(row)) && (
+                            <p className="text-gray-500 text-[10px] mt-1">
+                              {convertAmountToWords(calculateTotal(row))}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -487,6 +587,12 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                         )
                       }
                     />
+
+                    {convertAmountToWords(additionalCharges.deliveryFee) && (
+                            <p className="text-gray-500 text-[10px] mt-1">
+                              {convertAmountToWords(additionalCharges.deliveryFee)}
+                            </p>
+                          )}
                   </div>
 
                   <div>
@@ -508,6 +614,13 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                         )
                       }
                     />
+
+                     {convertAmountToWords(additionalCharges.packingCharges) && (
+                            <p className="text-gray-500 text-[10px] mt-1">
+                              {convertAmountToWords(additionalCharges.packingCharges)}
+                            </p>
+                          )}
+
                   </div>
 
                   <div>
@@ -529,6 +642,12 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                         )
                       }
                     />
+
+                    {convertAmountToWords(additionalCharges.discount) && (
+                            <p className="text-gray-500 text-[10px] mt-1">
+                              {convertAmountToWords(additionalCharges.discount)}
+                            </p>
+                          )}
                   </div>
 
                   <div>
@@ -550,6 +669,13 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                         )
                       }
                     />
+
+                    {convertAmountToWords(additionalCharges.other) && (
+                            <p className="text-gray-500 text-[10px] mt-1">
+                              {convertAmountToWords(additionalCharges.other)}
+                            </p>
+                          )}
+
                   </div>
                 </div>
               </div>
@@ -635,6 +761,11 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                       className="border px-2 py-1 rounded bg-white w-full"
                       placeholder="Enter cash amount (optional, rest in debt)"
                     />
+                    {convertAmountToWords(partialCashAmount) && (
+                            <p className="text-gray-500 text-[10px] mt-1">
+                              {convertAmountToWords(partialCashAmount)}
+                            </p>
+                          )}
                     <p className="text-sm text-gray-500 mt-1">
                       Remaining Due: ₹{invoiceSummary.dueBalance.toFixed(2)}
                     </p>
@@ -690,7 +821,8 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                           setMilestones(newMilestones);
                         }}
                       />
-
+                       
+                    
                       <DatePicker
                         className="w-full h-10 border border-gray-300 px-2 py-1 rounded text-sm font-robotoR bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                         selected={
@@ -993,7 +1125,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                           <tr className="text-left text-xs font-semibold uppercase text-gray-600">
                             <th className="p-3 w-8 sm:w-10">#</th>
                             <th className="p-3">Product</th>
-                            
+
                             <th className="p-3 text-center w-16 sm:w-20">
                               Qty
                             </th>
@@ -1119,8 +1251,8 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                           </>
                         )}
 
-                        {(previewInvoice.deliveryFee ||
-                          invoiceSummary.deliveryFee) ? (
+                        {previewInvoice.deliveryFee ||
+                        invoiceSummary.deliveryFee ? (
                           <div className="flex justify-between">
                             <span>Delivery Fee:</span>
                             <span className="font-medium">
@@ -1131,10 +1263,12 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                               ).toFixed(2)}
                             </span>
                           </div>
-                        ):''}
+                        ) : (
+                          ""
+                        )}
 
-                        {(previewInvoice.packingCharges ||
-                          invoiceSummary.packingCharges) ? (
+                        {previewInvoice.packingCharges ||
+                        invoiceSummary.packingCharges ? (
                           <div className="flex justify-between">
                             <span>Packing Charges:</span>
                             <span className="font-medium">
@@ -1145,9 +1279,11 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                               ).toFixed(2)}
                             </span>
                           </div>
-                        ):''}
+                        ) : (
+                          ""
+                        )}
 
-                        {(previewInvoice.other || invoiceSummary.other) ? (
+                        {previewInvoice.other || invoiceSummary.other ? (
                           <div className="flex justify-between">
                             <span>Other:</span>
                             <span className="font-medium">
@@ -1157,10 +1293,11 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                               ).toFixed(2)}
                             </span>
                           </div>
-                        ):''}
+                        ) : (
+                          ""
+                        )}
 
-                        {(previewInvoice.discount ||
-                          invoiceSummary.discount) ? (
+                        {previewInvoice.discount || invoiceSummary.discount ? (
                           <div className="flex justify-between">
                             <span>Discount:</span>
                             <span className="font-medium text-red-600">
@@ -1171,7 +1308,9 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                               ).toFixed(2)}
                             </span>
                           </div>
-                        ):''}
+                        ) : (
+                          ""
+                        )}
                       </div>
 
                       {/* Total, Paid, Due */}

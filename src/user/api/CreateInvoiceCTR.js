@@ -416,7 +416,7 @@ export function useCreateInvoiceController({ onCustomerSelect } = {}) {
   const handleAdditionalChange = (field, value) => {
     setAdditionalCharges((prev) => ({
       ...prev,
-      [field]: Number(value) || 0,
+      [field]: value|| 0,
     }));
   };
 
