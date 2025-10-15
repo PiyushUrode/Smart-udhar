@@ -352,7 +352,7 @@ const ProductForm = ({
           </select>
         </div>
 
-        <div className="hidden">
+        <div className="">
           <label className="block text-sm font-medium text-gray-700 mb-3 ">
             Price
           </label>
@@ -362,8 +362,8 @@ const ProductForm = ({
             value={formData.price_type || ""}
             onChange={handleChange}
           >
-            <option selected value="fixed">With tax</option>
-            <option value="without">Without tax</option>
+            <option value="without">With tax(Include tax)</option>
+            <option selected value="fixed">Without tax (Exclude tax)</option>
           </select>
         </div>
 

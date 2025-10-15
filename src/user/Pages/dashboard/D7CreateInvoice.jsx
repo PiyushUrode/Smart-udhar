@@ -380,7 +380,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                         {/* Price */}
                         <div className="col-span-1 md:col-span-2">
                           <label className="text-xs text-gray-600 font-robotoM">
-                            Price
+                            Base Price
                           </label>
                           <input
                             type="text"

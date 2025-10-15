@@ -5,7 +5,7 @@ import { CustomerService } from "../../api/customerService.js";
 import { useCustomerForm } from "../../api/addCustomerService.js";
 import Button from "../../common/Button.jsx";
 import CustomerDummy from "../../../../public/Download/customer_report.xlsx"
-import NoData from "../../assets/common/beforecreatebussiness.png"
+import NoData from "../../assets/common/no_data_1.webp"
 
 const CustomerDetailsForm = () => {
 
@@ -101,7 +101,7 @@ const CustomerDetailsForm = () => {
     navigate(`/dashboard/add-customer/${customer.mongoId}`);
   };
 
-   const handleAdd = () => {
+  const handleAdd = () => {
     navigate("/dashboard/add-customer");
   };
 
@@ -111,12 +111,12 @@ const CustomerDetailsForm = () => {
     return "text-green-600";
   };
 
-    const handeluploadexceldummy = ()=>{
-      const link = document.createElement("a");
-      link.href = CustomerDummy;
-      link.download = "customer-template.xlsx";
-      link.click(); 
-    }
+  const handeluploadexceldummy = () => {
+    const link = document.createElement("a");
+    link.href = CustomerDummy;
+    link.download = "customer-template.xlsx";
+    link.click();
+  }
 
   return (
     <div className="p-4 w-full max-w-7xl mt-5 md:mt-10 mx-auto bg-white">
@@ -154,7 +154,7 @@ const CustomerDetailsForm = () => {
       <div className="overflow-x-auto">
         {loading ? (
           <p className="text-center py-5">Loading customers...</p>
-          
+
         ) : (
           <table className="min-w-full text-sm border-separate border-spacing-0 border-[#E5E7EB] border-y border-x-2 rounded-lg shadow-customSoft">
             <thead>
@@ -170,66 +170,66 @@ const CustomerDetailsForm = () => {
                 <th className="p-3 font-semibold py-5 text-center">Actions</th>
               </tr>
             </thead>
- <tbody>
-  {loading ? (
-    <tr>
-      <td colSpan="9" className="text-center p-6">
-        <p className="text-gray-600 text-lg">Loading businesses...</p>
-      </td>
-    </tr>
-  ) : customers.length === 0 ? (
-    <tr>
-      <td colSpan="9" className="p-6">
-        <div
-          className="flex flex-col items-center justify-center gap-4 text-center text-gray-600 py-8"
-          onClick={handleAdd}
-        >
-          <p
-            className="text-lg font-medium cursor-pointer underline text-blue-500 hover:text-blue-600 capitalize"
-          >
-            Create your first Customer Profile
-          </p>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="9" className="text-center p-6">
+                    <p className="text-gray-600 text-lg">Loading businesses...</p>
+                  </td>
+                </tr>
+              ) : customers.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="p-6">
+                    <div
+                      className="flex flex-col items-center justify-center gap-4 text-center text-gray-600 py-8"
+                      onClick={handleAdd}
+                    >
+                      <p
+                        className="text-lg font-medium cursor-pointer underline text-blue-500 hover:text-blue-600 capitalize"
+                      >
+                        Create your first Customer Profile
+                      </p>
 
-          <img
-            src={NoData}
-            alt="No data illustration"
-            className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain cursor-pointer"
-            aria-hidden="false"
-          />
-        </div>
-      </td>
-    </tr>
-  ) : (
-    customers.map((cust, index) => (
-      <tr
-        key={cust.displayId}
-        className="bg-white text-left shadow-customSoft"
-      >
-        {/* Serial Number */}
-        <td className="p-3">{(page - 1) * limit + index + 1}</td>
-        <td className="p-3">{cust.displayId || "--"}</td>
-        <td className="p-3">{cust.name || "--"}</td>
-        <td className="p-3">{cust.mobile || "--"}</td>
-        <td className="p-3 text-blue-600 hover:underline cursor-pointer">
-          {cust.email || "--"}
-        </td>
-        <td className={`p-3 ${getScoreColor(cust.score)}`}>{cust.score}</td>
-        <td className="p-3">{cust.city || "--"}</td>
-        <td className="p-3">{cust.state || "--"}</td>
-        <td className="p-3 text-center space-x-2">
-          <button onClick={() => handleEdit(cust)}>
-            <FiEdit className="w-5 h-5 text-blue-500" />
-          </button>
-          <button
-            onClick={() => handleDelete(cust.mongoId, cust.displayId)}
-          >
-            <FiTrash2 className="w-5 h-5 text-red-500" />
-          </button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
+                      <img
+                        src={NoData}
+                        alt="No data illustration"
+                        className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain cursor-pointer"
+                        aria-hidden="false"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                customers.map((cust, index) => (
+                  <tr
+                    key={cust.displayId}
+                    className="bg-white text-left shadow-customSoft"
+                  >
+                    {/* Serial Number */}
+                    <td className="p-3">{(page - 1) * limit + index + 1}</td>
+                    <td className="p-3">{cust.displayId || "--"}</td>
+                    <td className="p-3">{cust.name || "--"}</td>
+                    <td className="p-3">{cust.mobile || "--"}</td>
+                    <td className="p-3 text-blue-600 hover:underline cursor-pointer">
+                      {cust.email || "--"}
+                    </td>
+                    <td className={`p-3 ${getScoreColor(cust.score)}`}>{cust.score}</td>
+                    <td className="p-3">{cust.city || "--"}</td>
+                    <td className="p-3">{cust.state || "--"}</td>
+                    <td className="p-3 text-center space-x-2">
+                      <button onClick={() => handleEdit(cust)}>
+                        <FiEdit className="w-5 h-5 text-blue-500" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(cust.mongoId, cust.displayId)}
+                      >
+                        <FiTrash2 className="w-5 h-5 text-red-500" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
 
           </table>
         )}
@@ -257,79 +257,79 @@ const CustomerDetailsForm = () => {
       </div>
 
 
-  <div className="w-full max-w-6xl">
-    <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-md border border-gray-200 mt-4 sm:mt-6">
-      
-      {/* Action Area */}
-      <div className="flex flex-col lg:flex-row items-stretch justify-between gap-6">
-        
-        {/* Download Section */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200 w-full">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
-              </svg>
+      <div className="w-full max-w-6xl">
+        <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-md border border-gray-200 mt-4 sm:mt-6">
+
+          {/* Action Area */}
+          <div className="flex flex-col lg:flex-row items-stretch justify-between gap-6">
+
+            {/* Download Section */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50 p-4 sm:p-5 rounded-lg border border-gray-200 w-full">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-sm sm:text-base font-medium text-gray-800">Bulk Upload</h4>
+                  <p className="text-xs sm:text-sm text-gray-500">Get the Excel format file</p>
+                </div>
+              </div>
+
+              <button
+                onClick={handeluploadexceldummy}
+                className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-green-600 text-white text-sm rounded-lg shadow hover:bg-green-700 transition-all w-full sm:w-auto"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
+                </svg>
+                Download Excel
+              </button>
             </div>
-            <div>
-              <h4 className="text-sm sm:text-base font-medium text-gray-800">Bulk Upload</h4>
-              <p className="text-xs sm:text-sm text-gray-500">Get the Excel format file</p>
+
+            {/* Upload Section */}
+            <div className=" w-full flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
+              {/* File Input */}
+              <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
+                <span className="text-gray-700 text-sm">
+                  {file?.name || "Choose Excel/CSV file"}
+                </span>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls, .csv"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </label>
+
+              {/* Import Button */}
+              <button
+                onClick={handleImportExcel}
+                className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
+              >
+                Import Excel
+              </button>
+              {popupType && (
+                <Button
+                  type={popupType}
+                  message={message}
+                  onClose={() => setPopupType(null)}
+                />
+              )}
             </div>
           </div>
-
-          <button
-            onClick={handeluploadexceldummy}
-            className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-green-600 text-white text-sm rounded-lg shadow hover:bg-green-700 transition-all w-full sm:w-auto"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 11-2 0V4H5v11h3a1 1 0 110 2H4a1 1 0 01-1-1V3zm7 5a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 10-1.414 1.414l2.707 2.707a1 1 0 001.414 0l2.707-2.707a1 1 0 10-1.414-1.414L11 12.586V9a1 1 0 00-1-1z" />
-            </svg>
-            Download Excel
-          </button>
         </div>
 
-        {/* Upload Section */}
-       <div className=" w-full flex flex-col md:flex-row items-center gap-3 bg-gray-50 p-4 rounded-md shadow-sm border border-gray-200">
-          {/* File Input */}
-          <label className="flex items-center justify-center w-full md:w-60 px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
-            <span className="text-gray-700 text-sm">
-              {file?.name || "Choose Excel/CSV file"}
-            </span>
-            <input
-              type="file"
-              accept=".xlsx, .xls, .csv"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </label>
-
-          {/* Import Button */}
-          <button
-            onClick={handleImportExcel}
-            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
-          >
-            Import Excel
-          </button>
-          {popupType && (
-            <Button
-              type={popupType}
-              message={message}
-              onClose={() => setPopupType(null)}
-            />
-          )}
-        </div>
+        {popupType && (
+          <Button
+            type={popupType}
+            message={message}
+            onClose={() => setPopupType(null)}
+          />
+        )}
       </div>
     </div>
-
-    {popupType && (
-      <Button
-        type={popupType}
-        message={message}
-        onClose={() => setPopupType(null)}
-      />
-    )}
-  </div>
-</div>
   );
 };
 

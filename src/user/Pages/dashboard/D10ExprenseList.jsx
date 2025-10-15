@@ -4,7 +4,7 @@ import { FaFilePdf, FaFileExcel } from "react-icons/fa";
 import ExpenseService from "../../api/expenseservice.js";
 import Button from "../../common/Button.jsx";
 import ExpenseDummy from "../../../../public/Download/expense_report.xlsx"
-import NoData from "../../assets/common/beforecreatebussiness.png"
+import NoData from "../../assets/common/no_data_1.webp"
 
 const D10ExpenseList = () => {
   const [showFilters, setShowFilters] = useState(false);

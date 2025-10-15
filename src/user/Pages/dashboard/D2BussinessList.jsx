@@ -14,9 +14,9 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveBusiness } from "../../../reactStore/businessSlice.js";
-import NoData from "../../assets/common/beforecreatebussiness.png";
+import NoData from "../../assets/common/no_data_1.webp";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";  
 
 // --- Modals (Unchanged, omitted for brevity) ---
 const DeleteConfirmationModal = ({ productName, onConfirm, onCancel }) => (
@@ -174,7 +174,7 @@ const D2BusinessList = () => {
 
   useEffect(() => {
     // Initial fetch of the first page
-    fetchBusinesses(currentPage); 
+    fetchBusinesses(currentPage);
   }, [store_id, token, currentPage]); // Re-fetch when currentPage changes
 
   // 🆕 PAGINATION HANDLERS
@@ -189,7 +189,7 @@ const D2BusinessList = () => {
       setCurrentPage(currentPage - 1);
     }
   };
-  
+
   // ✅ Delete handler
   const handleDelete = (id, name) => {
     setDeleteBusinessId(id);
@@ -205,7 +205,7 @@ const D2BusinessList = () => {
         `${API_BASE}/store-business-profile/delete/${deleteBusinessId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       // After successful deletion, re-fetch the current page to update the list
       // This is important because deleting an item might pull a new item onto the page
       setInfoModal({
@@ -273,7 +273,7 @@ const D2BusinessList = () => {
 
         {/* Status Indicators (Unchanged) */}
         <div className="flex text-xs mx-auto py-2 px-2 pl-3  items-center gap-3">
-        <div className=" p-1 h-0 w-1 aspect-[1/1] rounded-full bg-green-600 font-semibold">
+          <div className=" p-1 h-0 w-1 aspect-[1/1] rounded-full bg-green-600 font-semibold">
             {/* dot */}
           </div>{" "}
           Active
@@ -351,11 +351,10 @@ const D2BusinessList = () => {
                               onClick={() =>
                                 handleSetActive(item._id, item.businessName)
                               }
-                              className={`flex items-center gap-1 ${
-                                isActive
+                              className={`flex items-center gap-1 ${isActive
                                   ? "text-green-600"
                                   : "text-gray-600 hover:text-green-600"
-                              }`}
+                                }`}
                             >
                               <FaCheckCircle /> {isActive ? "Active" : "Set Active"}
                             </button>
@@ -383,7 +382,7 @@ const D2BusinessList = () => {
                 </table >
               </>
             )}
-            
+
             {/* 🆕 PAGINATION CONTROLS */}
             {!loading && businesses.length > 0 && totalPages > 1 && (
               <div className="flex justify-between items-center mt-5 p-4 border-t border-gray-200">
@@ -397,10 +396,9 @@ const D2BusinessList = () => {
                     onClick={goToPrevPage}
                     disabled={currentPage === 1}
                     className={`px-3 py-1 text-sm font-medium rounded-md flex items-center gap-1 transition
-                      ${
-                        currentPage === 1
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-blue-500 text-white hover:bg-blue-600"
+                      ${currentPage === 1
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
                       }`}
                   >
                     <FaArrowLeft className="w-3 h-3" /> Previous
@@ -414,10 +412,9 @@ const D2BusinessList = () => {
                     onClick={goToNextPage}
                     disabled={currentPage === totalPages}
                     className={`px-3 py-1 text-sm font-medium rounded-md flex items-center gap-1 transition
-                      ${
-                        currentPage === totalPages
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-blue-500 text-white hover:bg-blue-600"
+                      ${currentPage === totalPages
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
                       }`}
                   >
                     Next <FaArrowRight className="w-3 h-3" />
@@ -425,7 +422,7 @@ const D2BusinessList = () => {
                 </div>
               </div>
             )}
-            
+
             {/* Modals */}
             {deleteBusinessId && (
               <DeleteConfirmationModal

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StaffService } from "../../api/staffDetails.js"; 
+import { StaffService } from "../../api/staffDetails.js";
 import {
   FaUserPlus,
   FaUsers,
@@ -15,7 +15,7 @@ import product1 from "../../assets/dummyimage/product1.png";
 import { useParams, useNavigate } from "react-router-dom";
 import Button from "../../common/Button.jsx";
 
-import NoData from "../../assets/common/beforecreatebussiness.png"
+import NoData from "../../assets/common/no_data_1.webp"
 
 // ----------------- STAT CONFIG -----------------
 const STAT_TYPE_MAP = {
@@ -69,7 +69,7 @@ const D5StaffRole = () => {
   const [dynamicRoles, setDynamicRoles] = useState([]);
   const [popupType, setPopupType] = useState(null); // 'success', 'error', 'processing'
 
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("");
 
 
 
@@ -77,33 +77,33 @@ const D5StaffRole = () => {
 
 
   // Inside D5StaffRole component, after fetching staff
-useEffect(() => {
-  if (members.length > 0) {
-    const sorted = [...members].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-    setRecentActivity(sorted.slice(0, 5));
+  useEffect(() => {
+    if (members.length > 0) {
+      const sorted = [...members].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setRecentActivity(sorted.slice(0, 5));
 
-    // ✅ Generate dynamic roles overview
-    const roleMap = {};
-    sorted.forEach((staff) => {
-      const roleName = staff.role || "Staff";
-      if (!roleMap[roleName]) {
-        roleMap[roleName] = {
-          name: roleName,
-          count: 1,
-          tags: [], // optionally you can fill tags based on role type
-        };
-      } else {
-        roleMap[roleName].count += 1;
-      }
-    });
-    setDynamicRoles(Object.values(roleMap));
-  }
-}, [members]);
+      // ✅ Generate dynamic roles overview
+      const roleMap = {};
+      sorted.forEach((staff) => {
+        const roleName = staff.role || "Staff";
+        if (!roleMap[roleName]) {
+          roleMap[roleName] = {
+            name: roleName,
+            count: 1,
+            tags: [], // optionally you can fill tags based on role type
+          };
+        } else {
+          roleMap[roleName].count += 1;
+        }
+      });
+      setDynamicRoles(Object.values(roleMap));
+    }
+  }, [members]);
 
 
- const handleAdd = () => {
+  const handleAdd = () => {
     navigate("/dashboard/product");
   };
 
@@ -205,7 +205,7 @@ useEffect(() => {
         </h1>
         <div className="flex gap-3 max-w-5xl flex-wrap">
           <button className="bg-bluecol flex items-center text-white font-robotoR text-sm px-4 py-3 rounded-md gap-2"
-                    onClick={() => navigate("/dashboard/staff-details")}
+            onClick={() => navigate("/dashboard/staff-details")}
           >
             <FaUserPlus /> Add Team Member
           </button>
@@ -246,94 +246,93 @@ useEffect(() => {
             </div> */}
           </div>
 
-         {/* Staff List */}
-{loading ? (
-  <div className="text-center py-10 text-gray-600">Loading staff...</div>
-) : members.length === 0 ? (
-  <div
-    className="flex flex-col items-center justify-center gap-4 text-center text-gray-600 py-10"
-    onClick={handleAdd} // 👈 Opens add staff form when clicked
-  >
-    <p
-      className="text-lg font-medium cursor-pointer underline text-blue-500"
-      onClick={handleAdd}
-    >
-      Create your first Staff Profile
-    </p>
-
-    <img
-      src={NoData}
-      alt="No staff data"
-      className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain cursor-pointer"
-    />
-  </div>
-) : (
-  <div className="space-y-3">
-    {members.map((member, index) => (
-      <div
-        key={member.id}
-        className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between p-3 border rounded-md shadow-sm bg-white"
-      >
-        {/* Left: Avatar + Info */}
-        <div className="flex items-center gap-3">
-          <img
-            src={member.avatar}
-            alt={member.name}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-          <div>
-            <div className="text-sm font-medium text-[#1F2937]">
-              {member.name}
-            </div>
-            <div className="text-xs text-gray-500">{member.email}</div>
-          </div>
-        </div>
-
-        {/* Right: Role + Status + Actions */}
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-xs px-2 py-1 rounded-full font-medium ${member.roleColor}`}
-          >
-            {member.role}
-          </span>
-
-          <span
-            className={`w-2.5 h-2.5 rounded-full ${
-              member.online ? "bg-green-500" : "bg-gray-400"
-            }`}
-          ></span>
-
-          {/* Dropdown */}
-          <div className="relative">
-            <button
-              className="text-sm text-[#1E40AF] hover:underline flex items-center gap-1"
-              onClick={() => toggleDropdown(index)}
+          {/* Staff List */}
+          {loading ? (
+            <div className="text-center py-10 text-gray-600">Loading staff...</div>
+          ) : members.length === 0 ? (
+            <div
+              className="flex flex-col items-center justify-center gap-4 text-center text-gray-600 py-10"
+              onClick={handleAdd} // 👈 Opens add staff form when clicked
             >
-              <FaEllipsisV size={16} />
-            </button>
+              <p
+                className="text-lg font-medium cursor-pointer underline text-blue-500"
+                onClick={handleAdd}
+              >
+                Create your first Staff Profile
+              </p>
 
-            {openDropdownIndex === index && (
-              <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
+              <img
+                src={NoData}
+                alt="No staff data"
+                className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 object-contain cursor-pointer"
+              />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {members.map((member, index) => (
                 <div
-                  onClick={() => handleEdit(member.id)}
-                  className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                  key={member.id}
+                  className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between p-3 border rounded-md shadow-sm bg-white"
                 >
-                  Edit
+                  {/* Left: Avatar + Info */}
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={member.avatar}
+                      alt={member.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-[#1F2937]">
+                        {member.name}
+                      </div>
+                      <div className="text-xs text-gray-500">{member.email}</div>
+                    </div>
+                  </div>
+
+                  {/* Right: Role + Status + Actions */}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full font-medium ${member.roleColor}`}
+                    >
+                      {member.role}
+                    </span>
+
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full ${member.online ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                    ></span>
+
+                    {/* Dropdown */}
+                    <div className="relative">
+                      <button
+                        className="text-sm text-[#1E40AF] hover:underline flex items-center gap-1"
+                        onClick={() => toggleDropdown(index)}
+                      >
+                        <FaEllipsisV size={16} />
+                      </button>
+
+                      {openDropdownIndex === index && (
+                        <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
+                          <div
+                            onClick={() => handleEdit(member.id)}
+                            className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                          >
+                            Edit
+                          </div>
+                          <div
+                            onClick={() => handleDelete(member.id)}
+                            className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer text-red-600"
+                          >
+                            Delete
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div
-                  onClick={() => handleDelete(member.id)}
-                  className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer text-red-600"
-                >
-                  Delete
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-)}
+              ))}
+            </div>
+          )}
 
         </div>
 
@@ -370,54 +369,54 @@ useEffect(() => {
         </div>
 
 
-          {popupType && (
+        {popupType && (
 
- <Button
+          <Button
 
-     type={popupType}
+            type={popupType}
 
-     message={message}
+            message={message}
 
-     onClose={() => setPopupType(null)}
+            onClose={() => setPopupType(null)}
 
-    />
+          />
 
-   )}
+        )}
       </div>
 
-     
+
 
 
 
       {/* Recent Activity */}
-    <div className="bg-white rounded-lg shadow-md border-2">
-  <div className="border-b p-5">
-    <h2 className="text-base font-semibold text-gray-700 mb-4">
-      Recent Activity
-    </h2>
-  </div>
+      <div className="bg-white rounded-lg shadow-md border-2">
+        <div className="border-b p-5">
+          <h2 className="text-base font-semibold text-gray-700 mb-4">
+            Recent Activity
+          </h2>
+        </div>
 
- {recentActivity.length > 0 ? (
-    <ul className="text-sm p-4 space-y-4 text-gray-700">
-      {recentActivity.map((activity, index) => (
-        <li key={index} className="flex gap-4 items-start">
-          <div className="rounded-full p-2 border-2 bg-[#DBEAFE]">
-            <FaUserPlus color="#2563EB" />
-          </div>
-          <div>
-            <span className="font-semibold">{activity.name}</span> joined as{" "}
-            <span className="text-blue-600">{activity.role}</span>
-            <div className="text-gray-500 text-xs">
-              {new Date(activity.createdAt).toLocaleString()}
-            </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <div className="p-4 text-gray-500 text-sm">No recent activity found</div>
-  )}
-</div>
+        {recentActivity.length > 0 ? (
+          <ul className="text-sm p-4 space-y-4 text-gray-700">
+            {recentActivity.map((activity, index) => (
+              <li key={index} className="flex gap-4 items-start">
+                <div className="rounded-full p-2 border-2 bg-[#DBEAFE]">
+                  <FaUserPlus color="#2563EB" />
+                </div>
+                <div>
+                  <span className="font-semibold">{activity.name}</span> joined as{" "}
+                  <span className="text-blue-600">{activity.role}</span>
+                  <div className="text-gray-500 text-xs">
+                    {new Date(activity.createdAt).toLocaleString()}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="p-4 text-gray-500 text-sm">No recent activity found</div>
+        )}
+      </div>
 
 
     </div>
