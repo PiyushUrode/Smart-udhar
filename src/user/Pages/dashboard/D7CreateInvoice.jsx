@@ -368,6 +368,7 @@ export default function D7CreateInvoice({ onCustomerSelect }) {
                                   })()
                                 : null
                             }
+                            
                             onChange={(selectedOption) => {
                               const selectedProduct = products?.find(
                                 (p) =>
